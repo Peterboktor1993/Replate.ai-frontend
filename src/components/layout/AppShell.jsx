@@ -11,7 +11,7 @@ const AppShell = ({ children }) => {
   return (
     <ClientOnly>
       {/* <Header /> */}
-      <main className="main-content px-5">
+      <main className="main-content px-md-5">
         <div className="container">{children}</div>
       </main>
       <Footer />
