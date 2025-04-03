@@ -1,67 +1,68 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
-  loginService,
-  signupService,
-  logoutService,
+  loginUser,
+  registerUser,
+  logoutUser,
 } from "@/store/services/authService";
 
-const initialState = {
-  user: null,
-  token: localStorage.getItem("token"),
-  isAuthenticated: false,
-  loading: false,
-  error: null,
+// Get initial state from localStorage if available
+const getInitialState = () => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+
+    if (token && user) {
+      return {
+        token,
+        user: JSON.parse(user),
+        isAuthenticated: true,
+      };
+    }
+  }
+
+  return {
+    token: null,
+    user: null,
+    isAuthenticated: false,
+  };
 };
 
 const authSlice = createSlice({
   name: "auth",
-  initialState,
+  initialState: getInitialState(),
   reducers: {
+    loginSuccess: (state, action) => {
+      state.token = action.payload.token;
+      state.user = action.payload.user;
+      state.isAuthenticated = true;
+
+      // Save to localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
+      }
+    },
     logout: (state) => {
-      state.user = null;
       state.token = null;
+      state.user = null;
       state.isAuthenticated = false;
-      state.error = null;
-      logoutService();
+
+      // Clear localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     },
-    clearError: (state) => {
-      state.error = null;
+    updateUser: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+
+      // Update localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user", JSON.stringify(state.user));
+      }
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      // Login
-      .addCase(loginService.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loginService.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(loginService.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Signup
-      .addCase(signupService.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(signupService.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(signupService.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { loginSuccess, logout, updateUser } = authSlice.actions;
 export default authSlice.reducer;

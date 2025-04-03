@@ -1,4 +1,5 @@
 import "../scss/main.scss";
+import "../app/globals.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "swiper/css";
 import Script from "next/script";

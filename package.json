@@ -21,6 +21,7 @@
     "react-redux": "^9.2.0",
     "sweetalert": "^2.1.2",
     "swiper": "^11.2.6",
+    "uuid": "^11.1.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {

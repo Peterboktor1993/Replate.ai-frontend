@@ -7,19 +7,21 @@ import { Provider } from "react-redux";
 import store from "@/store/store";
 import Toast from "../common/Toast";
 
-// const Header = dynamic(() => import("@/components/layout/Header"));
+const Header = dynamic(() => import("@/components/layout/Header"));
 const Footer = dynamic(() => import("@/components/layout/Footer"));
 
 const AppShell = ({ children }) => {
   return (
     <ClientOnly>
-      {/* <Header /> */}
       <Provider store={store}>
-        <main className="main-content px-md-5">
-          <div className="container">{children}</div>
-        </main>
+        <div className="d-flex flex-column min-vh-100">
+          <Header />
+          <main className="flex-grow-1 py-4">
+            <div className="container-fluid px-4 px-md-5">{children}</div>
+          </main>
+          <Footer />
+        </div>
         <Toast />
-        <Footer />
       </Provider>
     </ClientOnly>
   );
