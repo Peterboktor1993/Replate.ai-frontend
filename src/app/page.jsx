@@ -1,5 +1,11 @@
 import Home from "@/components/home/Home";
+import { getAllProductsServer } from "@/store/services/productService";
+import { getAllCategoriesServer } from "@/store/services/categoriesService";
+async function HomePage() {
+  const { products, error: productsError } = await getAllProductsServer();
+  const { categories, error: categoriesError } = await getAllCategoriesServer();
 
-export default function HomePage() {
-  return <Home className="px-sm-1 px-md-4 px-lg-5 mx-sm-1" />;
+  return <Home initialProducts={products} initialCategories={categories} />;
 }
+
+export default HomePage;

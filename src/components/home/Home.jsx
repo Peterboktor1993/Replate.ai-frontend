@@ -10,6 +10,11 @@ import PopularDishesSlider from "./mini/PopularDishesSlider";
 import RecentOrderSlider from "./mini/RecentOrderSlider";
 import AddDetailsModal from "./mini/AddDetailsModal";
 import AddNoteModal from "./mini/AddNoteModal";
+import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
+import { setProducts } from "@/store/slices/productSlice";
+import { setCategories } from "@/store/slices/categoriesSlice";
+import { filterCategoriesByProducts } from "@/store/services/categoriesService";
 
 const Pic1 = "/images/popular-img/review-img/pic-1.jpg";
 const Pic2 = "/images/popular-img/review-img/pic-2.jpg";
@@ -28,17 +33,26 @@ const reducer = (previousState, updatedState) => ({
   ...updatedState,
 });
 
-const Home = ({ className }) => {
+const Home = ({ className, initialProducts, initialCategories }) => {
   const [dropSelect, setDropSelect] = useState("Other");
   const { changeBackground } = useContext(ThemeContext);
   const [detailsModal, setDetailsModal] = useState(false);
   const [notesModal, setNotesModal] = useState(false);
   const [showFloatingButton, setShowFloatingButton] = useState(false);
   const checkoutRef = useRef(null);
-
+  const dispatch = useDispatch();
+  const { products } = useSelector((state) => state.products);
+  const { filteredCategories } = useSelector((state) => state.categories);
   useEffect(() => {
     changeBackground({ value: "light", label: "Light" });
   }, []);
+
+  useEffect(() => {
+    dispatch(setProducts(initialProducts));
+    console.log(initialCategories);
+    dispatch(setCategories(initialCategories));
+    dispatch(filterCategoriesByProducts(initialProducts));
+  }, [products, initialProducts, initialCategories]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,7 +112,7 @@ const Home = ({ className }) => {
                   View all <i className="fa-solid fa-angle-right ms-2"></i>
                 </Link>
               </div>
-              <CategorySlider />
+              <CategorySlider categories={filteredCategories} />
             </div>
             <div className="col-xl-12">
               <div className="d-flex align-items-center justify-content-between mb-2">
@@ -107,7 +121,7 @@ const Home = ({ className }) => {
                   View all <i className="fa-solid fa-angle-right ms-2"></i>
                 </Link>
               </div>
-              <PopularDishesSlider />
+              <PopularDishesSlider products={products} />
             </div>
             <div className="col-xl-12">
               <div className="d-flex align-items-center justify-content-between mb-2">

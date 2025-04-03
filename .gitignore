@@ -12,8 +12,8 @@
 
 # testing
 /coverage
-src/vendor
-src/scss
+/src/vendor
+/src/scss
 # next.js
 /.next/
 /out/

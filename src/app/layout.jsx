@@ -1,16 +1,13 @@
 import "../scss/main.scss";
-// import "./globals.css";
-// import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap is already imported in your SCSS
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "swiper/css";
 import Script from "next/script";
 import ThemeContextProvider from "@/context/ThemeContext";
 import AppShell from "@/components/layout/AppShell";
-// import "./test.css";
 
 export const metadata = {
-  title: "Food App",
-  description: "A food delivery application",
+  title: "Cravio AI",
+  description: "A food application",
 };
 
 export default function RootLayout({ children }) {

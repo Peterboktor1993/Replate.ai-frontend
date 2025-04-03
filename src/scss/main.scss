@@ -54,13 +54,6 @@
 
 */
 
-
-
-
-
-
-
-
 ////////////////////
 // Abstracts
 ////////////////////
@@ -69,8 +62,6 @@
 //bootstrap library scss files
 @import "./../vendor/bootstrap/scss/bootstrap.scss";
 
-
-
 ////////////////////
 // Global
 ////////////////////
@@ -78,31 +69,27 @@
 
 @import "./preloader";
 
-
 ////////////////////
 // Components
 ////////////////////
 @import "./layout/layout";
-
 
 ////////////////////
 // Components
 ////////////////////
 @import "./components/components";
 
+@import "components/toast";
 
 ////////////////////
 // All pages
 ////////////////////
 @import "./pages/pages";
 
-
-
 ////////////////////
 // RTL
 ////////////////////
 @import "./layout/rtl/rtl";
-
 
 ////////////////////
 // Version Color
