@@ -2,24 +2,20 @@
 // Get Products
 
 import axiosInstance from "@/config/axios";
-import {
-  PRODUCT_URL,
-  ZONE_ID,
-  RESTURANT_ID,
-  BASE_URL,
-  API_URL,
-} from "@/utils/CONSTANTS";
+import { PRODUCT_URL, ZONE_ID } from "@/utils/CONSTANTS";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { getCurrentRestaurantId } from "@/utils/restaurantUtils";
 
 //===============================================
 export const getAllProducts = createAsyncThunk(
   "products/getAllProducts",
   async (_, { rejectWithValue }) => {
     try {
+      const currentRestaurantId = getCurrentRestaurantId();
       const response = await axiosInstance.get(PRODUCT_URL, {
         headers: {
           zoneId: `[${ZONE_ID}]`,
-          restaurant_id: `[${RESTURANT_ID}]`,
+          restaurant_id: `[${currentRestaurantId}]`,
         },
       });
       return response.data;
@@ -34,12 +30,13 @@ export const getAllProducts = createAsyncThunk(
 //===============================================
 export async function getAllProductsServer() {
   try {
+    const currentRestaurantId = getCurrentRestaurantId();
     const response = await fetch(`${PRODUCT_URL}/search`, {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         zoneId: `[${ZONE_ID}]`,
-        restaurant_id: `[${RESTURANT_ID}]`,
+        restaurant_id: `[${currentRestaurantId}]`,
       },
       cache: "no-store",
     });

@@ -40,15 +40,16 @@ const BannerSlider = () => {
       >
         {sliderBlog.map((data, ind) => (
           <SwiperSlide key={ind}>
-            <div className="banner-bx">
+            <div className="banner-bx mt-1">
               <Image
                 src={data.image}
                 alt="Banner image"
                 width={800}
                 height={400}
-                style={{ width: "100%", height: "auto" }}
+                style={{ width: "100%", height: "220px" }}
                 priority
               />
+              
             </div>
           </SwiperSlide>
         ))}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Form, Button, Spinner } from "react-bootstrap";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -10,32 +10,19 @@ import { BASE_URL } from "@/utils/CONSTANTS";
 import axios from "axios";
 import { addToast } from "@/store/slices/toastSlice";
 import { AUTH_URL } from "@/utils/CONSTANTS";
+import logo from "../../../public/logo.png";
 
 const AuthModals = ({ show, onHide, initialMode = "login" }) => {
   const [mode, setMode] = useState(initialMode);
   const [loading, setLoading] = useState(false);
-  const [logoUrl, setLogoUrl] = useState("");
+  // const [logoUrl, setLogoUrl] = useState("");
   const dispatch = useDispatch();
 
-  // Fetch restaurant logo from backend
-  React.useEffect(() => {
-    const fetchLogo = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/api/v1/config`, {
-          headers: { "X-localization": "en" },
-        });
-        if (response.data.logo) {
-          setLogoUrl(response.data.logo);
-        }
-      } catch (error) {
-        console.error("Error fetching logo:", error);
-      }
-    };
+  // Add this useEffect to update mode when initialMode changes
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
 
-    fetchLogo();
-  }, []);
-
-  // Login form validation
   const loginFormik = useFormik({
     initialValues: {
       email: "",
@@ -53,6 +40,11 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
         const result = await dispatch(loginUser(values));
 
         if (result.success) {
+          // Explicitly fetch user profile after login
+          const { getUserProfile } = await import(
+            "@/store/services/authService"
+          );
+          await dispatch(getUserProfile(result.data.token));
           onHide();
         }
       } catch (error) {
@@ -93,6 +85,11 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
         const result = await dispatch(registerUser(values));
 
         if (result.success) {
+          // Explicitly fetch user profile after registration
+          const { getUserProfile } = await import(
+            "@/store/services/authService"
+          );
+          await dispatch(getUserProfile(result.data.token));
           onHide();
         }
       } catch (error) {
@@ -103,12 +100,63 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
     },
   });
 
+  const resetPasswordFormik = useFormik({
+    initialValues: {
+      email: "",
+    },
+    validationSchema: Yup.object({
+      email: Yup.string()
+        .email("Invalid email address")
+        .required("Email is required"),
+    }),
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+
+        // Replace with actual API call to reset password
+        const response = await axios.post(`${AUTH_URL}/forgot-password`, {
+          email: values.email,
+        });
+
+        if (response.status === 200) {
+          dispatch(
+            addToast({
+              show: true,
+              title: "Success",
+              message: "Password reset instructions sent to your email",
+              type: "success",
+            })
+          );
+          resetPasswordFormik.resetForm();
+          setMode("login");
+        } else {
+          throw new Error("Failed to send password reset email");
+        }
+      } catch (error) {
+        dispatch(
+          addToast({
+            show: true,
+            title: "Error",
+            message:
+              error.response?.data?.message ||
+              "Failed to send password reset email",
+            type: "error",
+          })
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+  });
+
   const handleSocialLogin = async (provider) => {
     try {
       setLoading(true);
 
-      // Get the OAuth URL from your backend
-      const response = await axios.get(`${AUTH_URL}/${provider}/callback`);
+      // Get the OAuth URL from your backend with the current mode (login or register)
+      const response = await axios.get(
+        `${AUTH_URL}/${provider}/callback?mode=${mode}`
+      );
 
       // Redirect to the OAuth provider
       if (response.data.url) {
@@ -118,12 +166,17 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
           addToast({
             type: "error",
             title: "Error",
-            message: `${provider} login failed`,
+            message: `${
+              mode === "register" ? "Sign up" : "Login"
+            } with ${provider} failed`,
           })
         );
       }
     } catch (error) {
-      console.error("Social login error:", error);
+      console.error(
+        `${mode === "register" ? "Sign up" : "Login"} error:`,
+        error
+      );
     } finally {
       setLoading(false);
     }
@@ -134,317 +187,338 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
       show={show}
       onHide={onHide}
       centered
-      size="lg"
+      size="md"
       className="auth-modal"
     >
-      <Modal.Header closeButton>
-        <Modal.Title>
-          {mode === "login" ? "Sign In" : "Create an Account"}
-        </Modal.Title>
-      </Modal.Header>
+      <style jsx global>{`
+        .auth-modal .form-control {
+          border: 1px solid #dee2e6 !important;
+          border-radius: 0.375rem !important;
+        }
+        .auth-modal .form-control:focus {
+          border-color: #86b7fe !important;
+          box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+      `}</style>
+      <Modal.Header closeButton className="border-0 pb-0"></Modal.Header>
 
-      <Modal.Body className="py-4">
-        <div className="row">
-          <div className="col-md-5 auth-left d-none d-md-flex">
-            <div className="auth-left-content text-center">
-              <div className="logo-container mb-4">
-                {logoUrl !== "" && (
-                  <Image
-                    src={logoUrl}
-                    alt="Logo"
-                    width={120}
-                    height={120}
-                    className="auth-logo"
-                  />
-                )}
-              </div>
-              <h3 className="mb-4">Welcome to Carvio</h3>
-              <p className="text-muted">
-                {mode === "login"
-                  ? "Sign in to continue to your account"
-                  : "Create an account to get started"}
-              </p>
-              <div className="auth-image mt-4">
-                {logoUrl !== "" && (
-                  <Image
-                    src="/images/login-illustration.png"
-                    alt="Auth"
-                    width={200}
-                    height={200}
-                    className="img-fluid"
-                  />
-                )}
-              </div>
+      <Modal.Body className="px-4 pt-0 pb-4">
+        <div className="auth-form-container">
+          {/* Social Login Buttons */}
+          <div className="social-login mb-3">
+            <h6 className="text-center mb-3">
+              {mode === "register" ? "Sign up with" : "Sign in with"}
+            </h6>
+            <div className="d-flex justify-content-center gap-3">
+              <Button
+                variant="outline-primary"
+                className="social-btn"
+                onClick={() => handleSocialLogin("google")}
+                disabled={loading}
+              >
+                <i className="fab fa-google"></i>
+              </Button>
+              <Button
+                variant="outline-primary"
+                className="social-btn"
+                onClick={() => handleSocialLogin("facebook")}
+                disabled={loading}
+              >
+                <i className="fab fa-facebook-f"></i>
+              </Button>
+              <Button
+                variant="outline-primary"
+                className="social-btn"
+                onClick={() => handleSocialLogin("apple")}
+                disabled={loading}
+              >
+                <i className="fab fa-apple"></i>
+              </Button>
+            </div>
+
+            <div className="divider my-3">
+              <span>OR</span>
             </div>
           </div>
 
-          <div className="col-md-7">
-            <div className="auth-form-container p-md-3">
-              {/* Social Login Buttons */}
-              <div className="social-login mb-4">
-                <h6 className="text-center mb-3">Sign in with</h6>
-                <div className="d-flex justify-content-center gap-3">
-                  <Button
-                    variant="outline-primary"
-                    className="social-btn"
-                    onClick={() => handleSocialLogin("google")}
-                    disabled={loading}
-                  >
-                    <i className="fab fa-google"></i>
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    className="social-btn"
-                    onClick={() => handleSocialLogin("facebook")}
-                    disabled={loading}
-                  >
-                    <i className="fab fa-facebook-f"></i>
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    className="social-btn"
-                    onClick={() => handleSocialLogin("apple")}
-                    disabled={loading}
-                  >
-                    <i className="fab fa-apple"></i>
-                  </Button>
-                </div>
+          {/* Login Form */}
+          {mode === "login" && (
+            <Form onSubmit={loginFormik.handleSubmit}>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={loginFormik.values.email}
+                  onChange={loginFormik.handleChange}
+                  onBlur={loginFormik.handleBlur}
+                  isInvalid={
+                    loginFormik.touched.email && loginFormik.errors.email
+                  }
+                />
+                <Form.Control.Feedback type="invalid">
+                  {loginFormik.errors.email}
+                </Form.Control.Feedback>
+              </Form.Group>
 
-                <div className="divider my-4">
-                  <span>OR</span>
-                </div>
+              <Form.Group className="mb-3">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="password"
+                  placeholder="Enter your password"
+                  value={loginFormik.values.password}
+                  onChange={loginFormik.handleChange}
+                  onBlur={loginFormik.handleBlur}
+                  isInvalid={
+                    loginFormik.touched.password && loginFormik.errors.password
+                  }
+                />
+                <Form.Control.Feedback type="invalid">
+                  {loginFormik.errors.password}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <Form.Check
+                  type="checkbox"
+                  label="Remember me"
+                  id="remember-me"
+                />
+                <Button
+                  variant="link"
+                  className="p-0 text-primary"
+                  onClick={() => setMode("forgot-password")}
+                >
+                  Forgot Password?
+                </Button>
               </div>
 
-              {/* Login Form */}
-              {mode === "login" && (
-                <Form onSubmit={loginFormik.handleSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      name="email"
-                      placeholder="Enter your email"
-                      value={loginFormik.values.email}
-                      onChange={loginFormik.handleChange}
-                      onBlur={loginFormik.handleBlur}
-                      isInvalid={
-                        loginFormik.touched.email && loginFormik.errors.email
-                      }
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {loginFormik.errors.email}
-                    </Form.Control.Feedback>
-                  </Form.Group>
+              <Button
+                variant="primary"
+                type="submit"
+                className="w-100"
+                disabled={loading}
+              >
+                {loading ? <Spinner animation="border" size="sm" /> : "Sign In"}
+              </Button>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control
-                      type="password"
-                      name="password"
-                      placeholder="Enter your password"
-                      value={loginFormik.values.password}
-                      onChange={loginFormik.handleChange}
-                      onBlur={loginFormik.handleBlur}
-                      isInvalid={
-                        loginFormik.touched.password &&
-                        loginFormik.errors.password
-                      }
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {loginFormik.errors.password}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <Form.Check
-                      type="checkbox"
-                      label="Remember me"
-                      id="remember-me"
-                    />
-                    <a href="#" className="text-primary">
-                      Forgot Password?
-                    </a>
-                  </div>
-
+              <div className="text-center mt-3">
+                <p className="mb-0">
+                  Don't have an account?{" "}
                   <Button
-                    variant="primary"
-                    type="submit"
-                    className="w-100"
-                    disabled={loading}
+                    variant="link"
+                    className="p-0"
+                    onClick={() => setMode("register")}
                   >
-                    {loading ? (
-                      <Spinner animation="border" size="sm" />
-                    ) : (
-                      "Sign In"
-                    )}
+                    Sign Up
                   </Button>
+                </p>
+              </div>
+            </Form>
+          )}
 
-                  <div className="text-center mt-4">
-                    <p>
-                      Don't have an account?{" "}
-                      <Button
-                        variant="link"
-                        className="p-0"
-                        onClick={() => setMode("register")}
-                      >
-                        Sign Up
-                      </Button>
-                    </p>
-                  </div>
-                </Form>
-              )}
-
-              {/* Register Form */}
-              {mode === "register" && (
-                <Form onSubmit={registerFormik.handleSubmit}>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <Form.Group className="mb-3">
-                        <Form.Label>First Name</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="first_name"
-                          placeholder="First name"
-                          value={registerFormik.values.first_name}
-                          onChange={registerFormik.handleChange}
-                          onBlur={registerFormik.handleBlur}
-                          isInvalid={
-                            registerFormik.touched.first_name &&
-                            registerFormik.errors.first_name
-                          }
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {registerFormik.errors.first_name}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </div>
-                    <div className="col-md-6">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Last Name</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="last_name"
-                          placeholder="Last name"
-                          value={registerFormik.values.last_name}
-                          onChange={registerFormik.handleChange}
-                          onBlur={registerFormik.handleBlur}
-                          isInvalid={
-                            registerFormik.touched.last_name &&
-                            registerFormik.errors.last_name
-                          }
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {registerFormik.errors.last_name}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </div>
-                  </div>
-
+          {/* Register Form */}
+          {mode === "register" && (
+            <Form onSubmit={registerFormik.handleSubmit}>
+              <div className="row">
+                <div className="col-md-6">
                   <Form.Group className="mb-3">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      name="email"
-                      placeholder="Enter your email"
-                      value={registerFormik.values.email}
-                      onChange={registerFormik.handleChange}
-                      onBlur={registerFormik.handleBlur}
-                      isInvalid={
-                        registerFormik.touched.email &&
-                        registerFormik.errors.email
-                      }
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {registerFormik.errors.email}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Phone Number</Form.Label>
+                    <Form.Label>First Name</Form.Label>
                     <Form.Control
                       type="text"
-                      name="phone"
-                      placeholder="Enter phone number"
-                      value={registerFormik.values.phone}
+                      name="first_name"
+                      placeholder="First name"
+                      value={registerFormik.values.first_name}
                       onChange={registerFormik.handleChange}
                       onBlur={registerFormik.handleBlur}
                       isInvalid={
-                        registerFormik.touched.phone &&
-                        registerFormik.errors.phone
+                        registerFormik.touched.first_name &&
+                        registerFormik.errors.first_name
                       }
                     />
                     <Form.Control.Feedback type="invalid">
-                      {registerFormik.errors.phone}
+                      {registerFormik.errors.first_name}
                     </Form.Control.Feedback>
                   </Form.Group>
-
+                </div>
+                <div className="col-md-6">
                   <Form.Group className="mb-3">
-                    <Form.Label>Password</Form.Label>
+                    <Form.Label>Last Name</Form.Label>
                     <Form.Control
-                      type="password"
-                      name="password"
-                      placeholder="Create a password"
-                      value={registerFormik.values.password}
+                      type="text"
+                      name="last_name"
+                      placeholder="Last name"
+                      value={registerFormik.values.last_name}
                       onChange={registerFormik.handleChange}
                       onBlur={registerFormik.handleBlur}
                       isInvalid={
-                        registerFormik.touched.password &&
-                        registerFormik.errors.password
+                        registerFormik.touched.last_name &&
+                        registerFormik.errors.last_name
                       }
                     />
                     <Form.Control.Feedback type="invalid">
-                      {registerFormik.errors.password}
+                      {registerFormik.errors.last_name}
                     </Form.Control.Feedback>
                   </Form.Group>
+                </div>
+              </div>
 
-                  <Form.Group className="mb-4">
-                    <Form.Label>Confirm Password</Form.Label>
-                    <Form.Control
-                      type="password"
-                      name="confirm_password"
-                      placeholder="Confirm your password"
-                      value={registerFormik.values.confirm_password}
-                      onChange={registerFormik.handleChange}
-                      onBlur={registerFormik.handleBlur}
-                      isInvalid={
-                        registerFormik.touched.confirm_password &&
-                        registerFormik.errors.confirm_password
-                      }
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {registerFormik.errors.confirm_password}
-                    </Form.Control.Feedback>
-                  </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={registerFormik.values.email}
+                  onChange={registerFormik.handleChange}
+                  onBlur={registerFormik.handleBlur}
+                  isInvalid={
+                    registerFormik.touched.email && registerFormik.errors.email
+                  }
+                />
+                <Form.Control.Feedback type="invalid">
+                  {registerFormik.errors.email}
+                </Form.Control.Feedback>
+              </Form.Group>
 
+              <Form.Group className="mb-3">
+                <Form.Label>Phone Number</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="phone"
+                  placeholder="Enter phone number"
+                  value={registerFormik.values.phone}
+                  onChange={registerFormik.handleChange}
+                  onBlur={registerFormik.handleBlur}
+                  isInvalid={
+                    registerFormik.touched.phone && registerFormik.errors.phone
+                  }
+                />
+                <Form.Control.Feedback type="invalid">
+                  {registerFormik.errors.phone}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              <div className="d-flex justify-content-between gap-3">
+                <Form.Group className="mb-3 flex-grow-1">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="password"
+                    placeholder="Create a password"
+                    value={registerFormik.values.password}
+                    onChange={registerFormik.handleChange}
+                    onBlur={registerFormik.handleBlur}
+                    isInvalid={
+                      registerFormik.touched.password &&
+                      registerFormik.errors.password
+                    }
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {registerFormik.errors.password}
+                  </Form.Control.Feedback>
+                </Form.Group>
+                <Form.Group className="mb-4 flex-grow-1">
+                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="confirm_password"
+                    placeholder="Confirm password"
+                    value={registerFormik.values.confirm_password}
+                    onChange={registerFormik.handleChange}
+                    onBlur={registerFormik.handleBlur}
+                    isInvalid={
+                      registerFormik.touched.confirm_password &&
+                      registerFormik.errors.confirm_password
+                    }
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {registerFormik.errors.confirm_password}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </div>
+              <Button
+                variant="primary"
+                type="submit"
+                className="w-100"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner animation="border" size="sm" />
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+
+              <div className="text-center mt-4">
+                <p className="mb-0">
+                  Already have an account?{" "}
                   <Button
-                    variant="primary"
-                    type="submit"
-                    className="w-100"
-                    disabled={loading}
+                    variant="link"
+                    className="p-0"
+                    onClick={() => setMode("login")}
                   >
-                    {loading ? (
-                      <Spinner animation="border" size="sm" />
-                    ) : (
-                      "Create Account"
-                    )}
+                    Sign In
                   </Button>
+                </p>
+              </div>
+            </Form>
+          )}
 
-                  <div className="text-center mt-4">
-                    <p>
-                      Already have an account?{" "}
-                      <Button
-                        variant="link"
-                        className="p-0"
-                        onClick={() => setMode("login")}
-                      >
-                        Sign In
-                      </Button>
-                    </p>
-                  </div>
-                </Form>
-              )}
-            </div>
-          </div>
+          {/* Forgot Password Form */}
+          {mode === "forgot-password" && (
+            <Form onSubmit={resetPasswordFormik.handleSubmit}>
+              <h4 className="text-center mb-4">Reset Your Password</h4>
+              <p className="text-muted text-center mb-4">
+                Enter your email address and we'll send you instructions to
+                reset your password.
+              </p>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={resetPasswordFormik.values.email}
+                  onChange={resetPasswordFormik.handleChange}
+                  onBlur={resetPasswordFormik.handleBlur}
+                  isInvalid={
+                    resetPasswordFormik.touched.email &&
+                    resetPasswordFormik.errors.email
+                  }
+                />
+                <Form.Control.Feedback type="invalid">
+                  {resetPasswordFormik.errors.email}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              <Button
+                variant="primary"
+                type="submit"
+                className="w-100"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner animation="border" size="sm" />
+                ) : (
+                  "Send Reset Instructions"
+                )}
+              </Button>
+
+              <div className="text-center mt-4">
+                <Button
+                  variant="link"
+                  className="p-0"
+                  onClick={() => setMode("login")}
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            </Form>
+          )}
         </div>
       </Modal.Body>
     </Modal>

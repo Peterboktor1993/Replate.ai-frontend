@@ -7,11 +7,23 @@ const generateNumericGuestId = () => {
 const getGuestId = () => {
   if (typeof window !== "undefined") {
     const storedGuestId = localStorage.getItem("guestId");
+
+    const alternativeGuestId = localStorage.getItem("guest_id");
+
     if (storedGuestId) {
+      if (alternativeGuestId && alternativeGuestId !== storedGuestId) {
+        console.log("Synchronizing guest IDs in localStorage");
+        localStorage.setItem("guest_id", storedGuestId);
+      }
       return storedGuestId;
+    } else if (alternativeGuestId) {
+      console.log("Using existing guest_id from localStorage");
+      localStorage.setItem("guestId", alternativeGuestId);
+      return alternativeGuestId;
     } else {
       const newGuestId = generateNumericGuestId();
       localStorage.setItem("guestId", newGuestId);
+      localStorage.setItem("guest_id", newGuestId);
       return newGuestId;
     }
   }
@@ -103,6 +115,10 @@ const cartSlice = createSlice({
       const newGuestId = generateNumericGuestId();
       state.guestId = newGuestId;
       localStorage.setItem("guestId", newGuestId);
+      localStorage.setItem("guest_id", newGuestId);
+      state.cartItems = [];
+      state.totalItems = 0;
+      state.totalAmount = 0;
     },
   },
 });

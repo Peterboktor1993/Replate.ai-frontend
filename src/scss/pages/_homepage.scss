@@ -261,12 +261,9 @@
 .card {
   &.dishe-bx {
     img {
-      height: 9.063rem;
-      width: 13.75rem;
       object-fit: cover;
       @include respond("tab-port") {
-        height: 7.063rem;
-        width: 10.75rem;
+
       }
     }
     li {

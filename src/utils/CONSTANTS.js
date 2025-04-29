@@ -6,3 +6,4 @@ export const AUTH_URL = `${API_URL}/auth`;
 export const PRODUCT_URL = `${API_URL}/products`;
 export const CATEGORIES_URL = `${API_URL}/categories`;
 export const CART_URL = `${API_URL}/customer/cart`;
+export const ORDER_URL = `${API_URL}/customer/order`;

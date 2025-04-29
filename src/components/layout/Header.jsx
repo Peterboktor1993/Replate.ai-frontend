@@ -16,6 +16,21 @@ const Header = () => {
   const { token, user } = useSelector((state) => state.auth || {});
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    const ensureUserData = async () => {
+      if (token && (!user || !user?.f_name)) {
+        const { getUserProfile } = await import("@/store/services/authService");
+        try {
+          await dispatch(getUserProfile(token));
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+    };
+
+    ensureUserData();
+  }, [token, user, dispatch]);
+
   const toggleTheme = () => {
     if (background.value === "light") {
       changeBackground({ value: "dark", label: "Dark" });
@@ -32,7 +47,7 @@ const Header = () => {
   };
 
   const handleSignup = () => {
-    setAuthMode("signup");
+    setAuthMode("register");
     setShowAuthModal(true);
   };
 
@@ -42,7 +57,12 @@ const Header = () => {
 
   return (
     <>
-      <header className=" shadow-sm sticky-top bg-white">
+      <header
+        style={{
+          zIndex: 899999999900,
+        }}
+        className=" shadow-sm sticky-top bg-white"
+      >
         <div className="px-4">
           <div className="d-flex align-items-center justify-content-between py-3">
             <div className="d-flex align-items-center">
@@ -130,8 +150,10 @@ const Header = () => {
                         <i className="fas fa-user"></i>
                       </div>
                       <div>
-                        <h6 className="mb-0">{user?.f_name}</h6>
-                        <small className="text-muted">{user?.email}</small>
+                        <h6 className="mb-0">{user?.f_name || "User"}</h6>
+                        <small className="text-muted">
+                          {user?.email || user?.phone || ""}
+                        </small>
                       </div>
                     </li>
                     <li>
@@ -142,6 +164,12 @@ const Header = () => {
                       <Link href="/profile" className="dropdown-item py-2">
                         <i className="fas fa-user me-2 text-primary"></i>
                         Profile
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/orders" className="dropdown-item py-2">
+                        <i className="fas fa-shopping-bag me-2 text-primary"></i>
+                        My Orders
                       </Link>
                     </li>
                     <li>

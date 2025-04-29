@@ -12,12 +12,9 @@ const categoriesSlice = createSlice({
   name: "categories",
   initialState,
   reducers: {
-    // Set Categories for (server side fetching)
     setCategories: (state, action) => {
-      console.log(action.payload);
       state.categories = action.payload;
     },
-    // Set Filtered Categories after matching from products
     setFilteredCategories: (state, action) => {
       state.filteredCategories = action.payload;
     },

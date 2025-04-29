@@ -11,7 +11,10 @@ import {
 import axiosInstance from "@/config/axios";
 import { CART_URL } from "@/utils/CONSTANTS";
 
-const handleErrorMessage = (error) => {
+//===============================================
+// Handle Error Message
+//===============================================
+export const handleErrorMessage = (error) => {
   if (
     error.response?.data?.errors &&
     Array.isArray(error.response.data.errors)
@@ -21,6 +24,9 @@ const handleErrorMessage = (error) => {
   return error.response?.data?.message || error.message;
 };
 
+//===============================================
+// Add to Cart
+//===============================================
 export const addToCart =
   (item, token = null) =>
   async (dispatch, getState) => {
@@ -29,28 +35,60 @@ export const addToCart =
 
       const { guestId } = getState().cart;
 
+      console.log(
+        "Raw item received in addToCart:",
+        JSON.stringify(item, null, 2)
+      );
+
       const payload = {
         item_id: item.id,
         model: item.model || "Food",
         price: item.price,
-        quantity: item.quantity || 1,
-        variation_options: item.variation_options || [],
-        add_on_ids: item.add_on_ids || [],
-        add_on_qtys: item.add_on_qtys || [],
-        variations: item.variations || [],
+        quantity: parseInt(item.quantity) || 1,
+        variations: [],
       };
+
+      if (
+        Array.isArray(item.variation_options) &&
+        item.variation_options.length > 0
+      ) {
+        console.log("Found variation_options:", item.variation_options);
+        payload.variation_options = [...item.variation_options];
+      } else {
+        console.log("No variation_options found in item");
+        payload.variation_options = [];
+      }
+
+      payload.add_on_ids = Array.isArray(item.add_on_ids)
+        ? [...item.add_on_ids]
+        : [];
+      payload.add_on_qtys = Array.isArray(item.add_on_qtys)
+        ? [...item.add_on_qtys]
+        : [];
 
       if (!token) {
         payload.guest_id = guestId;
+        localStorage.setItem("guest_id", guestId);
+        localStorage.setItem("guestId", guestId);
       }
+
+      console.log(
+        "Final payload for cart add:",
+        JSON.stringify(payload, null, 2)
+      );
 
       const config = token
         ? {
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
-        : {};
+        : {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          };
 
       const response = await axiosInstance.post(
         `${CART_URL}/add`,
@@ -64,10 +102,11 @@ export const addToCart =
           addToast({
             show: true,
             title: "Success",
-            message: "Item added to cart",
+            message: `${payload.quantity} item(s) added to cart`,
             type: "success",
           })
         );
+        return response.data;
       } else {
         throw new Error(response.data.message || "Error adding item to cart");
       }
@@ -82,12 +121,15 @@ export const addToCart =
           type: "error",
         })
       );
+      return { success: false, error: errorMessage };
     } finally {
       dispatch(setCartLoading(false));
     }
   };
 
+//===============================================
 // Cart View
+//===============================================
 export const fetchCartItems =
   (token = null) =>
   async (dispatch, getState) => {
@@ -105,8 +147,46 @@ export const fetchCartItems =
       const response = await axiosInstance.get(url, config);
 
       if (response.status == 200) {
-        // The API returns the cart items directly as an array
-        dispatch(setCartItems(response.data || []));
+        const processedItems = Array.isArray(response.data)
+          ? response.data.map((item) => {
+              let parsedVariations = [];
+              let parsedAddOns = [];
+
+              if (typeof item.variation_options === "string") {
+                try {
+                  parsedVariations = JSON.parse(item.variation_options);
+                  console.log(
+                    "Successfully parsed variation_options:",
+                    parsedVariations
+                  );
+                } catch (e) {
+                  console.error("Error parsing variation_options:", e);
+                }
+              } else if (Array.isArray(item.variation_options)) {
+                parsedVariations = item.variation_options;
+              }
+
+              // Parse add_ons if they exist
+              if (typeof item.add_ons === "string") {
+                try {
+                  parsedAddOns = JSON.parse(item.add_ons);
+                  console.log("Successfully parsed add_ons:", parsedAddOns);
+                } catch (e) {
+                  console.error("Error parsing add_ons:", e);
+                }
+              } else if (Array.isArray(item.add_ons)) {
+                parsedAddOns = item.add_ons;
+              }
+
+              return {
+                ...item,
+                variation_options: parsedVariations,
+                add_ons: parsedAddOns,
+              };
+            })
+          : [];
+
+        dispatch(setCartItems(processedItems));
       } else {
         throw new Error(response.data.message || "Error fetching cart items");
       }
@@ -126,7 +206,9 @@ export const fetchCartItems =
     }
   };
 
+//===============================================
 // Cart Update
+//===============================================
 export const updateCartItemQuantity =
   (item, token = null) =>
   async (dispatch, getState) => {
@@ -134,14 +216,30 @@ export const updateCartItemQuantity =
       dispatch(setCartLoading(true));
 
       const { guestId } = getState().cart;
+      const { cartItems } = getState().cart;
+
+      // Find the current cart item to get its full data
+      const currentItem = cartItems.find(
+        (cartItem) => cartItem.id === item.cart_id
+      );
 
       const payload = {
         cart_id: item.cart_id,
         price: item.price,
         quantity: item.quantity,
-        variation_options: [],
-        add_on_ids: [],
-        add_on_qtys: [],
+        // Include the existing variation_options if available
+        variation_options:
+          currentItem && Array.isArray(currentItem.variation_options)
+            ? currentItem.variation_options
+            : [],
+        add_on_ids:
+          currentItem && Array.isArray(currentItem.add_on_ids)
+            ? currentItem.add_on_ids
+            : [],
+        add_on_qtys:
+          currentItem && Array.isArray(currentItem.add_on_qtys)
+            ? currentItem.add_on_qtys
+            : [],
         variations: [],
       };
 
@@ -164,7 +262,6 @@ export const updateCartItemQuantity =
       );
 
       if (response.status == 200) {
-        // After successful update, refresh the cart
         dispatch(fetchCartItems(token));
       } else {
         throw new Error(response.data.message || "Error updating cart item");
@@ -185,7 +282,9 @@ export const updateCartItemQuantity =
     }
   };
 
+//===============================================
 // Cart Delete Item
+//===============================================
 export const removeItemFromCart =
   (cartId, token = null) =>
   async (dispatch, getState) => {
@@ -243,7 +342,9 @@ export const removeItemFromCart =
     }
   };
 
+//===============================================
 // Cart Clear
+//===============================================
 export const clearCartItems =
   (token = null) =>
   async (dispatch, getState) => {

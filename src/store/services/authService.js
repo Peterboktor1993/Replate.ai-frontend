@@ -3,20 +3,26 @@ import { loginSuccess, logout, updateUser } from "../slices/authSlice";
 import { addToast } from "../slices/toastSlice";
 import { AUTH_URL, API_URL } from "@/utils/CONSTANTS";
 import axiosInstance from "@/config/axios";
+import { regenerateGuestId } from "../slices/cartSlice";
 
-/**
- * Login user
- * @param {Object} credentials - User credentials
- * @returns {Promise<Object>} - Promise with success flag and any data
- */
-export const loginUser = (credentials) => async (dispatch) => {
+//===============================================
+// Login User
+//===============================================
+export const loginUser = (credentials) => async (dispatch, getState) => {
   try {
+    const { guestId } = getState().cart;
+    const hasGuestId = !!guestId;
+
     const payload = {
       email_or_phone: credentials.email,
       password: credentials.password,
       login_type: "manual",
       field_type: "email",
     };
+
+    if (hasGuestId) {
+      payload.guest_id = guestId;
+    }
 
     const response = await axios.post(`${AUTH_URL}/login`, payload, {
       headers: { "X-localization": "en" },
@@ -29,6 +35,13 @@ export const loginUser = (credentials) => async (dispatch) => {
           user: response.data,
         })
       );
+
+      if (hasGuestId) {
+        console.log(`Cleaning up guest ID ${guestId} after successful login`);
+        localStorage.removeItem("guest_id");
+        localStorage.removeItem("guestId");
+        dispatch(regenerateGuestId());
+      }
 
       dispatch(
         addToast({
@@ -67,13 +80,14 @@ export const loginUser = (credentials) => async (dispatch) => {
   }
 };
 
-/**
- * Register user
- * @param {Object} userData - User registration data
- * @returns {Promise<Object>} - Promise with success flag and any data
- */
-export const registerUser = (userData) => async (dispatch) => {
+//===============================================
+// Register User
+//===============================================
+export const registerUser = (userData) => async (dispatch, getState) => {
   try {
+    const { guestId } = getState().cart;
+    const hasGuestId = !!guestId;
+
     const payload = {
       name: `${userData.first_name} ${userData.last_name}`,
       f_name: userData.first_name,
@@ -87,17 +101,33 @@ export const registerUser = (userData) => async (dispatch) => {
       social_id: null,
     };
 
+    if (hasGuestId) {
+      payload.guest_id = guestId;
+    }
+
     const response = await axios.post(`${AUTH_URL}/sign-up`, payload, {
       headers: { "X-localization": "en" },
     });
 
     if (response.data.token) {
+      // Successfully registered
       dispatch(
         loginSuccess({
           token: response.data.token,
           user: response.data,
         })
       );
+
+      // Clean up guest ID data since we're now registered and logged in
+      if (hasGuestId) {
+        console.log(
+          `Cleaning up guest ID ${guestId} after successful registration`
+        );
+        localStorage.removeItem("guest_id");
+        localStorage.removeItem("guestId");
+        // Generate a new guest ID for future guest sessions if needed
+        dispatch(regenerateGuestId());
+      }
 
       dispatch(
         addToast({
@@ -139,10 +169,17 @@ export const registerUser = (userData) => async (dispatch) => {
   }
 };
 
-
+//===============================================
+// Logout User
+//===============================================
 export const logoutUser = () => async (dispatch) => {
   try {
+    // First log the user out
     dispatch(logout());
+
+    // Generate a new guest ID for the new guest session
+    dispatch(regenerateGuestId());
+
     dispatch(
       addToast({
         type: "success",
@@ -163,6 +200,9 @@ export const logoutUser = () => async (dispatch) => {
   }
 };
 
+//===============================================
+// Get User Profile
+//===============================================
 export const getUserProfile = (token) => async (dispatch) => {
   try {
     const response = await axiosInstance.get(`${API_URL}/customer/info`, {
@@ -216,6 +256,9 @@ export const getUserProfile = (token) => async (dispatch) => {
   }
 };
 
+//===============================================
+// Update User Profile
+//===============================================
 export const updateUserProfile = (token, userData) => async (dispatch) => {
   try {
     const formPayload = new FormData();
@@ -272,6 +315,9 @@ export const updateUserProfile = (token, userData) => async (dispatch) => {
   }
 };
 
+//===============================================
+// Get User Addresses
+//===============================================
 export const getUserAddresses = (token) => async (dispatch) => {
   try {
     const response = await axiosInstance.get(
@@ -318,6 +364,9 @@ export const getUserAddresses = (token) => async (dispatch) => {
   }
 };
 
+//===============================================
+// Add User Address
+//===============================================
 export const addUserAddress = (token, addressData) => async (dispatch) => {
   try {
     const response = await axiosInstance.post(
@@ -364,6 +413,9 @@ export const addUserAddress = (token, addressData) => async (dispatch) => {
   }
 };
 
+//===============================================
+// Update User Address
+//===============================================
 export const updateUserAddress =
   (token, addressId, addressData) => async (dispatch) => {
     try {
@@ -411,6 +463,9 @@ export const updateUserAddress =
     }
   };
 
+//===============================================
+// Delete User Address
+//===============================================
 export const deleteUserAddress = (token, addressId) => async (dispatch) => {
   try {
     const response = await axiosInstance.delete(
@@ -459,6 +514,9 @@ export const deleteUserAddress = (token, addressId) => async (dispatch) => {
   }
 };
 
+//===============================================
+// Remove User Account
+//===============================================
 export const removeUserAccount = (token) => async (dispatch) => {
   try {
     const response = await axiosInstance.post(
