@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { uid } = await request.json();
+  const { invoicenumber } = await request.json();
 
-  if (!uid) {
+  if (!invoicenumber) {
     return NextResponse.json(
-      { success: false, message: "Missing transaction UID" },
+      { success: false, message: "Missing invoice number" },
       { status: 400 }
     );
   }
@@ -13,11 +13,9 @@ export async function POST(request) {
   const appId = process.env.VALOR_APP_ID;
   const appKey = process.env.VALOR_APP_KEY;
   const valorTransactionListUrl = process.env.VALOR_TRANSACTION_LIST_URL;
+  const epi = process.env.VALOR_EPI;
 
-  if (!appId || !appKey || !valorTransactionListUrl) {
-    console.error(
-      "Valor environment variables not configured for verification."
-    );
+  if (!appId || !appKey || !epi || !valorTransactionListUrl) {
     return NextResponse.json(
       { success: false, message: "Server configuration error" },
       { status: 500 }
@@ -27,88 +25,74 @@ export async function POST(request) {
   const payload = {
     appid: appId,
     appkey: appKey,
-    uid: uid,
+    epi: epi,
+    txn_type: "txnfetch",
+    date_filter: 0,
+    source: 0,
+    transaction_type: 0,
+    card_type: 0,
+    transaction_status: "ALL",
+    devices: "0",
+    processor: "0",
+    limit: 200,
+    offset: 0,
+    offline_mode: 0,
+    version: 2,
+    epi_filter: false,
   };
 
   try {
     const valorResponse = await fetch(valorTransactionListUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
     if (!valorResponse.ok) {
       const errorText = await valorResponse.text();
-      console.error(
-        `Valor Verification API Error (${valorResponse.status}): ${errorText}`
-      );
-      // Consider NOT deleting temporary order here, maybe retry later?
       return NextResponse.json(
-        {
-          success: false,
-          message: "Failed to verify transaction with Valor",
-          details: errorText,
-        },
+        { success: false, message: "Valor API Error", details: errorText },
         { status: valorResponse.status }
       );
     }
 
     const result = await valorResponse.json();
+    const transactionList = result.data || [];
 
-    // Check Valor's response structure for success/failure
-    if (
-      result.error_no === "S00" &&
-      (result.status === "approved" || result.status === "captured")
-    ) {
-      console.log(
-        `Valor transaction verified: UID=${uid}, Status=${result.status}`
-      );
+    const matchingTxn = transactionList.find(
+      (txn) => txn.INVOICE_NO === invoicenumber
+    );
 
-      // --- IMPORTANT: Finalize Order --- //
-      // 1. Retrieve the temporarily stored order details using UID
-      // const orderDetails = await getTemporaryOrder(uid);
-      // if (!orderDetails) {
-      //   console.error(`Could not find temporary order for UID: ${uid}`);
-      //   return NextResponse.json({ success: false, message: 'Order details not found for verification' }, { status: 500 });
-      // }
-
-      // 2. Place the actual order in your system
-      // try {
-      //   const finalOrder = await finalizeOrder(orderDetails); // Your actual order placement function
-      //   console.log(`Order ${finalOrder.id} created successfully after verification.`);
-      // } catch (orderError) {
-      //    console.error(`Failed to place final order for UID: ${uid}`, orderError);
-      // Decide how to handle this critical error - maybe retry, notify admin?
-      //    return NextResponse.json({ success: false, message: 'Payment verified but order creation failed.' }, { status: 500 });
-      // }
-
-      // 3. Clean up temporary storage
-      // await deleteTemporaryOrder(uid);
-      // ----------------------------------- //
-
-      return NextResponse.json({ success: true, status: result.status });
-    } else {
-      console.warn(
-        `Valor transaction verification failed or declined: UID=${uid}`,
-        result
-      );
-      // Clean up temporary storage for failed/declined transactions
-      // await deleteTemporaryOrder(uid);
+    if (!matchingTxn) {
       return NextResponse.json(
-        {
-          success: false,
-          status: result.status || "failed",
-          message: result.message || "Payment was not approved",
-        },
-        { status: 400 }
+        { success: false, message: "Transaction not found for this invoice" },
+        { status: 404 }
       );
     }
+
+    const approvedStatuses = ["SALE"];
+    const isApproved =
+      matchingTxn.RESPONSE_CODE === "00" &&
+      approvedStatuses.includes(matchingTxn.TXN_TYPE) &&
+      matchingTxn.IS_VOID !== "1";
+
+    if (isApproved) {
+      return NextResponse.json({
+        success: true,
+        message: "Transaction approved",
+        transaction: matchingTxn,
+      });
+    } else {
+      return NextResponse.json({
+        success: false,
+        message: "Transaction not approved",
+        transaction: matchingTxn,
+      });
+    }
   } catch (error) {
-    console.error("Error calling Valor Transaction List API:", error);
+    console.error("Error verifying transaction:", error);
     return NextResponse.json(
-      { success: false, message: "Internal Server Error during verification" },
+      { success: false, message: "Internal Server Error" },
       { status: 500 }
     );
   }

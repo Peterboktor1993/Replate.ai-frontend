@@ -67,7 +67,7 @@ const CategorySlider = ({ categories }) => {
             },
           }}
         >
-          {categories.map((category) => (
+          {categories?.map((category) => (
             <SwiperSlide
               key={category.id}
               className="text-center border rounded py-2"

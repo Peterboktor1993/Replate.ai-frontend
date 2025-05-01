@@ -5,13 +5,19 @@ import "swiper/css";
 import Script from "next/script";
 import ThemeContextProvider from "@/context/ThemeContext";
 import AppShell from "@/components/layout/AppShell";
+import { getRestaurantDetailsServer } from "@/store/services/restaurantService";
+import { headers } from "next/headers";
 
-export const metadata = {
-  title: "Cravio AI",
-  description: "A food application",
-};
+export default async function RootLayout({ children }) {
+  const headersList = headers();
+  const searchParams = Object.fromEntries(
+    new URLSearchParams(headersList.get("searchParams") || "")
+  );
+  const restaurantId = searchParams?.restaurant || "2";
 
-export default function RootLayout({ children }) {
+  console.log("[RootLayout restaurantId]", restaurantId);
+  const restaurant = await getRestaurantDetailsServer(restaurantId);
+  console.log("[RootLayout restaurant]", restaurant);
   return (
     <html lang="en">
       <head>
@@ -25,10 +31,24 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content={restaurant?.meta_description} />
+        <meta
+          name="title"
+          content={restaurant?.meta_title || restaurant?.name}
+        />
+        <meta name="keywords" content={restaurant?.tags} />
+        <meta name="author" content={restaurant?.author} />
+        <meta
+          name="name"
+          content={restaurant?.name || restaurant?.meta_title}
+        />
+        <title>{restaurant?.name}</title>
+        <link rel="icon" href={restaurant?.logo_full_url} />
       </head>
       <body>
         <ThemeContextProvider>
-          <AppShell>{children}</AppShell>
+          <AppShell details={restaurant}>{children}</AppShell>
         </ThemeContextProvider>
         <Script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

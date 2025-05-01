@@ -6,20 +6,22 @@ import dynamic from "next/dynamic";
 import { Provider } from "react-redux";
 import store from "@/store/store";
 import Toast from "../common/Toast";
+import RouterListener from "../RouterListener";
 
 const Header = dynamic(() => import("@/components/layout/Header"));
 const Footer = dynamic(() => import("@/components/layout/Footer"));
 
-const AppShell = ({ children }) => {
+const AppShell = ({ children, details }) => {
   return (
     <ClientOnly>
       <Provider store={store}>
         <div className="d-flex flex-column min-vh-100">
-          <Header />
+          <RouterListener />
+          <Header details={details} />
           <main className="flex-grow-1 py-4">
             <div className="container-fluid px-4 px-md-5">{children}</div>
           </main>
-          <Footer />
+          <Footer details={details} />
         </div>
         <Toast />
       </Provider>

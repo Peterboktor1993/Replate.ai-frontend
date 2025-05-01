@@ -1,6 +1,5 @@
 "use client";
 import { useContext, useEffect, useState, useRef } from "react";
-import Link from "next/link";
 
 //Import Components
 import { ThemeContext } from "@/context/ThemeContext";
@@ -12,8 +11,10 @@ import AddNoteModal from "./mini/AddNoteModal";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { setProducts } from "@/store/slices/productSlice";
-import { setCategories } from "@/store/slices/categoriesSlice";
-import { filterCategoriesByProducts } from "@/store/services/categoriesService";
+import {
+  setCategories,
+  setFilteredCategories,
+} from "@/store/slices/categoriesSlice";
 import AuthModals from "@/components/auth/AuthModals";
 import {
   fetchCartItems,
@@ -24,10 +25,11 @@ import {
 
 import { getOrderList } from "@/store/services/orderService";
 import CartSidebar from "./CartSidebar";
+import { filterCategoriesByProducts } from "@/utils/utils";
 
 const BannerPic = "/images/banner-img/pic-2.jpg";
 
-const Home = ({ className, initialProducts, initialCategories }) => {
+const Home = ({ className, initialProducts, initialCategories, restaurantId }) => {
   const [dropSelect, setDropSelect] = useState("Other");
   const { changeBackground } = useContext(ThemeContext);
   const [detailsModal, setDetailsModal] = useState(false);
@@ -48,6 +50,8 @@ const Home = ({ className, initialProducts, initialCategories }) => {
     loading: cartLoading,
     guestId,
   } = useSelector((state) => state.cart);
+
+  
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
@@ -58,8 +62,12 @@ const Home = ({ className, initialProducts, initialCategories }) => {
   useEffect(() => {
     dispatch(setProducts(initialProducts));
     dispatch(setCategories(initialCategories));
-    dispatch(filterCategoriesByProducts(initialProducts));
-  }, [products, initialProducts, initialCategories]);
+    const filtered = filterCategoriesByProducts(
+      initialProducts,
+      initialCategories
+    );
+    dispatch(setFilteredCategories(filtered));
+  }, [initialProducts, initialCategories]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -199,6 +207,7 @@ const Home = ({ className, initialProducts, initialCategories }) => {
             calculateTotal={calculateTotal}
             recentOrders={recentOrders}
             BannerPic={BannerPic}
+            restaurantId={restaurantId}
           />
         </div>
       </div>

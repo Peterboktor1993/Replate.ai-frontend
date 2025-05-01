@@ -7,12 +7,15 @@ import AuthModals from "@/components/auth/AuthModals";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { logout } from "@/store/slices/authSlice";
+import SafeImage from "../common/SafeImage";
 
-const Header = () => {
+const Header = ({ details }) => {
   const { background, changeBackground } = useContext(ThemeContext);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-
+  // const { details } = useSelector(
+  //   (state) => state.restaurant.currentRestaurant
+  // );
   const { token, user } = useSelector((state) => state.auth || {});
   const dispatch = useDispatch();
 
@@ -54,7 +57,6 @@ const Header = () => {
   const handleLogout = () => {
     dispatch(logout());
   };
-
   return (
     <>
       <header
@@ -68,14 +70,18 @@ const Header = () => {
             <div className="d-flex align-items-center">
               <Link href="/" className="logo">
                 <div className="d-flex align-items-center">
-                  {/* <Image
-                    src={logoUrl}
-                    alt="Logo"
-                    width={45}
-                    height={45}
-                    className="me-2"
-                  /> */}
-                  <h2 className="m-0 text-primary fw-bold">Cravio</h2>
+                  {details?.logo_full_url && (
+                    <SafeImage
+                      src={details?.logo_full_url}
+                      alt={details?.name}
+                      width={45}
+                      height={45}
+                      className="me-2"
+                    />
+                  )}
+                  <h2 className="m-0 text-primary fw-bold">
+                    {details?.name || "Cravio"}
+                  </h2>
                 </div>
               </Link>
 

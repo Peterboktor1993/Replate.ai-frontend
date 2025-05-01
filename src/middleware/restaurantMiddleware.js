@@ -4,69 +4,42 @@ import {
   setRestaurantLoading,
   setRestaurantError,
 } from "@/store/slices/restaurantSlice";
-import store from "@/store/store";
 import axios from "axios";
 
-const fetchRestaurantDetails = async (restaurantId) => {
+const fetchRestaurantDetails = async (restaurantId, dispatch) => {
   try {
-    store.dispatch(setRestaurantLoading());
+    dispatch(setRestaurantLoading());
     const response = await axios.get(
       `https://diggitsy.com/replate/api/v1/restaurants/details/${restaurantId}`
     );
-    console.log(response.data);
-    store.dispatch(setRestaurantDetails(response.data));
+
+    if (response.data) {
+      const restaurantData = {
+        ...response.data,
+        id: restaurantId,
+      };
+      console.log("[dispatching]", response.data);
+      dispatch(setRestaurantDetails(restaurantData));
+      dispatch(setRestaurantId(response.data.id));
+    } else {
+      dispatch(setRestaurantError("No restaurant data received"));
+    }
   } catch (error) {
-    store.dispatch(setRestaurantError(error.message));
+    console.error("Error fetching restaurant details:", error);
+    dispatch(setRestaurantError(error.message));
   }
 };
 
+export const handleRouteChange = async (restaurantId, dispatch) => {
+  console.log("handleRouteChange: Setting restaurant ID to", restaurantId);
+  const numericId = parseInt(restaurantId, 10);
+
+  dispatch(setRestaurantId(numericId));
+
+  await fetchRestaurantDetails(numericId, dispatch);
+};
+
 const restaurantMiddleware = () => (next) => (action) => {
-  if (action.type === "@@router/LOCATION_CHANGE") {
-    const { pathname, search } = action.payload.location;
-    const params = new URLSearchParams(search);
-    let restaurantId = params.get("restaurant");
-
-    if (!restaurantId) {
-      restaurantId = "2";
-      const newSearch = new URLSearchParams(search);
-      newSearch.set("restaurant", restaurantId);
-      window.history.replaceState(
-        {},
-        "",
-        `${pathname}?${newSearch.toString()}`
-      );
-    }
-
-    const numericRestaurantId = parseInt(restaurantId, 10);
-    store.dispatch(setRestaurantId(numericRestaurantId));
-
-    // Check if we need to fetch restaurant details
-    const currentState = store.getState();
-    const currentDetails = currentState.restaurant.currentRestaurant.details;
-
-    if (!currentDetails || currentDetails.id !== numericRestaurantId) {
-      fetchRestaurantDetails(numericRestaurantId);
-    }
-  }
-
-  // Handle programmatic navigation
-  if (action.type === "@@router/CALL_HISTORY_METHOD") {
-    const { method, args } = action.payload;
-    if (method === "push" || method === "replace") {
-      const [path, state] = args;
-      const url = new URL(path, window.location.origin);
-      let restaurantId = url.searchParams.get("restaurant");
-
-      // If no restaurant parameter, add it
-      if (!restaurantId) {
-        restaurantId = "2";
-        url.searchParams.set("restaurant", restaurantId);
-        const newPath = `${url.pathname}${url.search}`;
-        action.payload.args = [newPath, state];
-      }
-    }
-  }
-
   return next(action);
 };
 

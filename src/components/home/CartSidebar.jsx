@@ -4,6 +4,7 @@ import {
   getCurrentRestaurantId,
   getLinkWithRestaurant,
 } from "@/utils/restaurantUtils";
+import { useSearchParams } from "next/navigation";
 
 const CartSidebar = ({
   checkoutRef,
@@ -18,8 +19,9 @@ const CartSidebar = ({
   calculateTotal,
   recentOrders,
   BannerPic,
+  restaurantId,
 }) => {
-  const restaurantId = getCurrentRestaurantId();
+  const restaurant_id = useSearchParams().get("restaurant") || restaurantId;
 
   return (
     <div className="row mx-0">
@@ -231,7 +233,7 @@ const CartSidebar = ({
                 <div className="recent-orders-list">
                   {recentOrders.map((order) => (
                     <Link
-                      href={getLinkWithRestaurant(`/orders/${order.id}`)}
+                      href={getLinkWithRestaurant(`/orders/${order.id}`, restaurant_id)}
                       key={order.id}
                       className="d-flex align-items-center justify-content-between p-2 mb-1 border rounded"
                     >
@@ -265,7 +267,7 @@ const CartSidebar = ({
             )}
             {token ? (
               <Link
-                href={getLinkWithRestaurant("/orders")}
+                href={getLinkWithRestaurant("/orders", restaurant_id)}
                 className="btn btn-outline-primary btn-block mb-2"
               >
                 <i className="fa-solid fa-shopping-bag me-1"></i> View My Orders
@@ -277,7 +279,7 @@ const CartSidebar = ({
                   <>
                     Your orders are saved to this device.{" "}
                     <Link
-                      href={getLinkWithRestaurant("/login")}
+                      href={getLinkWithRestaurant("/login", restaurant_id)}
                       className="fw-bold"
                     >
                       Sign in
@@ -290,7 +292,7 @@ const CartSidebar = ({
               </div>
             )}
             <Link
-              href={getLinkWithRestaurant("/checkout")}
+              href={getLinkWithRestaurant("/checkout", restaurant_id)}
               className="btn btn-primary btn-block"
             >
               <i className="fa-solid fa-check-circle me-1"></i> Checkout

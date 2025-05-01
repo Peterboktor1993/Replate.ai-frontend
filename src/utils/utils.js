@@ -28,3 +28,21 @@ export const getFilteredCategories = (categories, products) => {
 
   return result;
 };
+
+//===============================================
+// Filter Categories By Products (Client Side)
+//===============================================
+export function filterCategoriesByProducts(products, allCategories) {
+  const categoryIdSet = new Set();
+
+  products.forEach((product) => {
+    product.category_ids?.forEach((cat) => {
+      if (cat?.id) {
+        categoryIdSet.add(parseInt(cat.id));
+      }
+    });
+  });
+
+  const filtered = allCategories.filter((cat) => categoryIdSet.has(cat.id));
+  return filtered;
+}

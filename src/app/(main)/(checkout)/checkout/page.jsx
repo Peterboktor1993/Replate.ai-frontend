@@ -1,17 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import swal from "sweetalert";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
-import { placeOrder } from "@/store/services/orderService";
 import { addToast } from "@/store/slices/toastSlice";
-import { RESTURANT_ID } from "@/utils/CONSTANTS";
 import "react-datepicker/dist/react-datepicker.css";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
 // Import components
-import ContactInformation from "@/components/checkout/ContactInformation";
 import DeliveryOptions from "@/components/checkout/DeliveryOptions";
 import AddressSection from "@/components/checkout/AddressSection";
 import AddAddressModal from "@/components/checkout/AddAddressModal";
@@ -38,7 +35,7 @@ const CheckoutPage = () => {
   const { token, user } = useSelector(
     (state) => state.auth || { token: null, user: null }
   );
-
+  const restaurant = useSearchParams().get("restaurant");
   const [tipPercentage, setTipPercentage] = useState(10);
   const [customTip, setCustomTip] = useState(false);
   const [customTipAmount, setCustomTipAmount] = useState(0);
@@ -108,6 +105,7 @@ const CheckoutPage = () => {
   useEffect(() => {
     try {
       const reorderInfoString = localStorage.getItem("reorder_delivery_info");
+      const initialValues = getInitialValues();
       if (reorderInfoString) {
         const reorderInfo = JSON.parse(reorderInfoString);
 
@@ -370,7 +368,6 @@ const CheckoutPage = () => {
     }
   };
 
-  // Compute initial values from user, reorder, and address state
   const getInitialValues = () => {
     let values = {
       firstName: user?.f_name || "",
@@ -427,6 +424,7 @@ const CheckoutPage = () => {
         amount: calculateTotal().toFixed(2),
         invoicenumber: `INV-${Date.now()}`,
         customer_name: `${values.firstName} ${values.lastName}`,
+        restaurant_id: restaurant,
       };
 
       const response = await fetch("/api/valor/create-session", {
@@ -441,7 +439,9 @@ const CheckoutPage = () => {
         sessionStorage.setItem("payment_uid", result.uid);
         sessionStorage.setItem("payment_amount", result.amount);
         sessionStorage.setItem("payment_invoice", result.invoicenumber);
-
+        sessionStorage.setItem("checkout_order_data", JSON.stringify(values));
+        sessionStorage.setItem("restaurant", restaurant);
+        sessionStorage.setItem("token", token);
         router.push(result.url);
       } else {
         swal({

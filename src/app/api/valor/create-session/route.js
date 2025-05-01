@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { amount, invoicenumber, customer_name } = await request.json();
+  const { amount, invoicenumber, customer_name, restaurant_id } =
+    await request.json();
 
   if (!amount || !invoicenumber || !customer_name) {
     return NextResponse.json(
@@ -24,8 +25,8 @@ export async function POST(request) {
     );
   }
 
-  const successUrl = `${siteUrl}/checkout-success`;
-  const failureUrl = `${siteUrl}/checkout-failure`;
+  const successUrl = `${siteUrl}/checkout-success?restaurant=${restaurant_id}`;
+  const failureUrl = `${siteUrl}/checkout-failure?restaurant=${restaurant_id}`;
 
   const payload = {
     appid: appId,
@@ -67,11 +68,7 @@ export async function POST(request) {
     if (result.error_no === "S00" && result.url) {
       console.log("Valor session created. URL:", result.url);
 
-      // Extract UID manually from URL
-      const urlObj = new URL(result.url);
-      const uid = urlObj.searchParams.get("uid");
-
-      console.log(`Extracted UID: ${uid}`);
+      const uid = result.uid;
 
       if (!uid) {
         return NextResponse.json(

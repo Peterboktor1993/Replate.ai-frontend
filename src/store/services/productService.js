@@ -28,15 +28,14 @@ export const getAllProducts = createAsyncThunk(
 //===============================================
 // Get All Products (Server Side)
 //===============================================
-export async function getAllProductsServer() {
+export async function getAllProductsServer(restaurantId) {
   try {
-    const currentRestaurantId = getCurrentRestaurantId();
     const response = await fetch(`${PRODUCT_URL}/search`, {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         zoneId: `[${ZONE_ID}]`,
-        restaurant_id: `[${currentRestaurantId}]`,
+        restaurant_id: `[${restaurantId}]`,
       },
       cache: "no-store",
     });

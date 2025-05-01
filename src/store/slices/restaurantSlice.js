@@ -14,9 +14,12 @@ const restaurantSlice = createSlice({
   initialState,
   reducers: {
     setRestaurantDetails: (state, action) => {
-      state.currentRestaurant.details = action.payload;
-      state.currentRestaurant.loading = false;
-      state.currentRestaurant.error = null;
+      state.currentRestaurant = {
+        ...state.currentRestaurant,
+        details: action.payload,
+        loading: false,
+        error: null,
+      };
     },
     setRestaurantLoading: (state) => {
       state.currentRestaurant.loading = true;

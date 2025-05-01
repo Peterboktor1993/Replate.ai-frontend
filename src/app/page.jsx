@@ -1,11 +1,29 @@
 import Home from "@/components/home/Home";
-import { getAllProductsServer } from "@/store/services/productService";
 import { getAllCategoriesServer } from "@/store/services/categoriesService";
-async function HomePage() {
-  const { products, error: productsError } = await getAllProductsServer();
-  const { categories, error: categoriesError } = await getAllCategoriesServer();
+import { getAllProductsServer } from "@/store/services/productService";
 
-  return <Home initialProducts={products} initialCategories={categories} />;
+export default async function HomePage({ searchParams }) {
+  const restaurantId = (await searchParams)?.restaurant || "2";
+
+  const [productsData, categoriesData] = await Promise.all([
+    getAllProductsServer(restaurantId),
+    getAllCategoriesServer(),
+  ]);
+
+  const initialProducts = Array.isArray(productsData?.products)
+    ? productsData.products
+    : [];
+  const initialCategories = Array.isArray(categoriesData?.categories)
+    ? categoriesData.categories
+    : [];
+
+  return (
+    <div>
+      <Home
+        initialProducts={initialProducts}
+        initialCategories={initialCategories}
+        restaurantId={restaurantId}
+      />
+    </div>
+  );
 }
-
-export default HomePage;
