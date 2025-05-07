@@ -1,16 +1,58 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import StarRating from "@/components/common/StarRating";
 import ProductDetailsModal from "./ProductDetailsModal";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/store/services/cartService";
+import { getAllProducts, getAllProductsServer } from "@/store/services/productService";
 
-const PopularDishesGrid = ({ products }) => {
+const PopularDishesSlider = ({
+  products: initialProducts,
+  restaurantId = "2",
+}) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [products, setProducts] = useState(initialProducts || []);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(2);
+  const observer = useRef();
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth || { token: null });
+
+  const lastProductElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMoreProducts();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
+
+  const loadMoreProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllProducts(restaurantId, 20, offset);
+      const newProducts = response.products || [];
+
+      if (newProducts.length === 0) {
+        setHasMore(false);
+      } else {
+        setProducts((prevProducts) => [...prevProducts, ...newProducts]);
+        setOffset((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error loading more products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const openProductModal = (product) => {
     setSelectedProduct(product);
@@ -41,12 +83,13 @@ const PopularDishesGrid = ({ products }) => {
   return (
     <>
       <div className="popular-dishes-grid row g-3">
-        {products.map((product) => (
+        {products.map((product, index) => (
           <div
             key={product.id}
             className="col-6 col-sm-4 col-md-3 col-lg-2"
             onClick={() => openProductModal(product)}
             style={{ cursor: "pointer" }}
+            ref={index === products.length - 1 ? lastProductElementRef : null}
           >
             <div className="card product-card border rounded shadow-sm h-100">
               {/* <div className="card-header border-0 pb-0 pt-3 pe-3 bg-transparent d-flex justify-content-between">
@@ -97,6 +140,14 @@ const PopularDishesGrid = ({ products }) => {
           </div>
         ))}
       </div>
+
+      {loading && (
+        <div className="text-center mt-3">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
 
       <ProductDetailsModal
         show={showModal}
@@ -151,4 +202,4 @@ const PopularDishesGrid = ({ products }) => {
   );
 };
 
-export default PopularDishesGrid;
+export default PopularDishesSlider;

@@ -10,6 +10,49 @@ const CheckoutFailureContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useDispatch();
+  const [isPopup, setIsPopup] = useState(false);
+
+  // Detect if we're in a popup window
+  useEffect(() => {
+    if (window.opener && window.opener !== window) {
+      setIsPopup(true);
+
+      // Handle the case when the window is manually closed
+      window.addEventListener("beforeunload", () => {
+        try {
+          window.opener.postMessage(
+            {
+              status: "error",
+              message: "Payment window closed",
+            },
+            "*"
+          );
+        } catch (error) {
+          // Silent catch
+        }
+      });
+    }
+  }, []);
+
+  // Handle closing the popup window and notifying the parent
+  const handleCloseWindow = () => {
+    if (isPopup) {
+      try {
+        window.opener.postMessage(
+          {
+            status: "failed",
+            message: message || "Payment failed",
+          },
+          "*"
+        );
+      } catch (error) {
+        console.error("Error communicating with parent window:", error);
+      }
+      window.close();
+    } else {
+      router.push("/checkout");
+    }
+  };
 
   useEffect(() => {
     const handleFailure = async () => {
@@ -20,14 +63,33 @@ const CheckoutFailureContent = () => {
         setMessage(failureReason);
         setStatus("error");
 
-        dispatch(
-          addToast({
-            show: true,
-            title: "Payment Failed",
-            message: "Your payment could not be processed. Please try again.",
-            type: "error",
-          })
-        );
+        // If in a popup window, notify parent window of failure
+        if (isPopup) {
+          try {
+            window.opener.postMessage(
+              {
+                status: "failed",
+                message: failureReason,
+              },
+              "*"
+            );
+
+            // Auto-close after a short delay
+            setTimeout(() => window.close(), 3000);
+          } catch (error) {
+            console.error("Error communicating with parent window:", error);
+          }
+        } else {
+          // Only show toast in main window
+          dispatch(
+            addToast({
+              show: true,
+              title: "Payment Failed",
+              message: "Your payment could not be processed. Please try again.",
+              type: "error",
+            })
+          );
+        }
 
         sessionStorage.removeItem("payment_uid");
         sessionStorage.removeItem("payment_amount");
@@ -40,7 +102,7 @@ const CheckoutFailureContent = () => {
     };
 
     handleFailure();
-  }, [searchParams, dispatch]);
+  }, [searchParams, dispatch, isPopup]);
 
   if (status === "loading") {
     return (
@@ -48,6 +110,38 @@ const CheckoutFailureContent = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Processing payment status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show simplified UI for popup window
+  if (isPopup) {
+    return (
+      <div className="d-flex align-items-center justify-content-center min-vh-100">
+        <div className="text-center">
+          <div className="mb-4">
+            <div
+              className="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center"
+              style={{ width: "60px", height: "60px" }}
+            >
+              <i
+                className="bi bi-x-circle-fill text-danger"
+                style={{ fontSize: "2rem" }}
+              ></i>
+            </div>
+          </div>
+          <h4 className="mb-3">Payment Failed</h4>
+          <p className="text-muted mb-3">{message}</p>
+          <p className="small text-muted mb-3">
+            This window will close automatically...
+          </p>
+          <button
+            onClick={handleCloseWindow}
+            className="btn btn-sm btn-danger px-3 py-1"
+          >
+            Close Window
+          </button>
         </div>
       </div>
     );

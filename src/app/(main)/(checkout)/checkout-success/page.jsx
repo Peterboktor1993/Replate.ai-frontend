@@ -15,6 +15,65 @@ const CheckoutSuccessContent = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const restaurant = useSearchParams().get("restaurant");
+
+  // Check if this page is running in a popup window
+  const [isPopup, setIsPopup] = useState(false);
+
+  useEffect(() => {
+    if (window.opener && window.opener !== window) {
+      setIsPopup(true);
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("error") || params.has("unauthorized")) {
+        try {
+          window.opener.postMessage(
+            {
+              status: "error",
+              message: "Payment verification failed. Please try again.",
+            },
+            "*"
+          );
+
+          setTimeout(() => window.close(), 2000);
+        } catch (error) {
+          console.error("Error communicating with parent window:", error);
+        }
+      }
+
+      window.addEventListener("beforeunload", () => {
+        try {
+          window.opener.postMessage(
+            {
+              status: "closed",
+              message: "Payment window closed",
+            },
+            "*"
+          );
+        } catch (error) {
+        }
+      });
+    }
+  }, []);
+
+  const handleCloseWindow = () => {
+    if (isPopup) {
+      try {
+        window.opener.postMessage(
+          {
+            status: window.location.href.includes("checkout-success")
+              ? "success"
+              : "error",
+            message: "Window closed by user",
+          },
+          "*"
+        );
+      } catch (error) {
+        console.error("Error sending message to parent window:", error);
+      }
+      window.close();
+    }
+  };
+
   useEffect(() => {
     const verifyAndPlaceOrder = async () => {
       try {
@@ -85,17 +144,55 @@ const CheckoutSuccessContent = () => {
             setStatus("success");
             setMessage("Payment successful! Your order has been placed.");
 
-            dispatch(
-              addToast({
-                show: true,
-                title: "Payment Successful",
-                message: "Your order has been placed successfully!",
-                type: "success",
-              })
-            );
+            // If this is a popup window, communicate success to parent and close
+            if (isPopup) {
+              try {
+                // Send success message to parent window
+                window.opener.postMessage(
+                  {
+                    status: "success",
+                    message: "Payment completed successfully",
+                    orderId: result.orderId || result.id || null,
+                  },
+                  "*"
+                );
+
+                // Give the message time to be processed before closing
+                setTimeout(() => {
+                  window.close();
+                }, 1000);
+              } catch (error) {
+                console.error("Error communicating with parent window:", error);
+              }
+            } else {
+              // Normal flow for non-popup windows
+              dispatch(
+                addToast({
+                  show: true,
+                  title: "Payment Successful",
+                  message: "Your order has been placed successfully!",
+                  type: "success",
+                })
+              );
+            }
           } else {
             setStatus("error");
             setMessage(result.error || "Order placement failed.");
+
+            // If in popup, also communicate the error
+            if (isPopup) {
+              try {
+                window.opener.postMessage(
+                  {
+                    status: "error",
+                    message: result.error || "Order placement failed.",
+                  },
+                  "*"
+                );
+              } catch (error) {
+                console.error("Error communicating with parent window:", error);
+              }
+            }
           }
         }
       } catch (error) {
@@ -104,12 +201,87 @@ const CheckoutSuccessContent = () => {
         setMessage(
           "An error occurred while verifying your payment or placing the order."
         );
+
+        // If in popup, also communicate the error
+        if (isPopup) {
+          try {
+            window.opener.postMessage(
+              {
+                status: "error",
+                message: "An error occurred while verifying your payment.",
+              },
+              "*"
+            );
+          } catch (error) {
+            console.error("Error communicating with parent window:", error);
+          }
+        }
       }
     };
 
     verifyAndPlaceOrder();
-  }, [searchParams, router, dispatch]);
+  }, [searchParams, router, dispatch, isPopup, restaurant]);
 
+  // If we're in popup, show a simplified UI
+  if (isPopup) {
+    return (
+      <div className="d-flex align-items-center justify-content-center min-vh-100">
+        <div className="text-center">
+          {status === "loading" ? (
+            <>
+              <div className="spinner-border text-primary mb-3" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="text-muted">Processing your payment...</p>
+            </>
+          ) : status === "success" ? (
+            <>
+              <div className="mb-4">
+                <div
+                  className="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center"
+                  style={{ width: "60px", height: "60px" }}
+                >
+                  <i
+                    className="bi bi-check-circle-fill text-success"
+                    style={{ fontSize: "2rem" }}
+                  ></i>
+                </div>
+              </div>
+              <h4 className="mb-3">Success!</h4>
+              <p className="text-muted mb-2">{message}</p>
+              <p className="small text-muted">
+                This window will close automatically...
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="mb-4">
+                <div
+                  className="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center"
+                  style={{ width: "60px", height: "60px" }}
+                >
+                  <i
+                    className="bi bi-x-circle-fill text-danger"
+                    style={{ fontSize: "2rem" }}
+                  ></i>
+                </div>
+              </div>
+              <h4 className="mb-3">Error</h4>
+              <p className="text-muted mb-2">{message}</p>
+              <button
+                onClick={handleCloseWindow}
+                className="btn btn-sm btn-primary px-3 py-1"
+              >
+                Close Window
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Regular non-popup UI
   if (status === "loading") {
     return (
       <div className="d-flex align-items-center justify-content-center min-vh-100">

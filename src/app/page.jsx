@@ -6,7 +6,7 @@ export default async function HomePage({ searchParams }) {
   const restaurantId = (await searchParams)?.restaurant || "2";
 
   const [productsData, categoriesData] = await Promise.all([
-    getAllProductsServer(restaurantId),
+    getAllProductsServer(restaurantId, 20, 1),
     getAllCategoriesServer(),
   ]);
 

@@ -51,7 +51,6 @@ const Home = ({ className, initialProducts, initialCategories, restaurantId }) =
     guestId,
   } = useSelector((state) => state.cart);
 
-  
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
@@ -180,7 +179,10 @@ const Home = ({ className, initialProducts, initialCategories, restaurantId }) =
               <div className="d-flex align-items-center justify-content-between mb-3 px-1">
                 <h4 className="mb-0 cate-title">Popular Dishes</h4>
               </div>
-              <PopularDishesSlider products={products} />
+              <PopularDishesSlider
+                products={products}
+                restaurantId={restaurantId}
+              />
             </div>
             {/* <div className="col-xl-12">
               <div className="d-flex align-items-center justify-content-between mb-2">

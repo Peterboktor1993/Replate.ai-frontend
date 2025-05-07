@@ -210,6 +210,49 @@ const CheckoutPage = () => {
     fetchUserAddresses();
   }, [token, user, dispatch]);
 
+  useEffect(() => {
+    const handlePaymentMessage = (event) => {
+      // Security check - you might want to restrict the origin
+      // if (event.origin !== window.location.origin) return;
+
+      const { status, message, orderId } = event.data || {};
+
+      // Handle messages from our payment popup
+      if (status === "success") {
+        // Payment was successful in the popup
+        setProcessing(false);
+        router.push("/checkout/success");
+
+        dispatch(
+          addToast({
+            show: true,
+            title: "Payment Successful",
+            message: "Your order has been placed successfully!",
+            type: "success",
+          })
+        );
+      } else if (status === "failed" || status === "error") {
+        // Payment failed in the popup
+        setProcessing(false);
+
+        swal({
+          title: "Payment Failed",
+          text:
+            message || "Your payment could not be processed. Please try again.",
+          icon: "error",
+        });
+      }
+    };
+
+    // Add event listener for messages from popup
+    window.addEventListener("message", handlePaymentMessage);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("message", handlePaymentMessage);
+    };
+  }, [dispatch, router]);
+
   const handleTipSelection = (percentage) => {
     setTipPercentage(percentage);
     setCustomTip(false);
@@ -436,13 +479,119 @@ const CheckoutPage = () => {
       const result = await response.json();
 
       if (response.ok && result.url && result.uid) {
+        // Store necessary data in sessionStorage
         sessionStorage.setItem("payment_uid", result.uid);
         sessionStorage.setItem("payment_amount", result.amount);
         sessionStorage.setItem("payment_invoice", result.invoicenumber);
         sessionStorage.setItem("checkout_order_data", JSON.stringify(values));
         sessionStorage.setItem("restaurant", restaurant);
         sessionStorage.setItem("token", token);
-        router.push(result.url);
+
+        // Open payment page in a popup window
+        const paymentWindow = window.open(
+          result.url,
+          "PaymentWindow",
+          "width=800,height=700,top=100,left=100,resizable=yes,scrollbars=yes"
+        );
+
+        const redirectDomain = window.location.origin; // e.g. http://localhost:3000
+
+        // Monitor popup window URL for redirects back to our domain
+        const checkPopupRedirect = setInterval(() => {
+          try {
+            if (!paymentWindow || paymentWindow.closed) {
+              clearInterval(checkPopupRedirect);
+              setProcessing(false);
+              setSubmitting(false);
+
+              fetch(`/api/valor/check-status?uid=${result.uid}`)
+                .then((res) => res.json())
+                .then((finalStatus) => {
+                  if (finalStatus.success) {
+                    router.push("/checkout/success");
+                  }
+                })
+                .catch(() => {
+                  // Silent catch
+                });
+
+              return;
+            }
+
+            const popupUrl = paymentWindow.location.href;
+
+            if (popupUrl.startsWith(redirectDomain)) {
+              if (popupUrl.includes("/checkout-success")) {
+                clearInterval(checkPopupRedirect);
+                paymentWindow.close();
+
+                const urlObj = new URL(popupUrl);
+                const restaurantParam =
+                  urlObj.searchParams.get("restaurant") || restaurant;
+
+                router.push(`/checkout-success?restaurant=${restaurantParam}`);
+              } else if (popupUrl.includes("/checkout-failure")) {
+                clearInterval(checkPopupRedirect);
+                paymentWindow.close();
+
+                router.push(`/checkout-failure`);
+
+                dispatch(
+                  addToast({
+                    show: true,
+                    title: "Payment Failed",
+                    message:
+                      "Your payment could not be processed. Please try again.",
+                    type: "error",
+                  })
+                );
+              }
+            }
+          } catch (err) {}
+        }, 1000);
+
+        const checkPaymentStatus = async () => {
+          try {
+            const statusResponse = await fetch(
+              `/api/valor/check-status?uid=${result.uid}`,
+              {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+
+            const statusResult = await statusResponse.json();
+
+            if (statusResult.success) {
+              // Payment completed successfully
+              if (paymentWindow && !paymentWindow.closed) {
+                clearInterval(checkPopupRedirect); // Stop URL checking
+                paymentWindow.close();
+              }
+              router.push("/checkout/success");
+              setProcessing(false);
+              setSubmitting(false);
+            } else if (statusResult.failed) {
+              // Payment failed
+              if (paymentWindow && !paymentWindow.closed) {
+                clearInterval(checkPopupRedirect); // Stop URL checking
+                paymentWindow.close();
+              }
+              router.push("/checkout/failure");
+              setProcessing(false);
+              setSubmitting(false);
+            } else {
+              // Still processing, check again after a delay
+              setTimeout(checkPaymentStatus, 3000);
+            }
+          } catch (error) {
+            console.error("Error checking payment status:", error);
+            setTimeout(checkPaymentStatus, 5000); // Retry with a longer delay
+          }
+        };
+
+        // Start checking payment status after a short delay
+        setTimeout(checkPaymentStatus, 5000);
       } else {
         swal({
           title: "Payment Setup Failed",

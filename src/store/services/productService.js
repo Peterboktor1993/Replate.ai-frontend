@@ -9,15 +9,23 @@ import { getCurrentRestaurantId } from "@/utils/restaurantUtils";
 //===============================================
 export const getAllProducts = createAsyncThunk(
   "products/getAllProducts",
-  async (_, { rejectWithValue }) => {
+  async ({ limit, offset }, { rejectWithValue }) => {
     try {
       const currentRestaurantId = getCurrentRestaurantId();
-      const response = await axiosInstance.get(PRODUCT_URL, {
-        headers: {
-          zoneId: `[${ZONE_ID}]`,
-          restaurant_id: `[${currentRestaurantId}]`,
+      const response = await axiosInstance.get(
+        PRODUCT_URL,
+        {
+          headers: {
+            zoneId: `[${ZONE_ID}]`,
+            restaurant_id: `[${currentRestaurantId}]`,
+          },
         },
-      });
+        {
+          restaurant_id: currentRestaurantId,
+          limit: limit,
+          offset: offset,
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -28,17 +36,24 @@ export const getAllProducts = createAsyncThunk(
 //===============================================
 // Get All Products (Server Side)
 //===============================================
-export async function getAllProductsServer(restaurantId) {
+export async function getAllProductsServer(restaurantId, limit, offset) {
   try {
-    const response = await fetch(`${PRODUCT_URL}/search`, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        zoneId: `[${ZONE_ID}]`,
-        restaurant_id: `[${restaurantId}]`,
+    const response = await fetch(
+      `${PRODUCT_URL}/search`,
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          zoneId: `[${ZONE_ID}]`,
+          // restaurant_id: `[${restaurantId}]`,
+        },
       },
-      cache: "no-store",
-    });
+      {
+        restaurant_id: restaurantId,
+        limit: limit,
+        offset: offset,
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Failed to fetch products");

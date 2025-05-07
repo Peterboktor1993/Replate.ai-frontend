@@ -11,13 +11,11 @@ import { headers } from "next/headers";
 export default async function RootLayout({ children }) {
   const headersList = headers();
   const searchParams = Object.fromEntries(
-    new URLSearchParams(headersList.get("searchParams") || "")
+    new URLSearchParams((await headersList.get("searchParams")) || "")
   );
   const restaurantId = searchParams?.restaurant || "2";
 
-  console.log("[RootLayout restaurantId]", restaurantId);
   const restaurant = await getRestaurantDetailsServer(restaurantId);
-  console.log("[RootLayout restaurant]", restaurant);
   return (
     <html lang="en">
       <head>
