@@ -1,8 +1,6 @@
 "use client";
-import { useContext, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
-//Import Components
-import { ThemeContext } from "@/context/ThemeContext";
 import BannerSlider from "./mini/BannerSlider";
 import CategorySlider from "./mini/CategorySlider";
 import PopularDishesSlider from "./mini/PopularDishesSlider";
@@ -29,9 +27,13 @@ import { filterCategoriesByProducts } from "@/utils/utils";
 
 const BannerPic = "/images/banner-img/pic-2.jpg";
 
-const Home = ({ className, initialProducts, initialCategories, restaurantId }) => {
+const Home = ({
+  className,
+  initialProducts,
+  initialCategories,
+  restaurantId,
+}) => {
   const [dropSelect, setDropSelect] = useState("Other");
-  const { changeBackground } = useContext(ThemeContext);
   const [detailsModal, setDetailsModal] = useState(false);
   const [notesModal, setNotesModal] = useState(false);
   const [showFloatingButton, setShowFloatingButton] = useState(false);
@@ -55,10 +57,7 @@ const Home = ({ className, initialProducts, initialCategories, restaurantId }) =
   const [authMode, setAuthMode] = useState("login");
 
   useEffect(() => {
-    changeBackground({ value: "light", label: "Light" });
-  }, []);
-
-  useEffect(() => {
+    console.log("initialProducts", initialProducts);
     dispatch(setProducts(initialProducts));
     dispatch(setCategories(initialCategories));
     const filtered = filterCategoriesByProducts(
@@ -184,15 +183,6 @@ const Home = ({ className, initialProducts, initialCategories, restaurantId }) =
                 restaurantId={restaurantId}
               />
             </div>
-            {/* <div className="col-xl-12">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <h4 className=" mb-0 cate-title">Recent Order</h4>
-                <Link href="/favorite-menu" className="text-primary">
-                  View all <i className="fa-solid fa-angle-right ms-2"></i>
-                </Link>
-              </div>
-              <RecentOrderSlider />
-            </div> */}
           </div>
         </div>
         <div className="col-xl-2 col-xxl-3" ref={checkoutRef}>

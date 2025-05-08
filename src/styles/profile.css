@@ -1,0 +1,121 @@
+.profile-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.profile-tabs .nav-link {
+  color: #555;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.profile-tabs .nav-link.active {
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+
+.profile-tabs .nav-link:hover:not(.active) {
+  color: #222;
+}
+
+.profile-image-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.profile-image-container .profile-image {
+  object-fit: cover;
+  border: 3px solid #f5f5f5;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.profile-image-container .image-upload-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background-color: var(--bs-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.profile-image-container .image-upload-overlay:hover {
+  background-color: #0b5ed7; /* slightly darkened version of #0d6efd */
+  transform: scale(1.05);
+}
+
+.profile-image-container .image-upload-overlay i {
+  color: #fff;
+  font-size: 18px;
+}
+
+.points-circle {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  margin: 0 auto;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ffc107;
+  padding: 2rem;
+  text-align: center;
+}
+
+.points-circle h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+  color: var(--bs-primary);
+}
+
+.points-circle p {
+  margin-bottom: 0;
+  color: #6c757d;
+}
+
+.danger-zone {
+  background-color: rgba(220, 53, 69, 0.05);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(220, 53, 69, 0.1);
+}
+
+.address-type {
+  margin-bottom: 0;
+}
+
+.address-type .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+}
+
+.address-actions .btn-link {
+  padding: 0.25rem;
+}
+
+.address-actions .btn-link:hover {
+  color: currentColor;
+  opacity: 0.7;
+}
+
+.address-actions .btn-link i {
+  font-size: 1rem;
+}

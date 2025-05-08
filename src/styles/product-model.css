@@ -1,0 +1,307 @@
+.product-detail-modal .modal-content {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.product-detail-modal .modal-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.product-detail-modal .modal-header.fixed-header {
+  background-color: #fff;
+  backdrop-filter: blur(10px);
+}
+
+.product-detail-modal .modal-header .modal-title {
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: #333;
+  margin-right: 10px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-detail-modal .modal-header .product-price-badge {
+  background: var(--bs-primary);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 3px 10px rgba(var(--bs-primary-rgb), 0.3);
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.product-detail-modal .modal-header .product-price-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(var(--bs-primary-rgb), 0.4);
+}
+
+.product-detail-modal .modal-body {
+  padding: 0;
+}
+
+.product-detail-modal .modal-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.25rem 1.5rem;
+}
+
+.product-detail-modal .product-detail-container {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .product-detail-modal .product-detail-container {
+    flex-direction: row;
+  }
+}
+
+.product-detail-modal .product-image-section {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .product-detail-modal .product-image-section {
+    width: 40%;
+  }
+}
+
+.product-detail-modal .product-image-section .product-detail-img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.product-detail-modal .product-image-section .product-detail-img:hover {
+  transform: scale(1.05);
+}
+
+.product-detail-modal .product-info-section {
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .product-detail-modal .product-info-section {
+    width: 60%;
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+
+  .product-detail-modal .product-info-section::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .product-detail-modal .product-info-section::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  .product-detail-modal .product-info-section::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 10px;
+  }
+
+  .product-detail-modal .product-info-section::-webkit-scrollbar-thumb:hover {
+    background: #ccc;
+  }
+}
+
+.product-detail-modal .tags-container {
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.product-detail-modal .tags-container .halal-badge {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 3px 8px rgba(40, 167, 69, 0.25);
+}
+
+.product-detail-modal .halal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.product-detail-modal .halal-icon i {
+  font-size: 14px;
+}
+
+.product-detail-modal .halal-text {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.product-detail-modal .tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.product-detail-modal .tag-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.product-detail-modal .tag-item .tag-icon {
+  margin-right: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.product-detail-modal .tag-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tag-item.tag-cuisine {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+.tag-item.tag-cuisine:hover {
+  background-color: rgba(108, 117, 125, 0.15);
+}
+
+.tag-item.tag-tag {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.tag-item.tag-tag:hover {
+  background-color: rgba(40, 167, 69, 0.15);
+}
+
+.tag-item.tag-nutrition {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  border: 1px solid rgba(13, 110, 253, 0.2);
+}
+
+.tag-item.tag-nutrition:hover {
+  background-color: rgba(13, 110, 253, 0.15);
+}
+
+.tag-item.tag-allergy {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.tag-item.tag-allergy:hover {
+  background-color: rgba(220, 53, 69, 0.15);
+}
+
+.product-detail-modal .section-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #444;
+}
+
+.product-detail-modal .section-title i {
+  color: var(--bs-primary);
+}
+
+.product-detail-modal .nav-tabs {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.product-detail-modal .nav-tabs .nav-item {
+  margin-bottom: -1px;
+}
+
+.product-detail-modal .nav-tabs .nav-link {
+  border: none;
+  font-weight: 500;
+  color: #6c757d;
+  padding: 0.75rem 1rem;
+}
+
+.product-detail-modal .nav-tabs .nav-link.active {
+  color: var(--bs-primary);
+  border-bottom: 2px solid var(--bs-primary);
+  background-color: transparent;
+}
+
+.product-detail-modal .nav-tabs .nav-link:hover:not(.active) {
+  border-bottom: 2px solid #dee2e6;
+}
+
+.product-detail-modal .tab-content {
+  padding-top: 1.25rem;
+}
+
+.product-detail-modal .variation-item,
+.product-detail-modal .addon-item {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.product-detail-modal .variation-item:hover,
+.product-detail-modal .addon-item:hover {
+  border-color: var(--bs-primary);
+  background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.product-detail-modal .selected-variation,
+.product-detail-modal .selected-addon {
+  border-color: var(--bs-primary);
+  background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.product-detail-modal .quantity-selector .quantity-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.product-detail-modal .quantity-selector .quantity-btn:hover {
+  transform: scale(1.05);
+}
+
+.product-detail-modal .quantity-selector .quantity-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  min-width: 2rem;
+  text-align: center;
+}

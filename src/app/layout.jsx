@@ -1,9 +1,16 @@
-import "../scss/main.scss";
-import "../app/globals.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "swiper/css";
+// global css file
+import "../app/globals.css";
+// css files
+import "../styles/product-model.css";
+import "../styles/profile.css";
+import "../styles/toast.css";
+import "../styles/auth-model.css";
+
 import Script from "next/script";
-import ThemeContextProvider from "@/context/ThemeContext";
+
 import AppShell from "@/components/layout/AppShell";
 import { getRestaurantDetailsServer } from "@/store/services/restaurantService";
 import { headers } from "next/headers";
@@ -11,8 +18,9 @@ import { headers } from "next/headers";
 export default async function RootLayout({ children }) {
   const headersList = headers();
   const searchParams = Object.fromEntries(
-    new URLSearchParams((await headersList.get("searchParams")) || "")
+    new URLSearchParams(headersList.get("searchParams") || "")
   );
+
   const restaurantId = searchParams?.restaurant || "2";
 
   const restaurant = await getRestaurantDetailsServer(restaurantId);
@@ -45,9 +53,7 @@ export default async function RootLayout({ children }) {
         <link rel="icon" href={restaurant?.logo_full_url} />
       </head>
       <body>
-        <ThemeContextProvider>
-          <AppShell details={restaurant}>{children}</AppShell>
-        </ThemeContextProvider>
+        <AppShell details={restaurant}>{children}</AppShell>
         <Script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
           strategy="afterInteractive"

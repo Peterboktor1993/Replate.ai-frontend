@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ThemeContext } from "@/context/ThemeContext";
 import AuthModals from "@/components/auth/AuthModals";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -10,12 +9,9 @@ import { logout } from "@/store/slices/authSlice";
 import SafeImage from "../common/SafeImage";
 
 const Header = ({ details }) => {
-  const { background, changeBackground } = useContext(ThemeContext);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-  // const { details } = useSelector(
-  //   (state) => state.restaurant.currentRestaurant
-  // );
+
   const { token, user } = useSelector((state) => state.auth || {});
   const dispatch = useDispatch();
 
@@ -33,16 +29,6 @@ const Header = ({ details }) => {
 
     ensureUserData();
   }, [token, user, dispatch]);
-
-  const toggleTheme = () => {
-    if (background.value === "light") {
-      changeBackground({ value: "dark", label: "Dark" });
-      document.body.classList.add("dark-theme");
-    } else {
-      changeBackground({ value: "light", label: "Light" });
-      document.body.classList.remove("dark-theme");
-    }
-  };
 
   const handleLogin = () => {
     setAuthMode("login");
@@ -84,31 +70,20 @@ const Header = ({ details }) => {
                   </h2>
                 </div>
               </Link>
-
-              {/* <div className="navigation ms-5 d-none d-lg-flex">
-                <Link href="/" className="nav-link mx-3 fw-medium">
-                  <i className="fas fa-home me-2"></i>Home
-                </Link>
-                <Link href="/menu" className="nav-link mx-3 fw-medium">
-                  <i className="fas fa-utensils me-2"></i>Menu
-                </Link>
-                <Link href="/checkout" className="nav-link mx-3 fw-medium">
-                  <i className="fas fa-shopping-cart me-2"></i>Cart
-                </Link>
-              </div> */}
             </div>
 
             <div className="d-flex align-items-center">
               <button
-                onClick={toggleTheme}
+                // onClick={toggleTheme}
                 className="theme-toggle btn btn-sm border rounded-md me-3"
                 aria-label="Toggle theme"
               >
-                {background.value === "light" ? (
+                <i className="fas fa-moon text-primary"></i>
+                {/* {background.value === "light" ? (
                   <i className="fas fa-moon text-primary"></i>
                 ) : (
                   <i className="fas fa-sun text-warning"></i>
-                )}
+                )} */}
               </button>
 
               {!token ? (

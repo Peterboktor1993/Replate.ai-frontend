@@ -1,0 +1,43 @@
+.toast-container .toast {
+  background: #fff;
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.toast-container .toast .toast-header {
+  border-bottom: none;
+  padding: 0.75rem 1rem;
+}
+
+.toast-container .toast .toast-header i {
+  font-size: 1.1rem;
+}
+
+.toast-container .toast .toast-body {
+  padding: 1rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.toast-container .toast .btn-close {
+  opacity: 1;
+  text-shadow: none;
+}
+
+/* Animation */
+.toast.show {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

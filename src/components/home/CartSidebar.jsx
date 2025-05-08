@@ -25,15 +25,15 @@ const CartSidebar = ({
 
   return (
     <div className="row mx-0">
-      <div className="col-xl-12">
-        <div className="card dlab-bg dlab-position cart-sidebar-fixed">
+      <div className="col-xl-12 ">
+        <div className="card bg-primary-light border-primary cart-sidebar-fixed overflow-hidden">
           <div className="card-body py-4">
             <div className="card bg-primary blance-card">
               {token && user ? (
                 <>
                   <div className="card-body bg-gradient p-4">
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <h4 className="mb-0 fw-bold text-secondary">My Points</h4>
+                    <div className="d-flex align-items-center justify-content-between mb-1">
+                      <h4 className="mb-0 fw-bold text-light">My Points</h4>
                       <i className="fas fa-trophy text-warning fa-2x"></i>
                     </div>
                     <div className="d-flex align-items-baseline">
@@ -53,7 +53,7 @@ const CartSidebar = ({
               ) : (
                 <>
                   <div className="card-body">
-                    <h4 className="mb-0">Points</h4>
+                    <h4 className="mb-0 text-light">Points</h4>
                     <p className="my-2 text-white">
                       Sign in to earn and redeem points with every purchase!
                     </p>
@@ -79,7 +79,7 @@ const CartSidebar = ({
                 </div>
               </div>
             ) : cartItems.length === 0 ? (
-              <div className="text-center py-4">
+              <div className="text-center py-4 d-flex flex-column align-items-center justify-content-center">
                 <i className="fa-solid fa-shopping-cart fa-2x text-muted mb-3"></i>
                 <p className="text-muted">Your cart is empty</p>
               </div>
@@ -213,10 +213,10 @@ const CartSidebar = ({
               </>
             )}
           </div>
-          <div className="card-footer pt-0 border-0">
-            <div className="border-bottom pt-2 pb-3 mb-3">
-              <h3 className="subtotal font-w500 mb-0">
-                Subtotal:{" "}
+          <div className="px-3 pb-3 border-0">
+            <div className="border-bottom pt- pb-3 mb-3">
+              <h3 className="subtotal text-gray font-500 mb-0">
+                Subtotal:
                 <span className="float-end text-primary">
                   ${calculateTotal().toFixed(2)}
                 </span>
@@ -233,7 +233,10 @@ const CartSidebar = ({
                 <div className="recent-orders-list">
                   {recentOrders.map((order) => (
                     <Link
-                      href={getLinkWithRestaurant(`/orders/${order.id}`, restaurant_id)}
+                      href={getLinkWithRestaurant(
+                        `/orders/${order.id}`,
+                        restaurant_id
+                      )}
                       key={order.id}
                       className="d-flex align-items-center justify-content-between p-2 mb-1 border rounded"
                     >
@@ -268,7 +271,7 @@ const CartSidebar = ({
             {token ? (
               <Link
                 href={getLinkWithRestaurant("/orders", restaurant_id)}
-                className="btn btn-outline-primary btn-block mb-2"
+                className="btn btn-outline-primary w-100 mb-2"
               >
                 <i className="fa-solid fa-shopping-bag me-1"></i> View My Orders
               </Link>
@@ -293,27 +296,93 @@ const CartSidebar = ({
             )}
             <Link
               href={getLinkWithRestaurant("/checkout", restaurant_id)}
-              className="btn btn-primary btn-block"
+              className="btn btn-primary w-100"
             >
               <i className="fa-solid fa-check-circle me-1"></i> Checkout
             </Link>
           </div>
         </div>
       </div>
-      <div className="col-xl-12">
-        <div className="card bg-primary blance-card-1 border-primary h-100">
-          <div className="card-body pe-0 p-4 pb-3">
-            <div className="dlab-media d-flex justify-content-between">
-              <div className="dlab-content">
-                <h4 className="cate-title">Get Discount VoucherUp href 20%</h4>
-                <p className="mb-0">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </p>
-              </div>
-              <div className="dlab-img">
-                <img src={BannerPic} alt="" />
-              </div>
+      <div className="col-xl-12 mt-4">
+        <div
+          className="card text-white border-0 rounded-4 overflow-hidden"
+          style={{ backgroundColor: "#e01e1e" }}
+        >
+          <div className="card-body p-4 position-relative">
+            <div
+              className="position-absolute rounded-circle"
+              style={{
+                width: "150px",
+                height: "150px",
+                background: "rgba(255, 255, 255, 0.1)",
+                top: "-50px",
+                left: "-50px",
+                zIndex: 0,
+              }}
+            ></div>
+            <div
+              className="position-absolute rounded-circle"
+              style={{
+                width: "100px",
+                height: "100px",
+                background: "rgba(255, 255, 255, 0.1)",
+                bottom: "20px",
+                left: "30%",
+                zIndex: 0,
+              }}
+            ></div>
+            <div style={{ zIndex: 1, position: "relative" }}>
+              <h4
+                className="fw-bold mb-1"
+                style={{ fontSize: "1.25rem", letterSpacing: "0.5px" }}
+              >
+                Get Discount
+              </h4>
+              <h4
+                className="fw-bold mb-3"
+                style={{ fontSize: "1.25rem", letterSpacing: "0.5px" }}
+              >
+                VoucherUp href 20%
+              </h4>
+              <p
+                className="mb-0"
+                style={{ fontSize: "0.85rem", opacity: 0.8, maxWidth: "60%" }}
+              >
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              </p>
             </div>
+            <div
+              className="position-absolute"
+              style={{
+                right: "-10px",
+                bottom: "0",
+                top: "0",
+                width: "45%",
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src={BannerPic}
+                alt="Discount"
+                style={{
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center left",
+                }}
+              />
+            </div>
+            <div
+              className="position-absolute"
+              style={{
+                left: "0",
+                top: "0",
+                right: "0",
+                bottom: "0",
+                background:
+                  "radial-gradient(circle at left top, rgba(234, 72, 72, 0.8) 0%, rgba(224, 30, 30, 0) 50%)",
+                zIndex: 0,
+              }}
+            ></div>
           </div>
         </div>
       </div>

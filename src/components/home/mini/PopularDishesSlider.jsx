@@ -5,12 +5,9 @@ import StarRating from "@/components/common/StarRating";
 import ProductDetailsModal from "./ProductDetailsModal";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/store/services/cartService";
-import { getAllProducts, getAllProductsServer } from "@/store/services/productService";
+import { getAllProducts } from "@/store/services/productService";
 
-const PopularDishesSlider = ({
-  products: initialProducts,
-  restaurantId = "2",
-}) => {
+const PopularDishesSlider = ({ products: initialProducts, restaurantId }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState(initialProducts || []);
@@ -38,8 +35,15 @@ const PopularDishesSlider = ({
   const loadMoreProducts = async () => {
     try {
       setLoading(true);
-      const response = await getAllProducts(restaurantId, 20, offset);
-      const newProducts = response.products || [];
+      const result = await dispatch(
+        getAllProducts({
+          limit: 20,
+          offset: offset,
+          restaurantId: restaurantId,
+        })
+      ).unwrap();
+      console.log("result", result);
+      const newProducts = result?.products || [];
 
       if (newProducts.length === 0) {
         setHasMore(false);

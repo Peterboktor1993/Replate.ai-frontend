@@ -18,7 +18,7 @@ importers:
         specifier: ^1.8.4
         version: 1.8.4
       bootstrap:
-        specifier: ^5.3.3
+        specifier: ^5.3.4
         version: 5.3.4(@popperjs/core@2.11.8)
       date-fns:
         specifier: ^4.1.0

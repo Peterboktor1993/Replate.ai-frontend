@@ -18,7 +18,6 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
   // const [logoUrl, setLogoUrl] = useState("");
   const dispatch = useDispatch();
 
-  // Add this useEffect to update mode when initialMode changes
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
@@ -55,7 +54,6 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
     },
   });
 
-  // Register form validation
   const registerFormik = useFormik({
     initialValues: {
       first_name: "",
@@ -113,7 +111,6 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
       try {
         setLoading(true);
 
-        // Replace with actual API call to reset password
         const response = await axios.post(`${AUTH_URL}/forgot-password`, {
           email: values.email,
         });
@@ -153,12 +150,10 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
     try {
       setLoading(true);
 
-      // Get the OAuth URL from your backend with the current mode (login or register)
       const response = await axios.get(
         `${AUTH_URL}/${provider}/callback?mode=${mode}`
       );
 
-      // Redirect to the OAuth provider
       if (response.data.url) {
         window.location.href = response.data.url;
       } else {
@@ -191,13 +186,15 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
       className="auth-modal"
     >
       <style jsx global>{`
+        .auth-modal {
+          z-index: 99999999999999999 !important;
+        }
         .auth-modal .form-control {
           border: 1px solid #dee2e6 !important;
           border-radius: 0.375rem !important;
         }
         .auth-modal .form-control:focus {
-          border-color: #86b7fe !important;
-          box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+          border-color: var(--primary-color) !important;
         }
       `}</style>
       <Modal.Header closeButton className="border-0 pb-0"></Modal.Header>
@@ -299,6 +296,7 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
                 variant="primary"
                 type="submit"
                 className="w-100"
+                style={{ color: "var(--primary-color)" }}
                 disabled={loading}
               >
                 {loading ? <Spinner animation="border" size="sm" /> : "Sign In"}
@@ -309,7 +307,8 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
                   Don't have an account?{" "}
                   <Button
                     variant="link"
-                    className="p-0"
+                    className="p-0 fw-bold"
+                    style={{ color: "var(--primary-color)" }}
                     onClick={() => setMode("register")}
                   >
                     Sign Up
@@ -457,7 +456,8 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
                   Already have an account?{" "}
                   <Button
                     variant="link"
-                    className="p-0"
+                    className="p-0 fw-bold"
+                    style={{ color: "var(--primary-color)" }}
                     onClick={() => setMode("login")}
                   >
                     Sign In
@@ -511,7 +511,8 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
               <div className="text-center mt-4">
                 <Button
                   variant="link"
-                  className="p-0"
+                  className="p-0 fw-bold"
+                  style={{ color: "var(--primary-color)" }}
                   onClick={() => setMode("login")}
                 >
                   Back to Sign In

@@ -80,7 +80,7 @@ const CategorySlider = ({ categories }) => {
                   height={100}
                   className="rounded-2"
                 />
-                <h6 className="mb-0 pb-0 text-center text-sm">
+                <h6 className="mb-0 pb-0 text-center text-sm mt-2">
                   {category.name}
                 </h6>
               </div>
@@ -100,13 +100,13 @@ const CategorySlider = ({ categories }) => {
         }
 
         .category-card:hover h6 {
-          color: var(--bs-primary, #145650);
+          color: var(--primary-color);
         }
 
         .nav-button {
           width: 36px;
           height: 36px;
-          background: var(--primary);
+          background: var(--primary-color);
           border: none;
           border-radius: 8px;
           color: white;
@@ -119,7 +119,7 @@ const CategorySlider = ({ categories }) => {
         }
 
         .nav-button:hover {
-          background: var(--bs-secondary, #6c757d);
+          background: var(--secondary-color);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
           transform: translateY(-2px);
         }

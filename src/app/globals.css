@@ -1,12 +1,12 @@
 :root {
-  /* Primary Color - Orange */
+  /* Primary Color */
   --primary-color: #d40c14;
-  --primary-light: #e24a50;
+  --primary-light: #e24a4f48;
   --primary-lighter: #f29a9d;
   --primary-dark: #a10910;
   --primary-darker: #7c070b;
 
-  /* Secondary Color - Deep Brown/Rust */
+  /* Secondary Color */
   --secondary-color: #8b4513;
   --secondary-light: #a86032;
   --secondary-lighter: #c88c60;
@@ -44,7 +44,7 @@
   --border-color-dark: #c0c0c0;
 
   /* Text Colors */
-  --text-primary: #3d4152;
+  --text-color: #48494b;
   --text-secondary: #686b78;
   --text-light: #93959f;
   --text-muted: #a0a0a0;
@@ -63,8 +63,23 @@
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
+/* Global CSS */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-decoration: none !important;
+}
+
+a {
+  text-decoration: none;
+}
+
 .cursor-pointer {
   cursor: pointer;
+}
+.overflow-hidden {
+  overflow: hidden !important;
 }
 .img-fluid {
   width: 100%;
@@ -92,11 +107,11 @@
 .itemTitle {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--primary-color);
 }
 .checkout-title {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--primary-color);
 }
 .font-bold {
   font-weight: bold;
@@ -134,7 +149,10 @@ select:focus {
   box-shadow: 0 0 0 0.25rem var(--primary-light) !important;
   outline: 0 !important;
 }
-
+.dropdown-item:focus {
+  background-color: var(--primary-light) !important;
+  color: var(--primary-color) !important;
+}
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -242,6 +260,7 @@ input:-webkit-autofill:active {
 
 .text-primary {
   color: var(--primary-color) !important;
+  font-weight: 600;
 }
 
 .text-secondary {
@@ -251,7 +270,12 @@ input:-webkit-autofill:active {
 .bg-primary {
   background-color: var(--primary-color) !important;
 }
-
+.bg-primary-light {
+  background-color: var(--primary-light);
+}
+.text-gray {
+  color: var(--text-color) !important;
+}
 .bg-secondary {
   background-color: var(--secondary-color) !important;
 }
@@ -277,11 +301,11 @@ input:-webkit-autofill:active {
 
 /* Table Styling */
 .table {
-  color: var(--text-primary);
+  color: var(--primary-color);
 }
 
 .table thead th {
-  color: var(--text-primary);
+  color: var(--primary-color);
   border-bottom-color: var(--border-color);
 }
 
@@ -317,4 +341,31 @@ input:-webkit-autofill:active {
 }
 .fs-6 {
   font-size: 1.2rem !important;
+}
+.text-primary-light {
+  color: var(--primary-lighter) !important;
+}
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: #ddd;
+}
+
+.divider span {
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
 }

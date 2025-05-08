@@ -5,30 +5,33 @@ import axiosInstance from "@/config/axios";
 import { PRODUCT_URL, ZONE_ID } from "@/utils/CONSTANTS";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getCurrentRestaurantId } from "@/utils/restaurantUtils";
+import axios from "axios";
 
+//===============================================
+// Get All Products (Client Side)
 //===============================================
 export const getAllProducts = createAsyncThunk(
   "products/getAllProducts",
-  async ({ limit, offset }, { rejectWithValue }) => {
+  async ({ limit, offset, restaurantId }, { rejectWithValue }) => {
     try {
       const currentRestaurantId = getCurrentRestaurantId();
       const response = await axiosInstance.get(
         PRODUCT_URL,
         {
+          restaurant_id: restaurantId || currentRestaurantId,
+          limit,
+          offset,
+        },
+        {
           headers: {
             zoneId: `[${ZONE_ID}]`,
             restaurant_id: `[${currentRestaurantId}]`,
           },
-        },
-        {
-          restaurant_id: currentRestaurantId,
-          limit: limit,
-          offset: offset,
         }
       );
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
@@ -36,30 +39,25 @@ export const getAllProducts = createAsyncThunk(
 //===============================================
 // Get All Products (Server Side)
 //===============================================
+
 export async function getAllProductsServer(restaurantId, limit, offset) {
   try {
-    const response = await fetch(
-      `${PRODUCT_URL}/search`,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          zoneId: `[${ZONE_ID}]`,
-          // restaurant_id: `[${restaurantId}]`,
-        },
+    const response = await axios({
+      method: "get",
+      url: `${PRODUCT_URL}/search`,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        zoneId: `[${ZONE_ID}]`,
       },
-      {
+      data: {
         restaurant_id: restaurantId,
-        limit: limit,
-        offset: offset,
-      }
-    );
+        limit,
+        offset,
+      },
+    });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch products");
-    }
-
-    return response.json();
+    return response.data;
   } catch (error) {
     console.error("Error fetching products:", error);
     throw error;
