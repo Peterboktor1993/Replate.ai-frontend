@@ -174,12 +174,12 @@ const Home = ({
             <div className="col-xl-12 mb-3 my-3">
               <CategorySlider categories={filteredCategories} />
             </div>
-            <div className="col-xl-12 mt-4">
+            <div className="col-xl-12 my-4">
               <div className="d-flex align-items-center justify-content-between mb-3 px-1">
                 <h4 className="mb-0 cate-title">Popular Dishes</h4>
               </div>
               <PopularDishesSlider
-                products={products}
+                products={initialProducts}
                 restaurantId={restaurantId}
               />
             </div>

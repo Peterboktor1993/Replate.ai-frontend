@@ -15,15 +15,32 @@ const StarIcon = ({ filled }) => (
   </svg>
 );
 
-const StarRating = ({ rating = 0, totalStars = 5, className = "" }) => {
+const StarRating = ({
+  rating = 0,
+  totalStars = 5,
+  className = "",
+  showRating = false,
+}) => {
+  // Convert rating to a number between 0 and 5
+  let ratingValue = 0;
+
+  if (typeof rating === "number") {
+    ratingValue = rating;
+  } else if (typeof rating === "string") {
+    ratingValue = parseFloat(rating) || 0;
+  }
+
+  // Clamp the rating between 0 and totalStars
+  ratingValue = Math.max(0, Math.min(ratingValue, totalStars));
+
   return (
-    <ul className={`d-flex align-items-center ${className}`}>
+    <div className={`d-flex align-items-center ${className}`}>
       {[...Array(totalStars)].map((_, index) => (
-        <li key={index}>
-          <StarIcon filled={index < rating} />
-        </li>
+        <span key={index} className="me-1">
+          <StarIcon filled={index < ratingValue} />
+        </span>
       ))}
-    </ul>
+    </div>
   );
 };
 
