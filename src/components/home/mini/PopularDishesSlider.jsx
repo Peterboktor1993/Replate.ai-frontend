@@ -119,15 +119,6 @@ const PopularDishesSlider = ({
               ref={index === products.length - 1 ? lastProductElementRef : null}
             >
               <div className="card product-card border rounded shadow-sm h-100">
-                <i
-                  className={`fa-solid fa-heart c-heart c-pointer heart-icon ${
-                    product.heart ? "text-danger" : "text-muted"
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    product.heart = !product.heart;
-                  }}
-                ></i>
                 <div className="text-center p-3">
                   {product.image_full_url && (
                     <Image
@@ -199,11 +190,6 @@ const PopularDishesSlider = ({
           overflow: hidden;
         }
 
-        .c-heart {
-          font-size: 18px;
-          cursor: pointer;
-        }
-
         .add-to-cart-btn {
           width: 32px;
           height: 32px;
@@ -214,14 +200,6 @@ const PopularDishesSlider = ({
 
         .card-footer {
           margin-top: auto;
-        }
-        .heart-icon {
-          font-size: 18px;
-          cursor: pointer;
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          color: var(--primary-lighter) !important;
         }
       `}</style>
     </>

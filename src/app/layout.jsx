@@ -7,7 +7,6 @@ import "../app/globals.css";
 import "../styles/product-model.css";
 import "../styles/profile.css";
 import "../styles/toast.css";
-import "../styles/auth-model.css";
 
 import Script from "next/script";
 

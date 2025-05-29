@@ -39,10 +39,11 @@ const Home = ({
   const [showFloatingButton, setShowFloatingButton] = useState(false);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const checkoutRef = useRef(null);
   const dispatch = useDispatch();
 
-  const { products } = useSelector((state) => state.products);
   const { filteredCategories } = useSelector((state) => state.categories);
   const { token, user } = useSelector(
     (state) => state.auth || { token: null, user: null }
@@ -65,7 +66,41 @@ const Home = ({
       initialCategories
     );
     dispatch(setFilteredCategories(filtered));
+    setFilteredProducts(initialProducts);
   }, [initialProducts, initialCategories]);
+
+  const filterProductsByCategory = (categoryId) => {
+    if (!categoryId) {
+      setFilteredProducts(initialProducts);
+      setSelectedCategory(null);
+      return;
+    }
+
+    const filtered = initialProducts.filter((product) => {
+      if (product.category_id === categoryId) {
+        return true;
+      }
+
+      if (product.category_ids && Array.isArray(product.category_ids)) {
+        return product.category_ids.some(
+          (cat) => parseInt(cat.id) === categoryId
+        );
+      }
+
+      return false;
+    });
+
+    setFilteredProducts(filtered);
+    setSelectedCategory(categoryId);
+  };
+
+  const handleCategorySelect = (category) => {
+    if (selectedCategory === category.id) {
+      filterProductsByCategory(null);
+    } else {
+      filterProductsByCategory(category.id);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -172,14 +207,40 @@ const Home = ({
             </div>
 
             <div className="col-xl-12 mb-3 my-3">
-              <CategorySlider categories={filteredCategories} />
+              <CategorySlider
+                categories={filteredCategories}
+                selectedCategory={selectedCategory}
+                onCategorySelect={handleCategorySelect}
+              />
             </div>
             <div className="col-xl-12 my-4">
               <div className="d-flex align-items-center justify-content-between mb-3 px-1">
-                <h4 className="mb-0 cate-title">Popular Dishes</h4>
+                <h4 className="mb-0 cate-title">
+                  {selectedCategory
+                    ? `${
+                        filteredCategories.find(
+                          (cat) => cat.id === selectedCategory
+                        )?.name || "Category"
+                      } Dishes`
+                    : "Popular Dishes"}
+                  {filteredProducts.length > 0 && (
+                    <span className="text-muted ms-2 fs-6">
+                      ({filteredProducts.length} items)
+                    </span>
+                  )}
+                </h4>
+                {selectedCategory && (
+                  <button
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => filterProductsByCategory(null)}
+                  >
+                    <i className="fas fa-times me-1"></i>
+                    Clear Filter
+                  </button>
+                )}
               </div>
               <PopularDishesSlider
-                products={initialProducts}
+                products={filteredProducts}
                 restaurantId={restaurantId}
               />
             </div>
@@ -216,7 +277,7 @@ const Home = ({
               className="btn btn-primary btn-lg px-4 w-100"
               style={{
                 animation: "pulse 2s infinite",
-                boxShadow: "0 0 0 0 var(--primary-color)",
+                boxShadow: "0 0 0 0 rgba(212, 12, 20, 0.4)",
               }}
             >
               Checkout Now
@@ -241,24 +302,23 @@ const Home = ({
       <style jsx>{`
         @keyframes pulse {
           0% {
-            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+            box-shadow: 0 0 0 0 rgba(212, 12, 20, 0.4);
           }
           70% {
-            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+            box-shadow: 0 0 0 10px rgba(212, 12, 20, 0);
           }
           100% {
-            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+            box-shadow: 0 0 0 0 rgba(212, 12, 20, 0);
           }
         }
 
         .cart-items-scrollable {
-          max-height: 480px; /* Adjust height based on ~3 items (e.g., 3 * ~160px) */
+          max-height: 480px;
           overflow-y: auto;
-          padding-right: 8px; /* Space for scrollbar */
-          margin-right: -8px; /* Offset scrollbar space */
+          padding-right: 8px;
+          margin-right: -8px;
         }
 
-        /* Cool Scrollbar Styles */
         .cart-items-scrollable::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -275,7 +335,6 @@ const Home = ({
           background: #aaa;
         }
 
-        /* Firefox scrollbar styles */
         .cart-items-scrollable {
           scrollbar-width: thin; /* "auto" or "thin" */
           scrollbar-color: #ccc #f1f1f1; /* thumb and track color */

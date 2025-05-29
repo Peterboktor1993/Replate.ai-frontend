@@ -369,3 +369,7 @@ input:-webkit-autofill:active {
   font-weight: 500;
   white-space: nowrap;
 }
+.cart-card-footer {
+  display: flex;
+  justify-content: space-between;
+}

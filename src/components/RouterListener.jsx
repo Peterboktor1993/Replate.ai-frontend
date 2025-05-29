@@ -13,7 +13,7 @@ export default function RouterListener() {
 
   useEffect(() => {
     const restaurantId = searchParams.get("restaurant");
-    console.log("🚀 URL param restaurant =", restaurantId);
+    console.log(" URL param restaurant =", restaurantId);
 
     const updateRestaurant = async () => {
       const fallbackId = restaurantId || "2";

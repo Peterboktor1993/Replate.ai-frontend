@@ -20,7 +20,32 @@ const CartSummary = ({
   handleTipSelection,
   enableCustomTip,
   handleCustomTipChange,
+  paymentMethod = "cash_on_delivery", // Default to cash on delivery
 }) => {
+  // Get button text based on payment method
+  const getButtonText = () => {
+    if (processing) {
+      return (
+        <>
+          <span
+            className="spinner-border spinner-border-sm me-2"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          Processing...
+        </>
+      );
+    }
+
+    if (paymentMethod === "Stripe") {
+      return `Place Order & Pay with Card (${currency} ${calculateTotal().toFixed(
+        2
+      )})`;
+    }
+
+    return `Place Order (${currency} ${calculateTotal().toFixed(2)})`;
+  };
+
   return (
     <div className="card">
       <div className="card-header py-3">
@@ -169,24 +194,33 @@ const CartSummary = ({
               </span>
             </div>
 
+            {/* Show payment method info */}
+            <div className="payment-method-info mb-3">
+              <div className="d-flex align-items-center">
+                <i
+                  className={`me-2 ${
+                    paymentMethod === "Stripe"
+                      ? "fa-regular fa-credit-card"
+                      : "fa-solid fa-money-bill-wave"
+                  }`}
+                ></i>
+                <span>
+                  {paymentMethod === "Stripe"
+                    ? "Payment: Credit/Debit Card"
+                    : "Payment: Cash on Delivery"}
+                </span>
+              </div>
+            </div>
+
             <button
               type="submit"
               form="checkout-form"
-              className="btn btn-primary btn-lg w-100 mt-3"
+              className={`btn btn-lg w-100 mt-3 ${
+                paymentMethod === "Stripe" ? "btn-primary" : "btn-primary"
+              }`}
               disabled={processing}
             >
-              {processing ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                  Processing...
-                </>
-              ) : (
-                `Place Order & Pay ${currency} ${calculateTotal().toFixed(2)}`
-              )}
+              {getButtonText()}
             </button>
           </div>
         )}

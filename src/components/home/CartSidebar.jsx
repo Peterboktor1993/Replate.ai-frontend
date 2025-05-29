@@ -160,7 +160,7 @@ const CartSidebar = ({
                             )}
                           {/* Card Footer with Border */}
                           <div className="card-footer-actions pt-2 mt-1 border-top">
-                            <div className="d-flex align-items-center justify-content-between">
+                            <div className="cart-card-footer d-flex align-items-center justify-content-between">
                               <div className="quantity-controls d-flex align-items-center">
                                 <button
                                   className="btn btn-outline-primary light-btn p-1 px-2"

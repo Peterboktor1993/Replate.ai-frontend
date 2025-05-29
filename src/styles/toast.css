@@ -5,7 +5,9 @@
   min-width: 300px;
   max-width: 400px;
 }
-
+.toast-container {
+  z-index: 99999999999999999;
+}
 .toast-container .toast .toast-header {
   border-bottom: none;
   padding: 0.75rem 1rem;

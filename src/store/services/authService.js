@@ -201,6 +201,214 @@ export const logoutUser = () => async (dispatch) => {
 };
 
 //===============================================
+// Forgot Password - Request Reset
+//===============================================
+export const forgotPassword = (credentials) => async (dispatch) => {
+  try {
+    const payload = {
+      phone: credentials.phone || "",
+    };
+
+    const response = await axios.post(`${AUTH_URL}/forgot-password`, payload, {
+      headers: { "X-localization": "en" },
+    });
+
+    if (response.data.success || response.status === 200) {
+      dispatch(
+        addToast({
+          type: "success",
+          title: "Success",
+          message: response.data.message || "Reset code sent successfully!",
+        })
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } else {
+      const errorMessage = response.data.message || "Failed to send reset code";
+      dispatch(
+        addToast({
+          type: "error",
+          title: "Error",
+          message: errorMessage,
+        })
+      );
+      return { success: false, error: errorMessage };
+    }
+  } catch (error) {
+    // Extract error message from API response
+    let errorMessage = "Failed to send reset code";
+
+    if (
+      error.response?.data?.errors &&
+      Array.isArray(error.response.data.errors)
+    ) {
+      // Handle errors array format
+      errorMessage = error.response.data.errors
+        .map((err) => err.message)
+        .join(", ");
+    } else if (error.response?.data?.message) {
+      // Handle direct message format
+      errorMessage = error.response.data.message;
+    }
+
+    dispatch(
+      addToast({
+        type: "error",
+        title: "Error",
+        message: errorMessage,
+      })
+    );
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+};
+
+//===============================================
+// Verify Reset Token
+//===============================================
+export const verifyResetToken = (tokenData) => async (dispatch) => {
+  try {
+    const payload = {
+      phone: tokenData.phone,
+      reset_token: tokenData.reset_token,
+    };
+
+    const response = await axios.post(`${AUTH_URL}/verify-token`, payload, {
+      headers: { "X-localization": "en" },
+    });
+
+    if (response.data.success || response.status === 200) {
+      dispatch(
+        addToast({
+          type: "success",
+          title: "Success",
+          message: response.data.message || "Token verified successfully!",
+        })
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } else {
+      const errorMessage = response.data.message || "Invalid or expired token";
+      dispatch(
+        addToast({
+          type: "error",
+          title: "Error",
+          message: errorMessage,
+        })
+      );
+      return { success: false, error: errorMessage };
+    }
+  } catch (error) {
+    // Extract error message from API response
+    let errorMessage = "Invalid or expired token";
+
+    if (
+      error.response?.data?.errors &&
+      Array.isArray(error.response.data.errors)
+    ) {
+      // Handle errors array format
+      errorMessage = error.response.data.errors
+        .map((err) => err.message)
+        .join(", ");
+    } else if (error.response?.data?.message) {
+      // Handle direct message format
+      errorMessage = error.response.data.message;
+    }
+
+    dispatch(
+      addToast({
+        type: "error",
+        title: "Error",
+        message: errorMessage,
+      })
+    );
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+};
+
+//===============================================
+// Reset Password
+//===============================================
+export const resetPassword = (resetData) => async (dispatch) => {
+  try {
+    const payload = {
+      phone: resetData.phone,
+      reset_token: resetData.reset_token,
+      password: resetData.password,
+      confirm_password: resetData.confirm_password,
+    };
+
+    const response = await axios.put(`${AUTH_URL}/reset-password`, payload, {
+      headers: { "X-localization": "en" },
+    });
+
+    if (response.data.success || response.status === 200) {
+      dispatch(
+        addToast({
+          type: "success",
+          title: "Success",
+          message: response.data.message || "Password reset successfully!",
+        })
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } else {
+      const errorMessage = response.data.message || "Failed to reset password";
+      dispatch(
+        addToast({
+          type: "error",
+          title: "Error",
+          message: errorMessage,
+        })
+      );
+      return { success: false, error: errorMessage };
+    }
+  } catch (error) {
+    // Extract error message from API response
+    let errorMessage = "Failed to reset password";
+
+    if (
+      error.response?.data?.errors &&
+      Array.isArray(error.response.data.errors)
+    ) {
+      // Handle errors array format
+      errorMessage = error.response.data.errors
+        .map((err) => err.message)
+        .join(", ");
+    } else if (error.response?.data?.message) {
+      // Handle direct message format
+      errorMessage = error.response.data.message;
+    }
+
+    dispatch(
+      addToast({
+        type: "error",
+        title: "Error",
+        message: errorMessage,
+      })
+    );
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+};
+
+//===============================================
 // Get User Profile
 //===============================================
 export const getUserProfile = (token) => async (dispatch) => {

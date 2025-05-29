@@ -17,6 +17,8 @@ export default async function HomePage({ searchParams }) {
     ? categoriesData.categories
     : [];
 
+  console.log(initialProducts);
+
   return (
     <div>
       <Home

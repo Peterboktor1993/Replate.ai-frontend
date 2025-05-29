@@ -173,7 +173,7 @@ export const getOrderDetails =
       };
     }
   };
-  
+
 //===============================================
 // Get running orders
 //===============================================
@@ -215,6 +215,39 @@ export const getRunningOrders =
         addToast({
           show: true,
           title: "Error",
+          message: errorMessage,
+          type: "error",
+        })
+      );
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  };
+
+//===============================================
+// Get Stripe Payment Page URL
+//===============================================
+export const getStripePaymentUrl =
+  (orderId, customerId, redirectUrl) => async (dispatch) => {
+    try {
+      const paymentUrl = `https://diggitsy.com/replate/payment-mobile?order_id=${orderId}&customer_id=${customerId}&payment_method=stripe&payment_platform=stripe&callback=${encodeURIComponent(
+        redirectUrl
+      )}`;
+
+      return {
+        success: true,
+        paymentUrl,
+      };
+    } catch (error) {
+      const errorMessage = handleErrorMessage(error);
+
+      dispatch(
+        addToast({
+          show: true,
+          title: "Payment Error",
           message: errorMessage,
           type: "error",
         })

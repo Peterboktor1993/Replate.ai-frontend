@@ -1,25 +1,38 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import Link from "next/link";
-import { Autoplay, Navigation } from "swiper/modules";
+import { Navigation } from "swiper/modules";
 
 import "swiper/css";
-import "swiper/css/autoplay";
 import "swiper/css/navigation";
 import Image from "next/image";
 
-const CategorySlider = ({ categories }) => {
+const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
+  const [swiperInstance, setSwiperInstance] = useState(null);
+
+  const handleCategoryClick = (category, e) => {
+    e.stopPropagation(); // Prevent any swiper events
+    if (onCategorySelect) {
+      onCategorySelect(category);
+    }
+  };
+
   return (
     <>
       <div className="category-slider-container position-relative mb-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4 className="cate-title mb-0">Categories</h4>
           <div className="navigation-buttons">
-            <button className="nav-button prev-button me-2">
+            <button
+              className="nav-button prev-button me-2"
+              onClick={() => swiperInstance?.slidePrev()}
+            >
               <i className="fas fa-chevron-left"></i>
             </button>
-            <button className="nav-button next-button">
+            <button
+              className="nav-button next-button"
+              onClick={() => swiperInstance?.slideNext()}
+            >
               <i className="fas fa-chevron-right"></i>
             </button>
           </div>
@@ -27,23 +40,16 @@ const CategorySlider = ({ categories }) => {
 
         <Swiper
           className="mySwiper-2"
-          speed={1200}
+          speed={600}
           slidesPerView={6}
           spaceBetween={20}
-          controller={true}
           allowTouchMove={true}
-          loop={true}
-          navigation={{
-            nextEl: ".next-button",
-            prevEl: ".prev-button",
-          }}
-          pagination={{
-            clickable: true,
-          }}
-          autoplay={{
-            delay: 1200,
-          }}
-          modules={[Autoplay, Navigation]}
+          loop={false} // Disable loop to prevent position switching
+          navigation={false} // Disable built-in navigation, use custom buttons
+          pagination={false}
+          watchSlidesProgress={true}
+          onSwiper={setSwiperInstance} // Get swiper instance for custom navigation
+          modules={[Navigation]}
           breakpoints={{
             360: {
               slidesPerView: 2,
@@ -70,9 +76,14 @@ const CategorySlider = ({ categories }) => {
           {categories?.map((category) => (
             <SwiperSlide
               key={category.id}
-              className="text-center border rounded py-2"
+              className={`text-center border rounded py-2 ${
+                selectedCategory === category.id ? "active-category" : ""
+              }`}
             >
-              <div className="category-card">
+              <div
+                className="category-card"
+                onClick={(e) => handleCategoryClick(category, e)}
+              >
                 <Image
                   src={`${category.image_full_url}`}
                   alt={category.name}
@@ -97,10 +108,47 @@ const CategorySlider = ({ categories }) => {
         .category-card {
           padding: 10px;
           cursor: pointer;
+          transition: all 0.3s ease-in-out;
+          border-radius: 12px;
+          user-select: none; /* Prevent text selection */
+          transition: all 0.3s ease-in-out;
+        }
+
+        .category-card:hover {
+          transform: translateY(-3px);
+          transition: all 0.3s ease-in-out;
         }
 
         .category-card:hover h6 {
           color: var(--primary-color);
+          transition: all 0.3s ease-in-out;
+        }
+
+        .category-card:hover img {
+          transform: scale(1.05);
+          transition: transform 0.3s ease-in-out;
+        }
+
+        /* Active category styles */
+        .active-category {
+          border-color: var(--primary-color) !important;
+          transform: scale(1.02);
+          border-width: 3px !important;
+        }
+
+        .active-category .category-card h6 {
+          color: var(--primary-color) !important;
+          font-weight: 600;
+        }
+
+        .active-category .category-card img {
+          filter: brightness(1.1);
+          border: 2px solid var(--primary-color);
+          border-radius: 8px;
+        }
+
+        .swiper-slide {
+          transition: all 0.3s ease;
         }
 
         .nav-button {
@@ -116,17 +164,28 @@ const CategorySlider = ({ categories }) => {
           cursor: pointer;
           transition: all 0.2s ease;
           font-size: 12px;
+          z-index: 10;
         }
 
         .nav-button:hover {
-          background: var(--secondary-color);
+          background: var(--secondary-color, #0d6efd);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
           transform: translateY(-2px);
+        }
+
+        .nav-button:active {
+          transform: translateY(0);
         }
 
         .navigation-buttons {
           display: flex;
           align-items: center;
+        }
+
+        /* Disable swiper button styles if any */
+        .swiper-button-next,
+        .swiper-button-prev {
+          display: none !important;
         }
 
         @media (max-width: 767px) {

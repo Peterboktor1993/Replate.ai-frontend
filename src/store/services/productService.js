@@ -15,20 +15,20 @@ export const getAllProducts = createAsyncThunk(
   async ({ limit, offset, restaurantId }, { rejectWithValue }) => {
     try {
       const currentRestaurantId = getCurrentRestaurantId();
-      const response = await axiosInstance.get(
-        PRODUCT_URL,
-        {
+      const response = await axiosInstance({
+        method: "get",
+        url: `${PRODUCT_URL}/search`,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          zoneId: `[${ZONE_ID}]`,
+        },
+        data: {
           restaurant_id: restaurantId || currentRestaurantId,
           limit,
           offset,
         },
-        {
-          headers: {
-            zoneId: `[${ZONE_ID}]`,
-            restaurant_id: `[${currentRestaurantId}]`,
-          },
-        }
-      );
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
