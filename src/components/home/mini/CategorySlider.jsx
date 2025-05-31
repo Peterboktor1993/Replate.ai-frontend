@@ -5,13 +5,13 @@ import { Navigation } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
-import Image from "next/image";
+import SafeImage from "@/components/common/SafeImage";
 
 const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
   const [swiperInstance, setSwiperInstance] = useState(null);
 
   const handleCategoryClick = (category, e) => {
-    e.stopPropagation(); // Prevent any swiper events
+    e.stopPropagation();
     if (onCategorySelect) {
       onCategorySelect(category);
     }
@@ -84,7 +84,7 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
                 className="category-card"
                 onClick={(e) => handleCategoryClick(category, e)}
               >
-                <Image
+                <SafeImage
                   src={`${category.image_full_url}`}
                   alt={category.name}
                   width={100}

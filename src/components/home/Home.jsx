@@ -33,6 +33,9 @@ const Home = ({
   initialCategories,
   restaurantId,
   restaurantDetails,
+  productOffset,
+  productLimit,
+  productTotal,
 }) => {
   const [dropSelect, setDropSelect] = useState("Other");
   const [detailsModal, setDetailsModal] = useState(false);
@@ -42,6 +45,10 @@ const Home = ({
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [totalProductCount, setTotalProductCount] = useState(productTotal || 0);
+  const [currentProductCount, setCurrentProductCount] = useState(
+    initialProducts?.length || 0
+  );
   const checkoutRef = useRef(null);
   const dispatch = useDispatch();
 
@@ -67,6 +74,7 @@ const Home = ({
     );
     dispatch(setFilteredCategories(filtered));
     setFilteredProducts(initialProducts);
+    setCurrentProductCount(initialProducts?.length || 0);
   }, [initialProducts, initialCategories]);
 
   const filterProductsByCategory = (categoryId) => {
@@ -99,6 +107,13 @@ const Home = ({
       filterProductsByCategory(null);
     } else {
       filterProductsByCategory(category.id);
+    }
+  };
+
+  const handleProductCountUpdate = (newCount, newTotal) => {
+    setCurrentProductCount(newCount);
+    if (newTotal) {
+      setTotalProductCount(newTotal);
     }
   };
 
@@ -215,20 +230,54 @@ const Home = ({
             </div>
             <div className="col-xl-12 my-4">
               <div className="d-flex align-items-center justify-content-between mb-3 px-1">
-                <h4 className="mb-0 cate-title">
-                  {selectedCategory
-                    ? `${
-                        filteredCategories.find(
-                          (cat) => cat.id === selectedCategory
-                        )?.name || "Category"
-                      } Dishes`
-                    : "Popular Dishes"}
-                  {filteredProducts.length > 0 && (
-                    <span className="text-muted ms-2 fs-6">
+                <div className="title-section">
+                  <h4 className="mb-0 cate-title">
+                    {selectedCategory
+                      ? `${
+                          filteredCategories.find(
+                            (cat) => cat.id === selectedCategory
+                          )?.name || "Category"
+                        } Dishes`
+                      : "Popular Dishes"}
+                  </h4>
+                  {!selectedCategory ? (
+                    <div className="count-info d-flex align-items-center mt-1">
+                      {/* <span className="text-muted me-2 fs-6">
+                        Showing {currentProductCount} of {totalProductCount}{" "}
+                        items
+                      </span> */}
+                      {/* {currentProductCount < totalProductCount && (
+                        <div className="progress-container d-flex align-items-center">
+                          <div
+                            className="progress me-2"
+                            style={{ width: "100px", height: "4px" }}
+                          >
+                            <div
+                              className="progress-bar bg-primary"
+                              style={{
+                                width: `${
+                                  (currentProductCount / totalProductCount) *
+                                  100
+                                }%`,
+                                transition: "width 0.3s ease",
+                              }}
+                            ></div>
+                          </div>
+                          <small className="text-primary fw-bold">
+                            {Math.round(
+                              (currentProductCount / totalProductCount) * 100
+                            )}
+                            %
+                          </small>
+                        </div>
+                      )} */}
+                    </div>
+                  ) : (
+                    <span className="text-muted fs-6 mt-1 d-block">
                       ({filteredProducts.length} items)
                     </span>
                   )}
-                </h4>
+                </div>
                 {selectedCategory && (
                   <button
                     className="btn btn-outline-primary btn-sm"
@@ -242,6 +291,11 @@ const Home = ({
               <PopularDishesSlider
                 products={filteredProducts}
                 restaurantId={restaurantId}
+                isFiltered={selectedCategory !== null}
+                initialOffset={productOffset}
+                initialLimit={productLimit}
+                totalProducts={totalProductCount}
+                onProductCountUpdate={handleProductCountUpdate}
               />
             </div>
           </div>
@@ -269,7 +323,7 @@ const Home = ({
       {/* Floating Checkout Button - Mobile Only */}
       {showFloatingButton && (
         <div
-          className="d-block d-xl-none position-fixed bottom-0 start-0 w-100 p-3 bg-white shadow-lg"
+          className="d-block d-md-none position-fixed bottom-0 start-0 w-100 p-3 bg-white shadow-lg"
           style={{ zIndex: 1000 }}
         >
           <div className="d-flex align-items-center justify-content-between">
@@ -313,6 +367,69 @@ const Home = ({
           }
         }
 
+        /* Enhanced Title Section */
+        .title-section {
+          animation: fade-in-up 0.6s ease-out;
+        }
+
+        .count-info {
+          animation: slide-in-right 0.8s ease-out;
+        }
+
+        .progress-container {
+          animation: scale-in 0.5s ease-out 0.3s both;
+        }
+
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slide-in-right {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        /* Enhanced Progress Bar */
+        .progress {
+          background-color: rgba(var(--primary-color-rgb, 224, 30, 30), 0.1);
+          border-radius: 8px;
+          box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+          border-radius: 8px;
+          background: linear-gradient(
+            90deg,
+            var(--primary-color, #e01e1e) 0%,
+            rgba(var(--primary-color-rgb, 224, 30, 30), 0.8) 100%
+          );
+          box-shadow: 0 2px 4px rgba(var(--primary-color-rgb, 224, 30, 30), 0.3);
+        }
+
         .cart-items-scrollable {
           max-height: 480px;
           overflow-y: auto;
@@ -342,7 +459,7 @@ const Home = ({
         }
       `}</style>
       <style jsx global>{`
-        .cart-sidebar-fixed {
+        .cart-sidebar-sticky {
           position: sticky;
           top: 24px;
           z-index: 1020;

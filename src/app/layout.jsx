@@ -23,6 +23,7 @@ export default async function RootLayout({ children }) {
   const restaurantId = searchParams?.restaurant || "2";
 
   const restaurant = await getRestaurantDetailsServer(restaurantId);
+
   return (
     <html lang="en">
       <head>

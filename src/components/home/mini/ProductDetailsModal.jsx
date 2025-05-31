@@ -158,22 +158,22 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
         }
 
         .modal-footer .btn-outline-primary {
-          color: var(--bs-primary);
-          border-color: var(--bs-primary);
+          color: var(--primary-color);
+          border-color: var(--primary-color);
         }
 
         .modal-footer .btn-outline-primary:hover {
-          background-color: var(--bs-primary);
+          background-color: var(--primary-color);
           color: white;
         }
 
         .modal-footer .btn-primary {
-          background-color: var(--bs-primary);
-          border-color: var(--bs-primary);
+          background-color: var(--primary-color);
+          border-color: var(--primary-color);
         }
         .selected-variation {
-          border-color: var(--bs-primary) !important;
-          background-color: rgba(var(--bs-primary-rgb), 0.1);
+          border-color: var(--primary-color) !important;
+          background-color: rgba(var(--primary-color), 0.1);
         }
       `}</style>
       <Modal

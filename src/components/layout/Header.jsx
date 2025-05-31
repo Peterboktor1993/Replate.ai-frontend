@@ -164,11 +164,9 @@ const Header = ({ details }) => {
       />
 
       <style jsx global>{`
-        /* Logo Responsive Styles */
         .logo-img {
           max-width: 65px;
           max-height: 65px;
-          border-radius: 8px;
         }
 
         .logo-text {
@@ -228,7 +226,6 @@ const Header = ({ details }) => {
 
         /* Mobile Specific Styles */
         @media (max-width: 575.98px) {
-          /* Extra Small devices */
           .logo-img {
             max-width: 50px;
             max-height: 50px;

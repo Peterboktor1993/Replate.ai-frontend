@@ -106,7 +106,7 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
               setLoading={setLoading}
               onModeChange={handleModeChange}
               onHide={onHide}
-            />
+                  />
           )}
 
           {/* Forgot Password Flow */}

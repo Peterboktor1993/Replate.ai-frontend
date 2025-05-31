@@ -2,11 +2,10 @@
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
-import Image from "next/image";
-
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/autoplay";
+import SafeImage from "@/components/common/SafeImage";
 
 const banerimg1 = "/images/banner-img/pic-1.jpg";
 const banerimg2 = "/images/banner-img/pic-3.jpg";
@@ -19,9 +18,16 @@ const defaultSliderBlog = [
 ];
 
 const BannerSlider = ({ restaurantDetails }) => {
-  const sliderBlog = restaurantDetails?.top_banner_full_url
-    ? [{ image: restaurantDetails.top_banner_full_url }]
-    : defaultSliderBlog;
+  const topBanners = restaurantDetails?.top_banner_full_url;
+  let sliderBlog;
+
+  if (Array.isArray(topBanners) && topBanners.length > 0) {
+    sliderBlog = topBanners.map((url) => ({ image: url }));
+  } else if (typeof topBanners === "string" && topBanners.trim() !== "") {
+    sliderBlog = [{ image: topBanners }];
+  } else {
+    sliderBlog = defaultSliderBlog;
+  }
 
   return (
     <div className="position-relative">
@@ -41,13 +47,14 @@ const BannerSlider = ({ restaurantDetails }) => {
         {sliderBlog.map((data, ind) => (
           <SwiperSlide key={ind}>
             <div className="banner-bx mt-1">
-              <Image
+              <SafeImage
                 src={data.image}
                 alt="Banner image"
                 width={800}
                 height={400}
                 style={{ width: "100%", height: "220px" }}
                 priority
+                fallbackSrc={banerimg1}
               />
             </div>
           </SwiperSlide>

@@ -29,13 +29,13 @@
 }
 
 .product-detail-modal .modal-header .product-price-badge {
-  background: var(--bs-primary);
+  background: var(--primary-color);
   color: white;
   padding: 0.4rem 1rem;
   border-radius: 50px;
   font-weight: 700;
   font-size: 1.1rem;
-  box-shadow: 0 3px 10px rgba(var(--bs-primary-rgb), 0.3);
+  box-shadow: 0 3px 10px rgba(var(--primary-color), 0.3);
   transform: translateY(0);
   transition: all 0.3s ease;
 }
@@ -274,14 +274,14 @@
 
 .product-detail-modal .variation-item:hover,
 .product-detail-modal .addon-item:hover {
-  border-color: var(--bs-primary);
-  background-color: rgba(var(--bs-primary-rgb), 0.05);
+  border-color: var(--primary-color);
+  background-color: rgba(var(--primary-color), 0.05);
 }
 
 .product-detail-modal .selected-variation,
 .product-detail-modal .selected-addon {
-  border-color: var(--bs-primary);
-  background-color: rgba(var(--bs-primary-rgb), 0.1);
+  border-color: var(--primary-color);
+  background-color: rgba(var(--primary-color), 0.1);
 }
 
 .product-detail-modal .quantity-selector .quantity-btn {
