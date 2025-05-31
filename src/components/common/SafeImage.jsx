@@ -37,7 +37,7 @@ const SafeImage = ({
   }
 
   return (
-    <Image
+    <img
       src={finalSrc}
       alt={alt}
       width={width}
