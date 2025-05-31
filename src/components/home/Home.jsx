@@ -52,7 +52,6 @@ const Home = ({
   const checkoutRef = useRef(null);
   const dispatch = useDispatch();
 
-  const { filteredCategories } = useSelector((state) => state.categories);
   const { token, user } = useSelector(
     (state) => state.auth || { token: null, user: null }
   );
@@ -65,22 +64,46 @@ const Home = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
+  // Function to count products for a specific category
+  const countProductsForCategory = (categoryId) => {
+    return initialProducts.filter((product) => {
+      if (product.category_id === categoryId) {
+        return true;
+      }
+
+      if (product.category_ids && Array.isArray(product.category_ids)) {
+        return product.category_ids.some(
+          (cat) => parseInt(cat.id) === categoryId
+        );
+      }
+
+      return false;
+    }).length;
+  };
+
   useEffect(() => {
     dispatch(setProducts(initialProducts));
     dispatch(setCategories(initialCategories));
-    const filtered = filterCategoriesByProducts(
-      initialProducts,
-      initialCategories
-    );
-    dispatch(setFilteredCategories(filtered));
-    setFilteredProducts(initialProducts);
-    setCurrentProductCount(initialProducts?.length || 0);
-  }, [initialProducts, initialCategories]);
+    dispatch(setFilteredCategories(initialCategories));
+
+    if (
+      initialCategories &&
+      initialCategories.length > 0 &&
+      selectedCategory === null
+    ) {
+      const firstCategory = initialCategories[0];
+      filterProductsByCategory(firstCategory.id);
+    } else if (selectedCategory === null) {
+      setFilteredProducts(initialProducts);
+      setCurrentProductCount(initialProducts?.length || 0);
+    }
+  }, [initialProducts, initialCategories, dispatch]);
 
   const filterProductsByCategory = (categoryId) => {
     if (!categoryId) {
       setFilteredProducts(initialProducts);
       setSelectedCategory(null);
+      setCurrentProductCount(initialProducts?.length || 0);
       return;
     }
 
@@ -100,6 +123,7 @@ const Home = ({
 
     setFilteredProducts(filtered);
     setSelectedCategory(categoryId);
+    setCurrentProductCount(filtered?.length || 0);
   };
 
   const handleCategorySelect = (category) => {
@@ -223,9 +247,10 @@ const Home = ({
 
             <div className="col-xl-12 mb-3 my-3">
               <CategorySlider
-                categories={filteredCategories}
+                categories={initialCategories}
                 selectedCategory={selectedCategory}
                 onCategorySelect={handleCategorySelect}
+                countProductsForCategory={countProductsForCategory}
               />
             </div>
             <div className="col-xl-12 my-4">
@@ -234,7 +259,7 @@ const Home = ({
                   <h4 className="mb-0 cate-title">
                     {selectedCategory
                       ? `${
-                          filteredCategories.find(
+                          initialCategories.find(
                             (cat) => cat.id === selectedCategory
                           )?.name || "Category"
                         } Dishes`

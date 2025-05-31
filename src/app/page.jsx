@@ -18,9 +18,15 @@ export default async function HomePage({ searchParams }) {
   const productOffset = productsData?.offset;
   const productLimit = productsData?.limit;
   const productTotal = productsData?.total_size;
-  const initialCategories = Array.isArray(categoriesData?.categories)
+
+  const allCategories = Array.isArray(categoriesData?.categories)
     ? categoriesData.categories
     : [];
+
+  const restaurantCategoryIds = restaurantData?.category_ids || [];
+  const initialCategories = allCategories.filter((category) =>
+    restaurantCategoryIds.includes(category.id)
+  );
 
   return (
     <div>

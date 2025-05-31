@@ -43,11 +43,12 @@ const Header = ({ details }) => {
   const handleLogout = () => {
     dispatch(logout());
   };
+
   return (
     <>
       <header
         style={{
-          zIndex: 89990,
+          zIndex: 9990,
         }}
         className="shadow-sm sticky-top bg-white"
       >
@@ -55,20 +56,20 @@ const Header = ({ details }) => {
           <div className="d-flex align-items-center justify-content-between py-2 py-md-3">
             {/* Logo Section */}
             <div className="d-flex align-items-center">
-              <Link href="/" className="logo text-decoration-none">
+              <Link
+                href={`/?restaurant=${details?.id}`}
+                className="logo text-decoration-none"
+              >
                 <div className="d-flex align-items-center">
                   {details?.logo_full_url && (
                     <SafeImage
                       src={details?.logo_full_url}
                       alt={details?.name}
-                      width={35}
-                      height={35}
-                      className="me-2 logo-img"
+                      width={60}
+                      height={60}
+                      className="me-2 w-100"
                     />
                   )}
-                  <h2 className="m-0 text-primary fw-bold logo-text">
-                    {details?.name || "Cravio"}
-                  </h2>
                 </div>
               </Link>
             </div>

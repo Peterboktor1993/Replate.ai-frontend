@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import TipSection from "./TipSection";
 
 const CartSummary = ({
@@ -20,9 +20,88 @@ const CartSummary = ({
   handleTipSelection,
   enableCustomTip,
   handleCustomTipChange,
-  paymentMethod = "cash_on_delivery", // Default to cash on delivery
+  paymentMethod = "cash_on_delivery",
+  restaurantDetails,
+  incompletePayment = null,
+  hasValidCartItems = null,
 }) => {
-  // Get button text based on payment method
+  const [configData, setConfigData] = useState(null);
+  const [configLoading, setConfigLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch(
+          "https://diggitsy.com/replate/api/v1/config"
+        );
+        const data = await response.json();
+        setConfigData(data);
+      } catch (error) {
+        console.error("Error fetching config:", error);
+      } finally {
+        setConfigLoading(false);
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
+  const calculateDeliveryFee = () => {
+    if (!restaurantDetails?.delivery_fee) return 0;
+    const fee = restaurantDetails.delivery_fee;
+    if (fee === "out_of_range" || isNaN(parseFloat(fee))) return 0;
+    return parseFloat(fee) || 0;
+  };
+
+  const calculateRestaurantTax = () => {
+    if (!restaurantDetails?.tax) return 0;
+    return parseFloat(restaurantDetails.tax) || 0;
+  };
+
+  const calculateServiceFees = () => {
+    if (!restaurantDetails?.comission) return 0;
+    return parseFloat(restaurantDetails.comission) || 0;
+  };
+
+  const calculateTipAmount = () => {
+    if (customTip && customTipAmount > 0) {
+      return parseFloat(customTipAmount);
+    }
+    if (tipPercentage > 0) {
+      const subtotal = calculateSubtotal();
+      return (subtotal * tipPercentage) / 100;
+    }
+    return 0;
+  };
+
+  const calculateGrandTotal = () => {
+    const subtotal = calculateSubtotal();
+    const itemTax = calculateTotalTax();
+    const discount = calculateTotalDiscount();
+    const deliveryFee = calculateDeliveryFee();
+    const restaurantTax = calculateRestaurantTax();
+    const serviceFees = calculateServiceFees();
+    const tip = calculateTipAmount();
+
+    return (
+      subtotal +
+      itemTax -
+      discount +
+      deliveryFee +
+      restaurantTax +
+      serviceFees +
+      tip
+    );
+  };
+
+  const isButtonDisabled = () => {
+    if (processing) return true;
+    if (hasValidCartItems) {
+      return !hasValidCartItems();
+    }
+    return cartItems.length === 0;
+  };
+
   const getButtonText = () => {
     if (processing) {
       return (
@@ -37,13 +116,13 @@ const CartSummary = ({
       );
     }
 
+    const baseAmount = calculateGrandTotal().toFixed(2);
+
     if (paymentMethod === "Stripe") {
-      return `Place Order & Pay with Card (${currency} ${calculateTotal().toFixed(
-        2
-      )})`;
+      return `Place Order & Pay with Card (${currency} ${baseAmount})`;
     }
 
-    return `Place Order (${currency} ${calculateTotal().toFixed(2)})`;
+    return `Place Order (${currency} ${baseAmount})`;
   };
 
   return (
@@ -58,13 +137,91 @@ const CartSummary = ({
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>
-        ) : cartItems.length === 0 ? (
+        ) : cartItems.length === 0 && !incompletePayment ? (
           <div className="text-center py-4">
             <i className="fa-solid fa-shopping-cart fa-2x text-muted mb-3"></i>
             <p className="text-muted">Your cart is empty</p>
           </div>
-        ) : (
+        ) : cartItems.length === 0 && incompletePayment ? (
           <div className="checkout-right">
+            <div className="alert alert-warning mb-3">
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              <strong>Incomplete Payment</strong>
+              <br />
+              <small>
+                Order #{incompletePayment?.orderId || "N/A"} requires payment
+                completion.
+              </small>
+            </div>
+
+            <div className="bill-details mt-4 border-bottom">
+              <h6>Order Summary</h6>
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <span>Order Amount</span>
+                <span>
+                  {currency} {(incompletePayment?.amount || 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <div className="d-flex align-items-center justify-content-between my-3">
+              <span className="fw-bold">TOTAL</span>
+              <span className="fw-bold text-primary">
+                {currency} {(incompletePayment?.amount || 0).toFixed(2)}
+              </span>
+            </div>
+
+            <div className="payment-method-info mb-3">
+              <div className="d-flex align-items-center">
+                <i className="fa-regular fa-credit-card me-2"></i>
+                <span>Payment: Credit/Debit Card</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary btn-lg w-100 mt-3"
+              disabled={processing}
+              onClick={() => window.location.reload()}
+            >
+              {processing ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  Processing...
+                </>
+              ) : (
+                `Complete Payment (${currency} ${(
+                  incompletePayment?.amount || 0
+                ).toFixed(2)})`
+              )}
+            </button>
+          </div>
+        ) : (
+          <div
+            className={`checkout-right position-relative ${
+              processing ? "processing-active" : ""
+            }`}
+          >
+            {/* Processing Overlay */}
+            {processing && (
+              <div className="processing-overlay">
+                <div className="processing-content">
+                  <div className="alert alert-info mb-0">
+                    <i className="fas fa-lock me-2"></i>
+                    <strong>Payment in Progress</strong>
+                    <br />
+                    <small>
+                      Your order details are locked during payment processing.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Cart Items */}
             <div className="mb-4">
               {cartItems.map((item) => {
@@ -151,13 +308,14 @@ const CartSummary = ({
               handleTipSelection={handleTipSelection}
               enableCustomTip={enableCustomTip}
               handleCustomTipChange={handleCustomTipChange}
-              calculateTip={calculateTip}
+              calculateTip={calculateTipAmount}
+              disabled={processing}
             />
 
             <div className="bill-details mt-4 border-bottom">
               <h6>Bill Details</h6>
               <div className="d-flex align-items-center justify-content-between mb-3">
-                <span>Item Total</span>
+                <span>Subtotal</span>
                 <span>
                   {currency} {calculateSubtotal().toFixed(2)}
                 </span>
@@ -166,7 +324,23 @@ const CartSummary = ({
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <span>Tax</span>
                 <span>
-                  {currency} {calculateTotalTax().toFixed(2)}
+                  {currency} {calculateRestaurantTax().toFixed(2)}
+                </span>
+              </div>
+
+              {/* Delivery Fee */}
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <span>Delivery Fee</span>
+                <span>
+                  {currency} {calculateDeliveryFee().toFixed(2)}
+                </span>
+              </div>
+
+              {/* Service Fees (Commission) */}
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <span>Service Fees</span>
+                <span>
+                  {currency} {calculateServiceFees().toFixed(2)}
                 </span>
               </div>
 
@@ -182,7 +356,21 @@ const CartSummary = ({
               {(tipPercentage > 0 || (customTip && customTipAmount > 0)) && (
                 <div className="d-flex align-items-center justify-content-between mb-3">
                   <span>Tip</span>
-                  <span>USD {calculateTip().toFixed(2)}</span>
+                  <span>
+                    {currency} {calculateTipAmount().toFixed(2)}
+                  </span>
+                </div>
+              )}
+
+              {/* Additional Charge Information */}
+              {configData?.additional_charge_status === 1 && (
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <span className="d-flex align-items-center">
+                    {configData.additional_charge_name || "Additional Charge"}
+                  </span>
+                  <span>
+                    {currency} {(configData.additional_charge || 0).toFixed(2)}
+                  </span>
                 </div>
               )}
             </div>
@@ -190,7 +378,10 @@ const CartSummary = ({
             <div className="d-flex align-items-center justify-content-between my-3">
               <span className="fw-bold">TOTAL</span>
               <span className="fw-bold text-primary">
-                {currency} {calculateTotal().toFixed(2)}
+                {currency}{" "}
+                {(calculateGrandTotal() + configData.additional_charge).toFixed(
+                  2
+                )}
               </span>
             </div>
 
@@ -218,13 +409,68 @@ const CartSummary = ({
               className={`btn btn-lg w-100 mt-3 ${
                 paymentMethod === "Stripe" ? "btn-primary" : "btn-primary"
               }`}
-              disabled={processing}
+              disabled={isButtonDisabled()}
+              style={{
+                position: processing ? "relative" : "static",
+                zIndex: processing ? 20 : "auto",
+              }}
             >
               {getButtonText()}
             </button>
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .processing-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(248, 249, 250, 0.98);
+          z-index: 15;
+          pointer-events: all;
+          border-radius: 0.375rem;
+          cursor: not-allowed;
+        }
+
+        .processing-content {
+          position: sticky;
+          top: 0;
+          padding: 1rem;
+          pointer-events: none;
+        }
+
+        .checkout-right {
+          min-height: 200px;
+          position: relative;
+        }
+
+        .checkout-right.processing-active {
+          pointer-events: none;
+          user-select: none;
+        }
+
+        .checkout-right.processing-active * {
+          pointer-events: none !important;
+          user-select: none !important;
+        }
+
+        .checkout-right.processing-active button[type="submit"] {
+          pointer-events: auto !important;
+          position: relative;
+          z-index: 20;
+        }
+
+        .checkout-right.processing-active .processing-overlay {
+          pointer-events: all;
+        }
+
+        .checkout-right.processing-active .processing-content {
+          pointer-events: auto;
+        }
+      `}</style>
     </div>
   );
 };

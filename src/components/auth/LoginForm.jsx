@@ -26,7 +26,6 @@ const LoginForm = ({ loading, setLoading, onModeChange, onHide }) => {
         const result = await dispatch(loginUser(values));
 
         if (result.success) {
-          // Explicitly fetch user profile after login
           const { getUserProfile } = await import(
             "@/store/services/authService"
           );
@@ -92,7 +91,6 @@ const LoginForm = ({ loading, setLoading, onModeChange, onHide }) => {
         variant="primary"
         type="submit"
         className="w-100"
-        style={{ color: "var(--primary-color)" }}
         disabled={loading}
       >
         {loading ? <Spinner animation="border" size="sm" /> : "Sign In"}

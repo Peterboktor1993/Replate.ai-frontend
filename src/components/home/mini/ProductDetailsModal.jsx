@@ -175,12 +175,287 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
           border-color: var(--primary-color) !important;
           background-color: rgba(var(--primary-color), 0.1);
         }
+
+        /* Mobile-only cool and compact design */
+        @media (max-width: 576px) {
+          .modal-backdrop {
+            z-index: 999998 !important;
+          }
+
+          .product-detail-modal {
+            z-index: 999999 !important;
+          }
+
+          .product-detail-modal .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100vw - 1rem);
+            z-index: 999999 !important;
+          }
+
+          .product-detail-modal .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            z-index: 999999 !important;
+            position: relative;
+          }
+
+          .product-detail-modal .modal-header {
+            padding: 1rem 1.25rem 0.75rem;
+            border-bottom: none;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+          }
+
+          .product-detail-modal .modal-header .product-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+          }
+
+          .product-detail-modal .modal-header .product-price-badge {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            background: rgba(var(--primary-color), 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+          }
+
+          .product-detail-modal .btn-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.08);
+            font-size: 12px;
+          }
+
+          .product-detail-modal .modal-body {
+            padding: 0;
+            max-height: 70vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          .product-detail-modal .product-image-section {
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+          }
+
+          .product-detail-modal .product-detail-img {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          }
+
+          .product-detail-modal .product-info-section {
+            padding: 1rem 1.25rem;
+            background: white;
+          }
+
+          .product-detail-modal .product-info-section .d-flex {
+            margin-bottom: 0.75rem;
+          }
+
+          .product-detail-modal .product-info-section .text-muted {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+          }
+
+          .tags-container {
+            margin-bottom: 1rem;
+          }
+
+          .tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+          }
+
+          .tag-item {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            background: #f1f3f4;
+            color: #5f6368;
+            border: none;
+            font-weight: 500;
+          }
+
+          .tag-halal {
+            background: #e8f5e8;
+            color: #2e7d32;
+          }
+
+          .product-description {
+            margin-bottom: 1rem;
+          }
+
+          .product-description .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+          }
+
+          .product-description p {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #6c757d;
+            margin: 0;
+          }
+
+          .nav-tabs {
+            border: none;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 0.25rem;
+          }
+
+          .nav-tabs .nav-link {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #6c757d;
+            margin: 0 0.125rem;
+          }
+
+          .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+
+          .variation-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #2c3e50;
+          }
+
+          .variation-item,
+          .addon-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 12px;
+            border: 1.5px solid #e9ecef;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+          }
+
+          .variation-item:active,
+          .addon-item:active {
+            transform: scale(0.98);
+          }
+
+          .variation-item.selected-variation,
+          .addon-item.selected-addon {
+            border-color: var(--primary-color);
+            background: linear-gradient(
+              135deg,
+              rgba(var(--primary-color), 0.08) 0%,
+              rgba(var(--primary-color), 0.04) 100%
+            );
+            box-shadow: 0 4px 12px rgba(var(--primary-color), 0.15);
+          }
+
+          .variation-item h6,
+          .addon-item h6 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0;
+            color: #2c3e50;
+          }
+
+          .variation-item small,
+          .addon-item span {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+          }
+
+          .form-check-input {
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 4px;
+          }
+
+          .product-quantity-container {
+            margin: 1.25rem 0;
+            display: flex;
+            justify-content: center;
+          }
+
+          .quantity-control {
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          }
+
+          .quantity-control button {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 14px;
+            border-radius: 50%;
+            touch-action: manipulation;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            border: none;
+          }
+
+          .quantity-control span {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 1.5rem;
+            min-width: 30px;
+            text-align: center;
+            color: #2c3e50;
+          }
+
+          .product-detail-modal .modal-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid #f1f3f4;
+            background: white;
+            border-radius: 0 0 20px 20px;
+          }
+
+          .product-detail-modal .modal-footer .btn {
+            padding: 0.8rem 1.5rem;
+            min-height: 44px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 12px;
+            touch-action: manipulation;
+            border: none;
+          }
+
+          .product-detail-modal .modal-footer .btn-outline-primary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e9ecef;
+          }
+
+          .product-detail-modal .modal-footer .btn-primary {
+            box-shadow: 0 4px 12px rgba(var(--primary-color), 0.3);
+          }
+        }
       `}</style>
       <Modal
         size="lg"
         show={show}
         onHide={handleClose}
         centered
+        style={{ zIndex: 9999999999999999999999999999999 }}
         dialogClassName="product-detail-modal"
       >
         <Modal.Header closeButton className="fixed-header">
@@ -211,17 +486,6 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
 
               {/* Tags Section */}
               <div className="tags-container mb-4">
-                {/* Halal Badge with special styling */}
-                {/* {product.is_halal === 1 && (
-                  <div className="halal-badge">
-                    <div className="halal-icon">
-                      <i className="fas fa-check"></i>
-                    </div>
-                    <div className="halal-text">Halal Certified</div>
-                  </div>
-                )} */}
-
-                {/* All Tags in a single section */}
                 {allTags.length > 0 ? (
                   <div className="all-tags-section">
                     <div className="tags-list">

@@ -408,7 +408,6 @@ const CartSidebar = ({
 
       <style jsx>{`
         .cart-sidebar-container {
-          position: sticky;
           top: 20px;
           z-index: 1010;
         }

@@ -9,9 +9,10 @@ const TipSection = ({
   enableCustomTip,
   handleCustomTipChange,
   calculateTip,
+  disabled = false,
 }) => {
   return (
-    <div className="tip-section mb-4">
+    <div className={`tip-section mb-4 ${disabled ? "disabled" : ""}`}>
       <div className="d-flex justify-content-between align-items-center mb-2">
         <span className="checkout-title font-bold">Add a Tip</span>
       </div>
@@ -26,7 +27,8 @@ const TipSection = ({
                 ? "btn-primary"
                 : "btn-outline-primary"
             } btn-sm me-2 mb-2`}
-            onClick={() => handleTipSelection(preset.value)}
+            onClick={() => !disabled && handleTipSelection(preset.value)}
+            disabled={disabled}
           >
             {preset.label}
           </button>
@@ -36,7 +38,8 @@ const TipSection = ({
           className={`btn ${
             customTip ? "btn-primary" : "btn-outline-primary"
           } btn-sm mb-2`}
-          onClick={enableCustomTip}
+          onClick={() => !disabled && enableCustomTip()}
+          disabled={disabled}
         >
           Custom
         </button>
@@ -53,6 +56,7 @@ const TipSection = ({
             onChange={handleCustomTipChange}
             min="0"
             step="0.01"
+            disabled={disabled}
           />
         </div>
       )}
@@ -66,10 +70,12 @@ const TipSection = ({
           step="5"
           value={customTip ? 0 : tipPercentage}
           onChange={(e) => {
-            const value = parseInt(e.target.value);
-            handleTipSelection(value);
+            if (!disabled) {
+              const value = parseInt(e.target.value);
+              handleTipSelection(value);
+            }
           }}
-          disabled={customTip}
+          disabled={customTip || disabled}
         />
         <div className="d-flex justify-content-between">
           <span>0%</span>
@@ -87,6 +93,13 @@ const TipSection = ({
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .tip-section.disabled {
+          opacity: 0.6;
+          pointer-events: none;
+        }
+      `}</style>
     </div>
   );
 };

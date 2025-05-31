@@ -57,7 +57,7 @@ const PopularDishesSlider = ({
 
     initializedRef.current = setupKey;
 
-    if (initialProducts && initialProducts.length > 0) {
+    if (initialProducts !== undefined) {
       setProducts(initialProducts);
       setCurrentPage(initialOffset + 1);
       setLoadedCount(initialProducts.length);
@@ -71,7 +71,8 @@ const PopularDishesSlider = ({
       const shouldContinueLoading =
         !isFiltered &&
         totalProducts > 0 &&
-        initialProducts.length < totalProducts;
+        initialProducts.length < totalProducts &&
+        initialProducts.length > 0;
 
       setHasMore(shouldContinueLoading);
 
@@ -213,7 +214,9 @@ const PopularDishesSlider = ({
   };
 
   const handleAddToCart = (e, product) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
     const payload = {
       id: product.id,
       model: product.model || "Food",

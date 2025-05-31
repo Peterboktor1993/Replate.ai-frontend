@@ -80,6 +80,114 @@ export const loginUser = (credentials) => async (dispatch, getState) => {
 };
 
 //===============================================
+// Social Login (Google, Facebook, etc.)
+//===============================================
+export const socialLogin = (socialData) => async (dispatch, getState) => {
+  try {
+    const { guestId } = getState().cart;
+    const hasGuestId = !!guestId;
+
+    const payload = {
+      login_type: "social",
+      token: socialData.token,
+      unique_id: socialData.unique_id,
+      email: socialData.email,
+      medium: socialData.medium,
+    };
+
+    if (hasGuestId) {
+      payload.guest_id = guestId;
+    }
+
+    const response = await axios.post(`${AUTH_URL}/login`, payload, {
+      headers: { "X-localization": "en" },
+    });
+
+    const isSuccessful = response.data.token || response.data.is_exist_user;
+
+    if (isSuccessful) {
+      const userData = response.data.is_exist_user || response.data;
+
+      if (response.data.token) {
+        dispatch(
+          loginSuccess({
+            token: response.data.token,
+            user: {
+              ...response.data,
+              id: userData.id,
+              name: userData.name,
+              image: userData.image,
+              email: response.data.email,
+              is_phone_verified: response.data.is_phone_verified,
+              is_email_verified: response.data.is_email_verified,
+              is_personal_info: response.data.is_personal_info,
+              login_type: response.data.login_type,
+            },
+          })
+        );
+
+        if (hasGuestId) {
+          localStorage.removeItem("guest_id");
+          localStorage.removeItem("guestId");
+          dispatch(regenerateGuestId());
+        }
+
+        dispatch(
+          addToast({
+            type: "success",
+            title: "Success",
+            message: `Welcome back, ${userData.name}!`,
+          })
+        );
+
+        return {
+          success: true,
+          data: response.data,
+          isLoggedIn: true,
+        };
+      } else {
+        dispatch(
+          addToast({
+            type: "info",
+            title: "Account Found",
+            message: `Hi ${userData.name}! Your account was found. Please sign in with your email and password.`,
+          })
+        );
+
+        return {
+          success: true,
+          data: response.data,
+          isLoggedIn: false,
+          existingUser: userData,
+          shouldPrefillEmail: response.data.email,
+        };
+      }
+    } else {
+      dispatch(
+        addToast({
+          type: "error",
+          title: "Error",
+          message: response.data.message || "Social login failed",
+        })
+      );
+      return { success: false, error: response.data.message };
+    }
+  } catch (error) {
+    dispatch(
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error.response?.data?.message || "Social login failed",
+      })
+    );
+    return {
+      success: false,
+      error: error.response?.data?.message || "Social login failed",
+    };
+  }
+};
+
+//===============================================
 // Register User
 //===============================================
 export const registerUser = (userData) => async (dispatch, getState) => {

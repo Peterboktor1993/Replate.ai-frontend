@@ -6,7 +6,7 @@ import { addToast } from "@/store/slices/toastSlice";
 import { AUTH_URL } from "@/utils/CONSTANTS";
 import axios from "axios";
 
-// Import new components
+// Import components
 import SocialLogin from "./SocialLogin";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
@@ -80,7 +80,6 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
 
       <Modal.Body className="px-4 pt-0 pb-4">
         <div className="auth-form-container">
-          {/* Social Login Buttons - Only show for login and register modes */}
           {mode !== "forgot-password" && (
             <SocialLogin
               mode={mode}
@@ -106,7 +105,7 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
               setLoading={setLoading}
               onModeChange={handleModeChange}
               onHide={onHide}
-                  />
+            />
           )}
 
           {/* Forgot Password Flow */}

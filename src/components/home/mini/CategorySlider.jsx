@@ -17,6 +17,46 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
     }
   };
 
+  const handlePrevCategory = () => {
+    if (!categories || categories.length === 0) return;
+
+    const currentIndex = categories.findIndex(
+      (cat) => cat.id === selectedCategory
+    );
+    const prevIndex =
+      currentIndex <= 0 ? categories.length - 1 : currentIndex - 1;
+    const prevCategory = categories[prevIndex];
+
+    if (onCategorySelect && prevCategory) {
+      onCategorySelect(prevCategory);
+
+      const slideIndex = prevIndex;
+      if (swiperInstance) {
+        swiperInstance.slideTo(slideIndex);
+      }
+    }
+  };
+
+  const handleNextCategory = () => {
+    if (!categories || categories.length === 0) return;
+
+    const currentIndex = categories.findIndex(
+      (cat) => cat.id === selectedCategory
+    );
+    const nextIndex =
+      currentIndex >= categories.length - 1 ? 0 : currentIndex + 1;
+    const nextCategory = categories[nextIndex];
+
+    if (onCategorySelect && nextCategory) {
+      onCategorySelect(nextCategory);
+
+      const slideIndex = nextIndex;
+      if (swiperInstance) {
+        swiperInstance.slideTo(slideIndex);
+      }
+    }
+  };
+
   return (
     <>
       <div className="category-slider-container position-relative mb-4">
@@ -25,13 +65,13 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           <div className="navigation-buttons">
             <button
               className="nav-button prev-button me-2"
-              onClick={() => swiperInstance?.slidePrev()}
+              onClick={handlePrevCategory}
             >
               <i className="fas fa-chevron-left"></i>
             </button>
             <button
               className="nav-button next-button"
-              onClick={() => swiperInstance?.slideNext()}
+              onClick={handleNextCategory}
             >
               <i className="fas fa-chevron-right"></i>
             </button>
@@ -44,11 +84,11 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           slidesPerView={6}
           spaceBetween={20}
           allowTouchMove={true}
-          loop={false} // Disable loop to prevent position switching
-          navigation={false} // Disable built-in navigation, use custom buttons
+          loop={false}
+          navigation={false}
           pagination={false}
           watchSlidesProgress={true}
-          onSwiper={setSwiperInstance} // Get swiper instance for custom navigation
+          onSwiper={setSwiperInstance}
           modules={[Navigation]}
           breakpoints={{
             360: {
@@ -76,24 +116,26 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           {categories?.map((category) => (
             <SwiperSlide
               key={category.id}
-              className={`text-center border rounded py-2 ${
+              className={`category-slide border rounded overflow-hidden ${
                 selectedCategory === category.id ? "active-category" : ""
               }`}
             >
               <div
-                className="category-card"
+                className="category-card-content"
                 onClick={(e) => handleCategoryClick(category, e)}
               >
-                <SafeImage
-                  src={`${category.image_full_url}`}
-                  alt={category.name}
-                  width={100}
-                  height={100}
-                  className="rounded-2"
-                />
-                <h6 className="mb-0 pb-0 text-center text-sm mt-2">
-                  {category.name}
-                </h6>
+                <div className="category-image-container">
+                  <SafeImage
+                    src={`${category.image_full_url}`}
+                    alt={category.name}
+                    width={100}
+                    height={100}
+                    className="category-image"
+                  />
+                </div>
+                <div className="category-text-content">
+                  <h6 className="mb-0 text-center">{category.name}</h6>
+                </div>
               </div>
             </SwiperSlide>
           ))}
@@ -105,46 +147,78 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           position: relative;
         }
 
-        .category-card {
-          padding: 10px;
+        .category-slide {
+          transition: all 0.3s ease;
           cursor: pointer;
-          transition: all 0.3s ease-in-out;
-          border-radius: 12px;
-          user-select: none; /* Prevent text selection */
-          transition: all 0.3s ease-in-out;
+          height: auto;
         }
 
-        .category-card:hover {
-          transform: translateY(-3px);
-          transition: all 0.3s ease-in-out;
+        .category-card-content {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          padding: 0;
         }
 
-        .category-card:hover h6 {
-          color: var(--primary-color);
-          transition: all 0.3s ease-in-out;
+        .category-image-container {
+          width: 100%;
+          height: 100px;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8f9fa;
         }
 
-        .category-card:hover img {
-          transform: scale(1.05);
+        .category-image {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
           transition: transform 0.3s ease-in-out;
+        }
+
+        .category-text-content {
+          padding: 0.75rem 0.5rem;
+          text-align: center;
+          background: white;
+        }
+
+        .category-text-content h6 {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: #333;
+          line-height: 1.2;
+          margin: 0;
+        }
+
+        .category-slide:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-slide:hover .category-image {
+          transform: scale(1.05);
+        }
+
+        .category-slide:hover .category-text-content h6 {
+          color: var(--primary-color);
         }
 
         /* Active category styles */
         .active-category {
           border-color: var(--primary-color) !important;
           transform: scale(1.02);
-          border-width: 3px !important;
+          border-width: 2px !important;
+          box-shadow: 0 4px 12px rgba(var(--primary-color), 0.25);
         }
 
-        .active-category .category-card h6 {
+        .active-category .category-text-content h6 {
           color: var(--primary-color) !important;
           font-weight: 600;
         }
 
-        .active-category .category-card img {
+        .active-category .category-image {
           filter: brightness(1.1);
-          border: 2px solid var(--primary-color);
-          border-radius: 8px;
         }
 
         .swiper-slide {
@@ -193,6 +267,14 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
             width: 32px;
             height: 32px;
             font-size: 10px;
+          }
+
+          .category-text-content h6 {
+            font-size: 0.8rem;
+          }
+
+          .category-text-content {
+            padding: 0.5rem 0.25rem;
           }
         }
       `}</style>
