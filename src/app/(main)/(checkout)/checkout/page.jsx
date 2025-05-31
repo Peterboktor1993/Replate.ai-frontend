@@ -1776,9 +1776,10 @@ const CheckoutPage = ({ restaurantDetails }) => {
                                 formData={values}
                                 handleInputChange={handleChange}
                                 setFormData={setFieldValue}
+                                restaurantDetails={restaurantDetails}
                                 disabled={processing}
                               />
-                              {/* Address Section (renders conditionally based on delivery type) */}
+                              {/* Address Section */}
                               <AddressSection
                                 formData={values}
                                 handleInputChange={handleChange}

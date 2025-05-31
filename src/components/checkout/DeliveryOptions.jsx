@@ -1,10 +1,37 @@
-import React from "react";
+import React, { useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useFormikContext } from "formik";
 
-const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
+const DeliveryOptions = ({
+  formData,
+  handleInputChange,
+  setFormData,
+  restaurantDetails,
+  disabled,
+}) => {
   const { setFieldValue, values } = useFormikContext();
+
+  // Check if delivery is available from restaurant details
+  const isDeliveryAvailable = restaurantDetails?.delivery !== false;
+
+  // Check if schedule order is available from restaurant details
+  const isScheduleOrderAvailable = restaurantDetails?.schedule_order !== false;
+
+  // Auto-switch to pickup if delivery is not available and currently selected
+  useEffect(() => {
+    if (!isDeliveryAvailable && formData.orderType === "delivery") {
+      setFormData("orderType", "pickup");
+    }
+  }, [isDeliveryAvailable, formData.orderType, setFormData]);
+
+  // Clear schedule order if it's not available and currently selected
+  useEffect(() => {
+    if (!isScheduleOrderAvailable && formData.scheduleOrder) {
+      setFormData("scheduleOrder", false);
+      setFormData("scheduleTime", null);
+    }
+  }, [isScheduleOrderAvailable, formData.scheduleOrder, setFormData]);
 
   const FormikDatePicker = ({ name, disabled }) => {
     return (
@@ -32,12 +59,35 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
       <div className="billing-title mb-4">
         <h4 className="fw-bold text-primary mb-0">Delivery Options</h4>
       </div>
+
+      {/* Notification for disabled options */}
+      {(!isDeliveryAvailable || !isScheduleOrderAvailable) && (
+        <div className="alert alert-info mb-3 d-flex align-items-start">
+          <i className="fas fa-info-circle me-2 mt-1"></i>
+          <div>
+            <div className="fw-bold mb-1">Service Availability Notice</div>
+            <div className="small">
+              {!isDeliveryAvailable && (
+                <div>• Delivery service is currently not available</div>
+              )}
+              {!isScheduleOrderAvailable && (
+                <div>• Schedule order feature is currently not available</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="row">
         <div className="col-md-12">
           <div className="d-flex flex-column gap-3">
             {/* Delivery/Pickup Row */}
             <div className="d-flex flex-wrap align-items-center gap-3">
-              <label className="custom-radio-label mb-0">
+              <label
+                className={`custom-radio-label mb-0 ${
+                  !isDeliveryAvailable ? "disabled" : ""
+                }`}
+              >
                 <input
                   className="custom-radio"
                   type="radio"
@@ -46,11 +96,15 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
                   value="delivery"
                   checked={formData.orderType === "delivery"}
                   onChange={handleInputChange}
+                  disabled={disabled || !isDeliveryAvailable}
                   required
                 />
                 <span className="custom-radio-check"></span>
                 <i className="fas fa-truck me-2 text-primary"></i>
                 Delivery
+                {!isDeliveryAvailable && (
+                  <span className="ms-2 text-muted small">(Not Available)</span>
+                )}
               </label>
               <label className="custom-radio-label mb-0">
                 <input
@@ -61,6 +115,7 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
                   value="pickup"
                   checked={formData.orderType === "pickup"}
                   onChange={handleInputChange}
+                  disabled={disabled}
                   required
                 />
                 <span className="custom-radio-check"></span>
@@ -69,7 +124,11 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
               </label>
 
               {/* Schedule & Address Type Row */}
-              <label className="custom-checkbox-label mb-0">
+              <label
+                className={`custom-checkbox-label mb-0 ${
+                  !isScheduleOrderAvailable ? "disabled" : ""
+                }`}
+              >
                 <input
                   className="custom-checkbox"
                   type="checkbox"
@@ -77,10 +136,14 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
                   id="scheduleOrder"
                   checked={formData.scheduleOrder}
                   onChange={handleInputChange}
+                  disabled={disabled || !isScheduleOrderAvailable}
                 />
                 <span className="custom-checkbox-check"></span>
                 <i className="fas fa-clock me-2 text-primary"></i>
                 Schedule Order
+                {!isScheduleOrderAvailable && (
+                  <span className="ms-2 text-muted small">(Not Available)</span>
+                )}
               </label>
               <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 {formData.orderType === "delivery" && (
@@ -94,6 +157,7 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
                             formData.addressType === type ? "active" : ""
                           }`}
                           onClick={() => setFieldValue("addressType", type)}
+                          disabled={disabled}
                         >
                           {type}
                         </button>
@@ -105,7 +169,7 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
             </div>
 
             {/* Date Picker Section (if scheduled) */}
-            {formData.scheduleOrder && (
+            {formData.scheduleOrder && isScheduleOrderAvailable && (
               <div className="schedule-date-picker mb-3">
                 <label
                   htmlFor="scheduleTime"
@@ -117,7 +181,11 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
                 <div className="date-picker-wrapper">
                   <FormikDatePicker
                     name="scheduleTime"
-                    disabled={!formData.scheduleOrder}
+                    disabled={
+                      disabled ||
+                      !formData.scheduleOrder ||
+                      !isScheduleOrderAvailable
+                    }
                   />
                 </div>
               </div>
@@ -154,6 +222,17 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
         .custom-checkbox-label:hover {
           border-color: var(--primary-light);
           box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 212, 12, 20), 0.1);
+        }
+        .custom-radio-label.disabled,
+        .custom-checkbox-label.disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          background-color: #f8f9fa;
+        }
+        .custom-radio-label.disabled:hover,
+        .custom-checkbox-label.disabled:hover {
+          border-color: var(--border-color-light);
+          box-shadow: none;
         }
         .custom-radio,
         .custom-checkbox {
@@ -206,6 +285,11 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
           left: 50%;
           transform: translate(-50%, -50%) rotate(45deg);
         }
+        .custom-radio:disabled + .custom-radio-check,
+        .custom-checkbox:disabled + .custom-checkbox-check {
+          background: #f8f9fa;
+          border-color: #dee2e6;
+        }
         .address-type-group {
           border-radius: 2rem;
           overflow: hidden;
@@ -218,19 +302,23 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
           color: var(--primary-dark);
           background: #fff;
           transition: background 0.2s, color 0.2s;
-          border-right: 1px solid var(--border-color-light); /* Separator */
+          border-right: 1px solid var(--border-color-light);
         }
         .address-type-btn:last-child {
           border-right: none;
         }
         .address-type-btn.active,
-        .address-type-btn:hover {
+        .address-type-btn:hover:not(:disabled) {
           background: var(--primary-color);
           color: #fff;
         }
+        .address-type-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
         .schedule-date-picker {
-          padding-left: 0; /* Reset padding for better alignment */
-          margin-top: 0.5rem; /* Add some space above */
+          padding-left: 0;
+          margin-top: 0.5rem;
         }
         .date-picker-wrapper {
           position: relative;
@@ -249,6 +337,10 @@ const DeliveryOptions = ({ formData, handleInputChange, setFormData }) => {
         .date-picker-wrapper :global(.form-control:focus) {
           border-color: var(--primary-color);
           box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 212, 12, 20), 0.25);
+        }
+        .date-picker-wrapper :global(.form-control:disabled) {
+          background-color: #f8f9fa;
+          opacity: 0.6;
         }
         .date-picker-wrapper:before {
           content: "\f073"; /* Font Awesome calendar icon */

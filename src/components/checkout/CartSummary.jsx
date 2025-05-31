@@ -38,6 +38,7 @@ const CartSummary = ({
         setConfigData(data);
       } catch (error) {
         console.error("Error fetching config:", error);
+        setConfigData(null);
       } finally {
         setConfigLoading(false);
       }
@@ -45,6 +46,16 @@ const CartSummary = ({
 
     fetchConfig();
   }, []);
+
+  // Helper function to safely get additional charge
+  const getAdditionalCharge = () => {
+    return configData?.additional_charge || 0;
+  };
+
+  // Helper function to check if additional charge should be shown
+  const shouldShowAdditionalCharge = () => {
+    return configData?.additional_charge_status === 1;
+  };
 
   const calculateDeliveryFee = () => {
     if (!restaurantDetails?.delivery_fee) return 0;
@@ -82,6 +93,7 @@ const CartSummary = ({
     const restaurantTax = calculateRestaurantTax();
     const serviceFees = calculateServiceFees();
     const tip = calculateTipAmount();
+    const additionalCharge = getAdditionalCharge();
 
     return (
       subtotal +
@@ -90,7 +102,8 @@ const CartSummary = ({
       deliveryFee +
       restaurantTax +
       serviceFees +
-      tip
+      tip +
+      additionalCharge
     );
   };
 
@@ -363,13 +376,13 @@ const CartSummary = ({
               )}
 
               {/* Additional Charge Information */}
-              {configData?.additional_charge_status === 1 && (
+              {shouldShowAdditionalCharge() && (
                 <div className="d-flex align-items-center justify-content-between mb-3">
                   <span className="d-flex align-items-center">
-                    {configData.additional_charge_name || "Additional Charge"}
+                    {configData?.additional_charge_name || "Additional Charge"}
                   </span>
                   <span>
-                    {currency} {(configData.additional_charge || 0).toFixed(2)}
+                    {currency} {getAdditionalCharge().toFixed(2)}
                   </span>
                 </div>
               )}
@@ -378,10 +391,7 @@ const CartSummary = ({
             <div className="d-flex align-items-center justify-content-between my-3">
               <span className="fw-bold">TOTAL</span>
               <span className="fw-bold text-primary">
-                {currency}{" "}
-                {(calculateGrandTotal() + configData.additional_charge).toFixed(
-                  2
-                )}
+                {currency} {calculateGrandTotal().toFixed(2)}
               </span>
             </div>
 
