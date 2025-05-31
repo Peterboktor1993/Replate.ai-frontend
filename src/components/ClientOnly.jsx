@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react";
 
-export default function ClientOnly({ children }) {
+export default function ClientOnly({ children, fallback = null }) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  return isClient ? children : null;
+  if (!isClient) {
+    return fallback;
+  }
+
+  return children;
 }

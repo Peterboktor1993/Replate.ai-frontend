@@ -11,6 +11,7 @@ import "../styles/toast.css";
 import Script from "next/script";
 
 import AppShell from "@/components/layout/AppShell";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { getRestaurantDetailsServer } from "@/store/services/restaurantService";
 import { headers } from "next/headers";
 
@@ -53,7 +54,9 @@ export default async function RootLayout({ children }) {
         <link rel="icon" href={restaurant?.logo_full_url} />
       </head>
       <body>
-        <AppShell details={restaurant}>{children}</AppShell>
+        <ErrorBoundary>
+          <AppShell details={restaurant}>{children}</AppShell>
+        </ErrorBoundary>
         <Script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
           strategy="afterInteractive"

@@ -1,15 +1,35 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import ClientOnly from "@/components/ClientOnly";
+import LoadingWrapper from "@/components/LoadingWrapper";
 import dynamic from "next/dynamic";
 import { Provider } from "react-redux";
 import store from "@/store/store";
 import Toast from "../common/Toast";
 import RouterListener from "../RouterListener";
 
-const Header = dynamic(() => import("@/components/layout/Header"));
-const Footer = dynamic(() => import("@/components/layout/Footer"));
+const Header = dynamic(() => import("@/components/layout/Header"), {
+  ssr: false,
+  loading: () => (
+    <div
+      style={{ height: "80px" }}
+      className="d-flex align-items-center justify-content-center"
+    >
+      <div
+        className="spinner-border spinner-border-sm text-primary"
+        role="status"
+      >
+        <span className="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  ),
+});
+
+const Footer = dynamic(() => import("@/components/layout/Footer"), {
+  ssr: false,
+  loading: () => <div style={{ height: "60px" }} />,
+});
 
 const AppShell = ({ children, details }) => {
   useEffect(() => {
@@ -34,18 +54,72 @@ const AppShell = ({ children, details }) => {
     }
   }, [details]);
 
+  // Enhanced children validation and rendering
+  const renderChildren = () => {
+    if (!children) {
+      return null;
+    }
+
+    // Check if children is a valid React element
+    if (React.isValidElement(children)) {
+      try {
+        return React.cloneElement(children, { restaurantDetails: details });
+      } catch (error) {
+        console.warn(
+          "Failed to clone element, rendering children as-is:",
+          error
+        );
+        return children;
+      }
+    }
+
+    // If children is not a React element, render it directly
+    return children;
+  };
+
   return (
-    <ClientOnly>
+    <ClientOnly
+      fallback={
+        <div className="d-flex align-items-center justify-content-center min-vh-100">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      }
+    >
       <Provider store={store}>
         <div className="d-flex flex-column min-vh-100">
-          <RouterListener />
-          <Header details={details} />
+          <Suspense fallback={<div style={{ height: "80px" }} />}>
+            <RouterListener />
+          </Suspense>
+
+          <Suspense
+            fallback={
+              <div
+                style={{ height: "80px" }}
+                className="d-flex align-items-center justify-content-center"
+              >
+                <div
+                  className="spinner-border spinner-border-sm text-primary"
+                  role="status"
+                >
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            }
+          >
+            <Header details={details} />
+          </Suspense>
+
           <main className="flex-grow-1 py-4">
             <div className="container-fluid px-4 px-md-5">
-              {React.cloneElement(children, { restaurantDetails: details })}
+              <LoadingWrapper delay={50}>{renderChildren()}</LoadingWrapper>
             </div>
           </main>
-          <Footer details={details} />
+
+          <Suspense fallback={<div style={{ height: "60px" }} />}>
+            <Footer details={details} />
+          </Suspense>
         </div>
         <Toast />
       </Provider>
