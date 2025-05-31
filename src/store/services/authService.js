@@ -37,7 +37,6 @@ export const loginUser = (credentials) => async (dispatch, getState) => {
       );
 
       if (hasGuestId) {
-        console.log(`Cleaning up guest ID ${guestId} after successful login`);
         localStorage.removeItem("guest_id");
         localStorage.removeItem("guestId");
         dispatch(regenerateGuestId());
@@ -118,14 +117,9 @@ export const registerUser = (userData) => async (dispatch, getState) => {
         })
       );
 
-      // Clean up guest ID data since we're now registered and logged in
       if (hasGuestId) {
-        console.log(
-          `Cleaning up guest ID ${guestId} after successful registration`
-        );
         localStorage.removeItem("guest_id");
         localStorage.removeItem("guestId");
-        // Generate a new guest ID for future guest sessions if needed
         dispatch(regenerateGuestId());
       }
 
@@ -137,7 +131,6 @@ export const registerUser = (userData) => async (dispatch, getState) => {
         })
       );
 
-      // Get user profile after successful registration
       dispatch(getUserProfile());
 
       return {
@@ -174,10 +167,8 @@ export const registerUser = (userData) => async (dispatch, getState) => {
 //===============================================
 export const logoutUser = () => async (dispatch) => {
   try {
-    // First log the user out
     dispatch(logout());
 
-    // Generate a new guest ID for the new guest session
     dispatch(regenerateGuestId());
 
     dispatch(
@@ -238,19 +229,16 @@ export const forgotPassword = (credentials) => async (dispatch) => {
       return { success: false, error: errorMessage };
     }
   } catch (error) {
-    // Extract error message from API response
     let errorMessage = "Failed to send reset code";
 
     if (
       error.response?.data?.errors &&
       Array.isArray(error.response.data.errors)
     ) {
-      // Handle errors array format
       errorMessage = error.response.data.errors
         .map((err) => err.message)
         .join(", ");
     } else if (error.response?.data?.message) {
-      // Handle direct message format
       errorMessage = error.response.data.message;
     }
 
@@ -307,19 +295,16 @@ export const verifyResetToken = (tokenData) => async (dispatch) => {
       return { success: false, error: errorMessage };
     }
   } catch (error) {
-    // Extract error message from API response
     let errorMessage = "Invalid or expired token";
 
     if (
       error.response?.data?.errors &&
       Array.isArray(error.response.data.errors)
     ) {
-      // Handle errors array format
       errorMessage = error.response.data.errors
         .map((err) => err.message)
         .join(", ");
     } else if (error.response?.data?.message) {
-      // Handle direct message format
       errorMessage = error.response.data.message;
     }
 
@@ -378,19 +363,16 @@ export const resetPassword = (resetData) => async (dispatch) => {
       return { success: false, error: errorMessage };
     }
   } catch (error) {
-    // Extract error message from API response
     let errorMessage = "Failed to reset password";
 
     if (
       error.response?.data?.errors &&
       Array.isArray(error.response.data.errors)
     ) {
-      // Handle errors array format
       errorMessage = error.response.data.errors
         .map((err) => err.message)
         .join(", ");
     } else if (error.response?.data?.message) {
-      // Handle direct message format
       errorMessage = error.response.data.message;
     }
 
@@ -536,7 +518,6 @@ export const getUserAddresses = (token) => async (dispatch) => {
         },
       }
     );
-    console.log("response", response);
     if (response.status == 200) {
       return {
         success: true,

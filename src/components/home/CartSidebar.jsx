@@ -20,8 +20,13 @@ const CartSidebar = ({
   recentOrders,
   BannerPic,
   restaurantId,
+  restaurantDetails,
 }) => {
   const restaurant_id = useSearchParams().get("restaurant") || restaurantId;
+
+  const sideBannerImage = restaurantDetails?.side_banner_full_url || BannerPic;
+
+  const primaryColor = restaurantDetails?.primary_color || "#e01e1e";
 
   return (
     <div className="row mx-0">
@@ -306,7 +311,7 @@ const CartSidebar = ({
       <div className="col-xl-12 mt-4">
         <div
           className="card text-white border-0 rounded-4 overflow-hidden"
-          style={{ backgroundColor: "#e01e1e" }}
+          style={{ backgroundColor: primaryColor }}
         >
           <div className="card-body p-4 position-relative">
             <div
@@ -362,7 +367,7 @@ const CartSidebar = ({
               }}
             >
               <img
-                src={BannerPic}
+                src={sideBannerImage}
                 alt="Discount"
                 style={{
                   height: "100%",
@@ -378,8 +383,7 @@ const CartSidebar = ({
                 top: "0",
                 right: "0",
                 bottom: "0",
-                background:
-                  "radial-gradient(circle at left top, rgba(234, 72, 72, 0.8) 0%, rgba(224, 30, 30, 0) 50%)",
+                background: `radial-gradient(circle at left top, ${primaryColor}cc 0%, ${primaryColor}00 50%)`,
                 zIndex: 0,
               }}
             ></div>

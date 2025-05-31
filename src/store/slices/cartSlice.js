@@ -12,12 +12,10 @@ const getGuestId = () => {
 
     if (storedGuestId) {
       if (alternativeGuestId && alternativeGuestId !== storedGuestId) {
-        console.log("Synchronizing guest IDs in localStorage");
         localStorage.setItem("guest_id", storedGuestId);
       }
       return storedGuestId;
     } else if (alternativeGuestId) {
-      console.log("Using existing guest_id from localStorage");
       localStorage.setItem("guestId", alternativeGuestId);
       return alternativeGuestId;
     } else {

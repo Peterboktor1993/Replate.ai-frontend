@@ -22,7 +22,6 @@ const PopularDishesSlider = ({
   const { token } = useSelector((state) => state.auth || { token: null });
 
   useEffect(() => {
-    console.log("initialProducts in slider:", initialProducts);
     if (initialProducts && initialProducts.length > 0) {
       setProducts(initialProducts);
     }
@@ -55,7 +54,6 @@ const PopularDishesSlider = ({
 
       if (actionResult.type.endsWith("/fulfilled")) {
         const result = actionResult.payload;
-        console.log("Products loaded successfully:", result);
 
         const newProducts = result?.products || [];
 
@@ -104,7 +102,6 @@ const PopularDishesSlider = ({
   return (
     <>
       <div className="popular-dishes-grid row g-3">
-        {console.log("Rendering products:", products)}
         {products?.length === 0 ? (
           <div className="col-12 text-center py-5">
             <p>No products available</p>

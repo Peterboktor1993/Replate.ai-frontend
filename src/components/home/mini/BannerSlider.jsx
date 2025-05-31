@@ -12,13 +12,17 @@ const banerimg1 = "/images/banner-img/pic-1.jpg";
 const banerimg2 = "/images/banner-img/pic-3.jpg";
 const banerimg3 = "/images/banner-img/pic-4.jpg";
 
-const sliderBlog = [
+const defaultSliderBlog = [
   { image: banerimg1 },
   { image: banerimg2 },
   { image: banerimg3 },
 ];
 
-const BannerSlider = () => {
+const BannerSlider = ({ restaurantDetails }) => {
+  const sliderBlog = restaurantDetails?.top_banner_full_url
+    ? [{ image: restaurantDetails.top_banner_full_url }]
+    : defaultSliderBlog;
+
   return (
     <div className="position-relative">
       <Swiper

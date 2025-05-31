@@ -32,6 +32,7 @@ const Home = ({
   initialProducts,
   initialCategories,
   restaurantId,
+  restaurantDetails,
 }) => {
   const [dropSelect, setDropSelect] = useState("Other");
   const [detailsModal, setDetailsModal] = useState(false);
@@ -58,7 +59,6 @@ const Home = ({
   const [authMode, setAuthMode] = useState("login");
 
   useEffect(() => {
-    console.log("initialProducts", initialProducts);
     dispatch(setProducts(initialProducts));
     dispatch(setCategories(initialCategories));
     const filtered = filterCategoriesByProducts(
@@ -203,7 +203,7 @@ const Home = ({
         <div className="col-xl-10 col-xxl-9 px-0">
           <div className="row mx-0">
             <div className="col-xl-12 px-0">
-              <BannerSlider />
+              <BannerSlider restaurantDetails={restaurantDetails} />
             </div>
 
             <div className="col-xl-12 mb-3 my-3">
@@ -261,6 +261,7 @@ const Home = ({
             recentOrders={recentOrders}
             BannerPic={BannerPic}
             restaurantId={restaurantId}
+            restaurantDetails={restaurantDetails}
           />
         </div>
       </div>

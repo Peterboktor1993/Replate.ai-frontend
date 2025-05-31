@@ -110,7 +110,6 @@ const ProfilePage = () => {
     try {
       setLoading(true);
       const result = await dispatch(getUserProfile(token));
-      console.log("result", result);
 
       if (result.success && result.data) {
         const userData = result.data;

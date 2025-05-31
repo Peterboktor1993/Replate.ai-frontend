@@ -85,18 +85,6 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
         add_ons: add_ons,
       };
 
-      console.log(
-        "Adding to cart with:",
-        JSON.stringify(
-          {
-            variations: variation_options,
-            addons: add_ons,
-          },
-          null,
-          2
-        )
-      );
-
       onAddToCart(null, updatedProduct);
       handleClose();
     }

@@ -313,14 +313,11 @@ const CheckoutPage = () => {
             (parsedPayment.status === "payment_pending" ||
               !parsedPayment.status)
           ) {
-            console.log("Found incomplete payment:", parsedPayment);
             setIncompletePayment(parsedPayment);
 
-            // If cart is empty, show the incomplete payment options
             if (cartItems.length === 0) {
               setShowIncompletePayment(true);
             } else {
-              // If cart has items, show a notification about the incomplete payment
               dispatch(
                 addToast({
                   show: true,
@@ -332,32 +329,7 @@ const CheckoutPage = () => {
               );
             }
           }
-        }
-        // If no local storage item, check for recent orders with pending payment
-        else if (cartItems.length === 0 && token) {
-          // This would be an API call to check for recent orders with pending payment
-          // For now we're just checking localStorage, but in a real system you would
-          // implement this API call to your backend
-          // Sample code for how this might work:
-          // const { getRecentOrders } = await import("@/store/services/orderService");
-          // const response = await dispatch(getRecentOrders(token));
-          // if (response.success && response.orders) {
-          //   const pendingOrder = response.orders.find(order =>
-          //     order.payment_status === "unpaid" &&
-          //     order.payment_method === "digital_payment"
-          //   );
-          //
-          //   if (pendingOrder) {
-          //     const paymentData = {
-          //       orderId: pendingOrder.id,
-          //       amount: pendingOrder.order_amount,
-          //       timestamp: pendingOrder.created_at,
-          //       status: "payment_pending"
-          //     };
-          //     setIncompletePayment(paymentData);
-          //     setShowIncompletePayment(true);
-          //   }
-          // }
+        } else if (cartItems.length === 0 && token) {
         }
       } catch (error) {
         console.error("Error loading incomplete payment:", error);
@@ -467,7 +439,6 @@ const CheckoutPage = () => {
       const { status, message, orderId } = event.data || {};
 
       if (status === "success") {
-        console.log("Payment successful");
         setProcessing(false);
         setPaymentPopupOpen(false);
 
@@ -486,10 +457,8 @@ const CheckoutPage = () => {
           })
         );
 
-        // Clear any incomplete payment data
         localStorage.removeItem("incompletePayment");
       } else if (status === "failed" || status === "error") {
-        console.log("Payment failed:", message);
         setProcessing(false);
         setPaymentPopupOpen(false);
 
@@ -497,12 +466,10 @@ const CheckoutPage = () => {
           popupRef.close();
         }
 
-        // Get incomplete payment data from localStorage
         const lastOrderInfo = localStorage.getItem("lastOrderInfo");
         if (lastOrderInfo) {
           const orderInfo = JSON.parse(lastOrderInfo);
 
-          // Save the incomplete payment for later retry
           const incompletePaymentData = {
             orderId: orderInfo.orderId,
             amount: orderInfo.amount,
@@ -539,7 +506,6 @@ const CheckoutPage = () => {
     };
   }, [dispatch, router, popupRef]);
 
-  // Check popup status periodically
   useEffect(() => {
     let checkInterval;
 
@@ -547,18 +513,15 @@ const CheckoutPage = () => {
       const timeoutId = setTimeout(() => {
         checkInterval = setInterval(() => {
           if (popupRef && popupRef.closed) {
-            console.log("Popup was closed by user without completing payment");
             setPaymentPopupOpen(false);
             setProcessing(false);
             clearInterval(checkInterval);
 
-            // Get the last order info
             const lastOrderInfo = localStorage.getItem("lastOrderInfo");
             if (lastOrderInfo) {
               try {
                 const orderInfo = JSON.parse(lastOrderInfo);
 
-                // Save as incomplete payment for retry
                 const incompletePaymentData = {
                   orderId: orderInfo.orderId,
                   amount: orderInfo.amount,
@@ -574,7 +537,6 @@ const CheckoutPage = () => {
                 setIncompletePayment(incompletePaymentData);
                 setShowIncompletePayment(true);
 
-                // Show user notification
                 dispatch(
                   addToast({
                     show: true,
@@ -610,7 +572,6 @@ const CheckoutPage = () => {
   useEffect(() => {
     return () => {
       if (paymentPopupOpen && popupRef && !popupRef.closed) {
-        console.log("Closing popup due to component unmount");
         popupRef.close();
       }
       setPaymentPopupOpen(false);
@@ -618,16 +579,12 @@ const CheckoutPage = () => {
     };
   }, [paymentPopupOpen, popupRef]);
 
-  // Explicitly check for pending orders when the cart is empty
   useEffect(() => {
     if (cartItems.length === 0) {
-      // Check for pending order data in localStorage
       const pendingOrderData = localStorage.getItem("pendingOrderData");
       if (pendingOrderData) {
         try {
           console.log("Found pending order data:", pendingOrderData);
-          // Here you could retrieve the pending order and show it
-          // For now we're just keeping the hardcoded UI for simplicity
         } catch (error) {
           console.error("Error loading pending order data:", error);
         }
@@ -865,8 +822,6 @@ const CheckoutPage = () => {
             throw new Error("Order ID not found in the response");
           }
 
-          // Store order information IMMEDIATELY when it's created
-          // This ensures we always have access to the order data
           const pendingOrderData = {
             orderId: orderId,
             amount: parseFloat(orderAmount),
@@ -875,7 +830,6 @@ const CheckoutPage = () => {
             status: "payment_pending",
           };
 
-          // Store in localStorage for persistence
           localStorage.setItem(
             "pendingOrderData",
             JSON.stringify(pendingOrderData)
@@ -960,7 +914,6 @@ const CheckoutPage = () => {
     }
   };
 
-  // Handle retrying incomplete payments
   const handleRetryPayment = async () => {
     if (!incompletePayment) return;
 
@@ -972,7 +925,6 @@ const CheckoutPage = () => {
         user?.id || guestId || Math.random().toString(36).substring(7);
       const callback = `${window.location.origin}/checkout-status?order_id=${orderId}`;
 
-      // Show processing toast
       dispatch(
         addToast({
           show: true,
@@ -994,7 +946,6 @@ const CheckoutPage = () => {
         throw new Error(data.error || "Failed to get payment URL");
       }
 
-      // Update last order info for tracking
       localStorage.setItem(
         "lastOrderInfo",
         JSON.stringify({
@@ -1004,7 +955,6 @@ const CheckoutPage = () => {
         })
       );
 
-      // Open payment in popup with increased size for better UX
       const popupWidth = 550;
       const popupHeight = 750;
       const left = window.innerWidth / 2 - popupWidth / 2;
@@ -1016,7 +966,6 @@ const CheckoutPage = () => {
         `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`
       );
 
-      // Set popup reference and state
       if (!popup || popup.closed || typeof popup.closed === "undefined") {
         setPaymentPopupOpen(false);
         setProcessing(false);
@@ -1025,10 +974,8 @@ const CheckoutPage = () => {
         );
       }
 
-      // Update state to show overlay
       setPaymentPopupOpen(true);
 
-      // Set popup reference after slight delay
       setTimeout(() => {
         setPopupRef(popup);
       }, 500);
@@ -1049,7 +996,6 @@ const CheckoutPage = () => {
   };
 
   const handleCancelIncompletePayment = () => {
-    // Clear the incomplete payment data
     localStorage.removeItem("incompletePayment");
     setIncompletePayment(null);
     setShowIncompletePayment(false);
@@ -1283,7 +1229,6 @@ const CheckoutPage = () => {
                 <button
                   className="btn btn-primary payment-action-btn"
                   onClick={() => {
-                    // Direct retry payment function - simplified version
                     const userId =
                       user?.id ||
                       guestId ||
@@ -1291,10 +1236,8 @@ const CheckoutPage = () => {
                     const orderId = 100037; // In production, this would come from your state or API
                     const callback = `${window.location.origin}/checkout-status?order_id=${orderId}`;
 
-                    // Show processing feedback
                     setProcessing(true);
 
-                    // Get payment URL and open popup
                     fetch(
                       `/api/pay?order_id=${orderId}&customer_id=${userId}&callback=${encodeURIComponent(
                         callback
@@ -1303,7 +1246,6 @@ const CheckoutPage = () => {
                       .then((response) => response.json())
                       .then((data) => {
                         if (data.success) {
-                          // Open popup for payment
                           const popupWidth = 550;
                           const popupHeight = 750;
                           const left = window.innerWidth / 2 - popupWidth / 2;
@@ -1315,7 +1257,6 @@ const CheckoutPage = () => {
                             `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`
                           );
 
-                          // Update state to show overlay
                           if (popup) {
                             setPaymentPopupOpen(true);
                             setTimeout(() => setPopupRef(popup), 500);

@@ -1,13 +1,15 @@
 import Home from "@/components/home/Home";
 import { getAllCategoriesServer } from "@/store/services/categoriesService";
 import { getAllProductsServer } from "@/store/services/productService";
+import { getRestaurantDetailsServer } from "@/store/services/restaurantService";
 
 export default async function HomePage({ searchParams }) {
   const restaurantId = (await searchParams)?.restaurant || "2";
 
-  const [productsData, categoriesData] = await Promise.all([
+  const [productsData, categoriesData, restaurantData] = await Promise.all([
     getAllProductsServer(restaurantId, 20, 1),
     getAllCategoriesServer(),
+    getRestaurantDetailsServer(restaurantId),
   ]);
 
   const initialProducts = Array.isArray(productsData?.products)
@@ -17,7 +19,6 @@ export default async function HomePage({ searchParams }) {
     ? categoriesData.categories
     : [];
 
-  console.log(initialProducts);
 
   return (
     <div>
@@ -25,6 +26,7 @@ export default async function HomePage({ searchParams }) {
         initialProducts={initialProducts}
         initialCategories={initialCategories}
         restaurantId={restaurantId}
+        restaurantDetails={restaurantData}
       />
     </div>
   );

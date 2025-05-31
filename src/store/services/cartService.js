@@ -35,11 +35,6 @@ export const addToCart =
 
       const { guestId } = getState().cart;
 
-      console.log(
-        "Raw item received in addToCart:",
-        JSON.stringify(item, null, 2)
-      );
-
       const payload = {
         item_id: item.id,
         model: item.model || "Food",
@@ -52,10 +47,8 @@ export const addToCart =
         Array.isArray(item.variation_options) &&
         item.variation_options.length > 0
       ) {
-        console.log("Found variation_options:", item.variation_options);
         payload.variation_options = [...item.variation_options];
       } else {
-        console.log("No variation_options found in item");
         payload.variation_options = [];
       }
 
@@ -71,11 +64,6 @@ export const addToCart =
         localStorage.setItem("guest_id", guestId);
         localStorage.setItem("guestId", guestId);
       }
-
-      console.log(
-        "Final payload for cart add:",
-        JSON.stringify(payload, null, 2)
-      );
 
       const config = token
         ? {
@@ -155,10 +143,6 @@ export const fetchCartItems =
               if (typeof item.variation_options === "string") {
                 try {
                   parsedVariations = JSON.parse(item.variation_options);
-                  console.log(
-                    "Successfully parsed variation_options:",
-                    parsedVariations
-                  );
                 } catch (e) {
                   console.error("Error parsing variation_options:", e);
                 }
@@ -166,11 +150,9 @@ export const fetchCartItems =
                 parsedVariations = item.variation_options;
               }
 
-              // Parse add_ons if they exist
               if (typeof item.add_ons === "string") {
                 try {
                   parsedAddOns = JSON.parse(item.add_ons);
-                  console.log("Successfully parsed add_ons:", parsedAddOns);
                 } catch (e) {
                   console.error("Error parsing add_ons:", e);
                 }
@@ -218,7 +200,6 @@ export const updateCartItemQuantity =
       const { guestId } = getState().cart;
       const { cartItems } = getState().cart;
 
-      // Find the current cart item to get its full data
       const currentItem = cartItems.find(
         (cartItem) => cartItem.id === item.cart_id
       );
@@ -227,7 +208,6 @@ export const updateCartItemQuantity =
         cart_id: item.cart_id,
         price: item.price,
         quantity: item.quantity,
-        // Include the existing variation_options if available
         variation_options:
           currentItem && Array.isArray(currentItem.variation_options)
             ? currentItem.variation_options

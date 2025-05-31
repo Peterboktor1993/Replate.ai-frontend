@@ -18,7 +18,6 @@ const fetchRestaurantDetails = async (restaurantId, dispatch) => {
         ...response.data,
         id: restaurantId,
       };
-      console.log("[dispatching]", response.data);
       dispatch(setRestaurantDetails(restaurantData));
       dispatch(setRestaurantId(response.data.id));
     } else {
@@ -31,7 +30,6 @@ const fetchRestaurantDetails = async (restaurantId, dispatch) => {
 };
 
 export const handleRouteChange = async (restaurantId, dispatch) => {
-  console.log("handleRouteChange: Setting restaurant ID to", restaurantId);
   const numericId = parseInt(restaurantId, 10);
 
   dispatch(setRestaurantId(numericId));

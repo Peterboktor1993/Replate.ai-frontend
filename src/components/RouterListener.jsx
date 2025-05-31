@@ -13,12 +13,9 @@ export default function RouterListener() {
 
   useEffect(() => {
     const restaurantId = searchParams.get("restaurant");
-    console.log(" URL param restaurant =", restaurantId);
 
     const updateRestaurant = async () => {
       const fallbackId = restaurantId || "2";
-      console.log("✅ RouterListener is using restaurantId:", fallbackId);
-
       await handleRouteChange(fallbackId, dispatch);
       dispatch(getAllProducts({ restaurant_id: fallbackId }));
     };
