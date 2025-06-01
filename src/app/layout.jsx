@@ -19,7 +19,6 @@ export default async function RootLayout({ children }) {
   const headersList = headers();
   const searchParamsString = headersList.get("searchParams") || "";
 
-  // Better handling of search params parsing
   let searchParams = {};
   if (searchParamsString) {
     try {

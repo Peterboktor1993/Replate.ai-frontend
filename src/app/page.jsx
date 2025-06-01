@@ -10,7 +10,7 @@ export default async function HomePage({ searchParams }) {
   const zoneId = restaurantData?.zone_id || 3;
 
   const [productsData, categoriesData] = await Promise.all([
-    getAllProductsServer(restaurantId, 20, 0, zoneId),
+    getAllProductsServer(restaurantId, 200, 0, zoneId),
     getAllCategoriesServer(),
   ]);
 
