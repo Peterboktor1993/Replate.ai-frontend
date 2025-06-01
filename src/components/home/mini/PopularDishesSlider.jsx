@@ -10,6 +10,7 @@ import SafeImage from "@/components/common/SafeImage";
 const PopularDishesSlider = ({
   products: initialProducts,
   restaurantId = "3",
+  zoneId = 3,
   isFiltered = false,
   initialOffset = 1,
   initialLimit = 20,
@@ -106,6 +107,7 @@ const PopularDishesSlider = ({
           limit: initialLimit,
           offset: currentOffset,
           restaurantId: restaurantId,
+          zoneId: zoneId,
         })
       );
 
@@ -177,7 +179,7 @@ const PopularDishesSlider = ({
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [isFiltered, totalProducts, initialLimit, restaurantId, dispatch]);
+  }, [isFiltered, totalProducts, initialLimit, restaurantId, zoneId, dispatch]);
 
   const lastProductElementRef = useCallback(
     (node) => {

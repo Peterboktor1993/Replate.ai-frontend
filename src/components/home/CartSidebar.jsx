@@ -514,7 +514,7 @@ const CartSidebar = ({
                 </p>
               </div>
 
-              {recentOrders.length > 0 && (
+              {/* {recentOrders.length > 0 && (
                 <div className="recent-orders-hint mb-3">
                   <h6 className="font-w500 mb-2">
                     <i className="fas fa-clock me-1 text-primary"></i>
@@ -557,9 +557,9 @@ const CartSidebar = ({
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
 
-              {token ? (
+              {/* {token ? (
                 <Link
                   href={getLinkWithRestaurant("/orders", restaurant_id)}
                   className="btn btn-outline-primary w-100 mb-2"
@@ -585,7 +585,7 @@ const CartSidebar = ({
                     <>Sign in to track your orders</>
                   )}
                 </div>
-              )}
+              )} */}
 
               {/* Conditional Checkout Button */}
               {cartItems.length > 0 ? (

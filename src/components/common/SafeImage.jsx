@@ -44,7 +44,6 @@ const SafeImage = ({
       height={height}
       style={style}
       onError={handleError}
-      priority={false}
       className={className}
       {...props}
     />

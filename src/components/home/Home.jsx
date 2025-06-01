@@ -316,6 +316,7 @@ const Home = ({
               <PopularDishesSlider
                 products={filteredProducts}
                 restaurantId={restaurantId}
+                zoneId={restaurantDetails?.zone_id || 3}
                 isFiltered={selectedCategory !== null}
                 initialOffset={productOffset}
                 initialLimit={productLimit}

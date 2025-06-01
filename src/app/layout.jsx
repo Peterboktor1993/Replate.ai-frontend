@@ -17,9 +17,20 @@ import { headers } from "next/headers";
 
 export default async function RootLayout({ children }) {
   const headersList = headers();
-  const searchParams = Object.fromEntries(
-    new URLSearchParams(headersList.get("searchParams") || "")
-  );
+  const searchParamsString = headersList.get("searchParams") || "";
+
+  // Better handling of search params parsing
+  let searchParams = {};
+  if (searchParamsString) {
+    try {
+      searchParams = Object.fromEntries(
+        new URLSearchParams(searchParamsString)
+      );
+    } catch (error) {
+      console.error("Error parsing search params:", error);
+      searchParams = {};
+    }
+  }
 
   const restaurantId = searchParams?.restaurant || "2";
 

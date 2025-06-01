@@ -1,6 +1,3 @@
-//===============================================
-// Get Products
-
 import axiosInstance from "@/config/axios";
 import { PRODUCT_URL, ZONE_ID } from "@/utils/CONSTANTS";
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -12,22 +9,37 @@ import axios from "axios";
 //===============================================
 export const getAllProducts = createAsyncThunk(
   "products/getAllProducts",
-  async ({ limit, offset, restaurantId }, { rejectWithValue }) => {
+  async (
+    { limit = 10, offset = 0, restaurantId = 3, zoneId = 3 },
+    { rejectWithValue }
+  ) => {
     try {
       const currentRestaurantId = getCurrentRestaurantId();
-
+      let url = `${PRODUCT_URL}/search`;
+      if (restaurantId) {
+        url = `${url}?restaurant_id=${restaurantId}`;
+      }
+      if (limit) {
+        if (url.includes("?")) {
+          url = `${url}&limit=${limit}`;
+        } else {
+          url = `${url}?limit=${limit}`;
+        }
+      }
+      if (offset) {
+        if (url.includes("?")) {
+          url = `${url}&offset=${offset}`;
+        } else {
+          url = `${url}?offset=${offset}`;
+        }
+      }
       const response = await axios({
         method: "get",
-        url: `${PRODUCT_URL}/search`,
+        url: url,
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          zoneId: `[${ZONE_ID}]`,
-        },
-        params: {
-          restaurant_id: restaurantId || currentRestaurantId,
-          limit,
-          offset,
+          zoneId: `[${zoneId}]`,
         },
       });
       return response.data;
@@ -41,20 +53,41 @@ export const getAllProducts = createAsyncThunk(
 // Get All Products (Server Side)
 //===============================================
 
-export async function getAllProductsServer(restaurantId, limit, offset) {
+export async function getAllProductsServer(
+  restaurantId = 3,
+  limit = 10,
+  offset = 0,
+  zoneId = 3
+) {
   try {
+    let url = `${PRODUCT_URL}/search`;
+    if (restaurantId) {
+      url = `${url}?restaurant_id=${restaurantId}`;
+    }
+    if (limit) {
+      if (url.includes("?")) {
+        url = `${url}&limit=${limit}`;
+      } else {
+        url = `${url}?limit=${limit}`;
+      }
+    }
+    if (offset) {
+      if (url.includes("?")) {
+        url = `${url}&offset=${offset}`;
+      } else {
+        url = `${url}?offset=${offset}`;
+      }
+    }
+    console.log(url);
+    console.log("Using zone_id:", zoneId);
+
     const response = await axios({
       method: "get",
-      url: `${PRODUCT_URL}/search`,
+      url: url,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        zoneId: `[${ZONE_ID}]`,
-      },
-      data: {
-        restaurant_id: restaurantId,
-        limit,
-        offset,
+        zoneId: `[${zoneId}]`,
       },
     });
 

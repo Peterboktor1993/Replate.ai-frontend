@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { handleRouteChange } from "@/middleware/restaurantMiddleware";
 import { useDispatch } from "react-redux";
-import { getAllProducts } from "@/store/services/productService";
 
 export default function RouterListener() {
   const pathname = usePathname();
@@ -17,7 +16,6 @@ export default function RouterListener() {
     const updateRestaurant = async () => {
       const fallbackId = restaurantId || "2";
       await handleRouteChange(fallbackId, dispatch);
-      dispatch(getAllProducts({ restaurant_id: fallbackId }));
     };
 
     updateRestaurant();

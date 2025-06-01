@@ -6,19 +6,21 @@ import { getRestaurantDetailsServer } from "@/store/services/restaurantService";
 export default async function HomePage({ searchParams }) {
   const restaurantId = (await searchParams)?.restaurant || "2";
 
-  const [productsData, categoriesData, restaurantData] = await Promise.all([
-    getAllProductsServer(restaurantId, 20, 1),
+  const restaurantData = await getRestaurantDetailsServer(restaurantId);
+  const zoneId = restaurantData?.zone_id || 3;
+
+  const [productsData, categoriesData] = await Promise.all([
+    getAllProductsServer(restaurantId, 20, 0, zoneId),
     getAllCategoriesServer(),
-    getRestaurantDetailsServer(restaurantId),
   ]);
 
+  console.log(productsData);
   const initialProducts = Array.isArray(productsData?.products)
     ? productsData.products
     : [];
   const productOffset = productsData?.offset;
   const productLimit = productsData?.limit;
   const productTotal = productsData?.total_size;
-
   const allCategories = Array.isArray(categoriesData?.categories)
     ? categoriesData.categories
     : [];
