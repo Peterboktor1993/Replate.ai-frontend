@@ -1,8 +1,89 @@
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { clearCart, setCartItems, setGuestId } from "@/store/slices/cartSlice";
+import { addToast } from "@/store/slices/toastSlice";
 import { getLinkWithRestaurant } from "@/utils/restaurantUtils";
 import { useSearchParams } from "next/navigation";
 import SafeImage from "../common/SafeImage";
+
+const RESTAURANT_CARTS_KEY = "restaurant_carts";
+const CURRENT_RESTAURANT_KEY = "current_restaurant_id";
+
+const generateNumericGuestId = (restaurantId) => {
+  const timestamp = Date.now().toString();
+  const random = Math.floor(Math.random() * 999999)
+    .toString()
+    .padStart(6, "0");
+  return `${timestamp}${restaurantId}${random}`;
+};
+
+const getRestaurantGuestId = (restaurantId) => {
+  const savedCarts = JSON.parse(
+    localStorage.getItem(RESTAURANT_CARTS_KEY) || "{}"
+  );
+
+  if (savedCarts[restaurantId]?.guestId) {
+    return savedCarts[restaurantId].guestId;
+  }
+
+  return generateNumericGuestId(restaurantId);
+};
+
+const saveCartForRestaurant = (restaurantId, cartItems, guestId) => {
+  try {
+    const savedCarts = JSON.parse(
+      localStorage.getItem(RESTAURANT_CARTS_KEY) || "{}"
+    );
+
+    savedCarts[restaurantId] = {
+      cartItems: cartItems || [],
+      guestId: guestId,
+      savedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(RESTAURANT_CARTS_KEY, JSON.stringify(savedCarts));
+    console.log(
+      `💾 Saved cart for restaurant ${restaurantId}:`,
+      savedCarts[restaurantId]
+    );
+    return true;
+  } catch (error) {
+    console.error("Error saving cart:", error);
+    return false;
+  }
+};
+
+const loadCartForRestaurant = (restaurantId) => {
+  try {
+    const savedCarts = JSON.parse(
+      localStorage.getItem(RESTAURANT_CARTS_KEY) || "{}"
+    );
+    const restaurantData = savedCarts[restaurantId];
+
+    if (restaurantData) {
+      console.log(
+        `📦 Loaded cart for restaurant ${restaurantId}:`,
+        restaurantData
+      );
+      return {
+        cartItems: restaurantData.cartItems || [],
+        guestId: restaurantData.guestId,
+      };
+    }
+
+    return {
+      cartItems: [],
+      guestId: getRestaurantGuestId(restaurantId),
+    };
+  } catch (error) {
+    console.error("Error loading cart:", error);
+    return {
+      cartItems: [],
+      guestId: getRestaurantGuestId(restaurantId),
+    };
+  }
+};
 
 const CartSidebar = ({
   token,
@@ -24,6 +105,93 @@ const CartSidebar = ({
   const restaurant_id = useSearchParams().get("restaurant") || restaurantId;
   const itemsPerSlide = 3;
   const totalSlides = Math.ceil(cartItems.length / itemsPerSlide);
+
+  const dispatch = useDispatch();
+  const { guestId } = useSelector((state) => state.cart);
+  const previousRestaurantRef = useRef(null);
+  const isInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (!restaurant_id) return;
+
+    const currentRestaurantId = String(restaurant_id);
+
+    if (!isInitializedRef.current) {
+      console.log(`🏪 Initializing cart for restaurant ${currentRestaurantId}`);
+
+      const savedCart = loadCartForRestaurant(currentRestaurantId);
+
+      dispatch(setGuestId(savedCart.guestId));
+
+      if (savedCart.cartItems.length > 0) {
+        dispatch(setCartItems(savedCart.cartItems));
+      }
+
+      localStorage.setItem(CURRENT_RESTAURANT_KEY, currentRestaurantId);
+      previousRestaurantRef.current = currentRestaurantId;
+      isInitializedRef.current = true;
+      return;
+    }
+
+    if (
+      previousRestaurantRef.current &&
+      previousRestaurantRef.current !== currentRestaurantId
+    ) {
+      if (cartItems.length > 0) {
+        saveCartForRestaurant(
+          previousRestaurantRef.current,
+          cartItems,
+          guestId
+        );
+      }
+
+      dispatch(clearCart());
+
+      const newRestaurantCart = loadCartForRestaurant(currentRestaurantId);
+
+      dispatch(setGuestId(newRestaurantCart.guestId));
+
+      setTimeout(() => {
+        if (newRestaurantCart.cartItems.length > 0) {
+          dispatch(setCartItems(newRestaurantCart.cartItems));
+          dispatch(
+            addToast({
+              show: true,
+              title: "Cart Switched",
+              message: `Loaded ${newRestaurantCart.cartItems.length} saved item(s) for this restaurant`,
+              type: "info",
+            })
+          );
+        } else {
+          dispatch(
+            addToast({
+              show: true,
+              title: "Restaurant Changed",
+              message:
+                cartItems.length > 0
+                  ? "Your previous cart has been saved. Starting fresh for this restaurant."
+                  : `Welcome to this restaurant!`,
+              type: "info",
+            })
+          );
+        }
+      }, 100);
+
+      localStorage.setItem(CURRENT_RESTAURANT_KEY, currentRestaurantId);
+    }
+
+    previousRestaurantRef.current = currentRestaurantId;
+  }, [restaurant_id, dispatch]);
+
+  useEffect(() => {
+    if (isInitializedRef.current && restaurant_id && cartItems.length > 0) {
+      const timeoutId = setTimeout(() => {
+        saveCartForRestaurant(String(restaurant_id), cartItems, guestId);
+      }, 500);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [cartItems, guestId, restaurant_id]);
 
   const sideBanners = restaurantDetails?.side_banner_full_url;
   let sideBannerImage;
@@ -47,6 +215,23 @@ const CartSidebar = ({
   const getCurrentSlideItems = () => {
     const startIndex = currentSlide * itemsPerSlide;
     return cartItems.slice(startIndex, startIndex + itemsPerSlide);
+  };
+
+  const handleEnhancedClearCart = () => {
+    handleClearCart();
+
+    if (restaurant_id) {
+      try {
+        const savedCarts = JSON.parse(
+          localStorage.getItem(RESTAURANT_CARTS_KEY) || "{}"
+        );
+        delete savedCarts[String(restaurant_id)];
+        localStorage.setItem(RESTAURANT_CARTS_KEY, JSON.stringify(savedCarts));
+        console.log(`🗑️ Cleared saved cart for restaurant ${restaurant_id}`);
+      } catch (error) {
+        console.error("Error clearing saved cart:", error);
+      }
+    }
   };
 
   return (
@@ -299,7 +484,7 @@ const CartSidebar = ({
                   <div className="d-flex align-items-center justify-content-between mb-2 pt-2 border-top">
                     <button
                       className="btn btn-outline-danger btn-sm"
-                      onClick={handleClearCart}
+                      onClick={handleEnhancedClearCart}
                     >
                       <i className="fa-solid fa-trash me-1"></i> Clear All
                     </button>

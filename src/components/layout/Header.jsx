@@ -11,6 +11,7 @@ import SafeImage from "../common/SafeImage";
 const Header = ({ details }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   const { token, user } = useSelector((state) => state.auth || {});
   const dispatch = useDispatch();
@@ -18,11 +19,14 @@ const Header = ({ details }) => {
   useEffect(() => {
     const ensureUserData = async () => {
       if (token && (!user || !user?.f_name)) {
+        setIsLoadingProfile(true);
         const { getUserProfile } = await import("@/store/services/authService");
         try {
           await dispatch(getUserProfile(token));
         } catch (error) {
           console.error("Error fetching user profile:", error);
+        } finally {
+          setIsLoadingProfile(false);
         }
       }
     };
@@ -104,7 +108,18 @@ const Header = ({ details }) => {
                   >
                     <i className="fas fa-user-circle me-1 me-sm-2"></i>
                     <span className="user-name d-none d-sm-inline">
-                      {user?.f_name || "Menu"}
+                      {isLoadingProfile ? (
+                        <span className="d-inline-flex align-items-center">
+                          <span
+                            className="spinner-border spinner-border-sm me-1"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          Loading...
+                        </span>
+                      ) : (
+                        user?.f_name || "User"
+                      )}
                     </span>
                   </button>
                   <ul
@@ -113,12 +128,36 @@ const Header = ({ details }) => {
                   >
                     <li className="px-3 py-2 d-flex align-items-center user-info">
                       <div className="rounded-circle bg-primary text-white p-2 me-2 user-avatar">
-                        <i className="fas fa-user"></i>
+                        {isLoadingProfile ? (
+                          <div
+                            className="spinner-border spinner-border-sm text-white"
+                            role="status"
+                          >
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                        ) : (
+                          <i className="fas fa-user"></i>
+                        )}
                       </div>
                       <div className="user-details">
-                        <h6 className="mb-0">{user?.f_name || "User"}</h6>
+                        <h6 className="mb-0">
+                          {isLoadingProfile ? (
+                            <span className="d-inline-flex align-items-center">
+                              <span
+                                className="spinner-border spinner-border-sm me-1"
+                                role="status"
+                                aria-hidden="true"
+                              ></span>
+                              Loading...
+                            </span>
+                          ) : (
+                            user?.f_name || "User"
+                          )}
+                        </h6>
                         <small className="text-muted user-contact">
-                          {user?.email || user?.phone || ""}
+                          {isLoadingProfile
+                            ? "Loading contact..."
+                            : user?.email || user?.phone || ""}
                         </small>
                       </div>
                     </li>
