@@ -62,7 +62,7 @@ const CheckoutSuccessContent = () => {
           setMessage("Payment successful! Your order has been placed.");
           setTimeout(() => {
             router.push("/");
-          }, 3000);
+          }, 5000);
           return;
         }
 

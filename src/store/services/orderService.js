@@ -83,7 +83,6 @@ export const getOrderList =
   (params, token = null) =>
   async (dispatch, getState) => {
     try {
-      // Get guest ID for guest users
       if (!token) {
         const { guestId } = getState().cart;
         if (guestId && !params.guest_id) {
@@ -91,7 +90,6 @@ export const getOrderList =
         }
       }
 
-      // Create config with headers and params
       const config = {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         params: params,

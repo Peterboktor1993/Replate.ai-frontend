@@ -6,16 +6,13 @@ import { addToast } from "@/store/slices/toastSlice";
 import { getLinkWithRestaurant } from "@/utils/restaurantUtils";
 import { useSearchParams } from "next/navigation";
 import SafeImage from "../common/SafeImage";
+import { generateGuestId } from "@/utils/guestOrderHandling";
 
 const RESTAURANT_CARTS_KEY = "restaurant_carts";
 const CURRENT_RESTAURANT_KEY = "current_restaurant_id";
 
 const generateNumericGuestId = (restaurantId) => {
-  const timestamp = Date.now().toString();
-  const random = Math.floor(Math.random() * 999999)
-    .toString()
-    .padStart(6, "0");
-  return `${timestamp}${restaurantId}${random}`;
+  return generateGuestId();
 };
 
 const getRestaurantGuestId = (restaurantId) => {

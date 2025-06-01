@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { generateGuestId } from "@/utils/guestOrderHandling";
 
 const generateNumericGuestId = () => {
-  return Math.floor(100000 + Math.random() * 900000000).toString();
+  return generateGuestId();
 };
 
 const getGuestId = () => {
@@ -61,14 +62,12 @@ const cartSlice = createSlice({
     },
     setCartItems: (state, action) => {
       state.cartItems = action.payload;
-      // Calculate totals
       const { totalItems, totalAmount } = calculateCartTotals(state.cartItems);
       state.totalItems = totalItems;
       state.totalAmount = totalAmount;
     },
     addCartItem: (state, action) => {
       state.cartItems.push(action.payload);
-      // Recalculate totals
       const { totalItems, totalAmount } = calculateCartTotals(state.cartItems);
       state.totalItems = totalItems;
       state.totalAmount = totalAmount;
@@ -82,8 +81,6 @@ const cartSlice = createSlice({
       if (itemIndex !== -1) {
         state.cartItems[itemIndex].quantity = quantity;
         state.cartItems[itemIndex].price = price;
-
-        // Recalculate totals
         const { totalItems, totalAmount } = calculateCartTotals(
           state.cartItems
         );
@@ -95,7 +92,6 @@ const cartSlice = createSlice({
       const cart_id = action.payload;
       state.cartItems = state.cartItems.filter((item) => item.id !== cart_id);
 
-      // Recalculate totals
       const { totalItems, totalAmount } = calculateCartTotals(state.cartItems);
       state.totalItems = totalItems;
       state.totalAmount = totalAmount;

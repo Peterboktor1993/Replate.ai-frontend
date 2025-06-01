@@ -5,10 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { addToast } from "@/store/slices/toastSlice";
 import { placeOrder } from "@/store/services/orderService";
-import "react-datepicker/dist/react-datepicker.css";
+import { fetchCartItems } from "@/store/services/cartService";
+import {
+  fetchUserAddresses,
+  addUserAddress,
+} from "@/store/services/authService";
+import SafeImage from "@/components/common/SafeImage";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
+import { generateGuestId } from "@/utils/guestOrderHandling";
 
 // Import components
 import DeliveryOptions from "@/components/checkout/DeliveryOptions";
@@ -1032,8 +1038,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
         })
       );
 
-      const userId =
-        user?.id || guestId || Math.random().toString(36).substring(7);
+      const userId = user?.id || guestId || generateGuestId();
 
       if (values.paymentMethod === "Stripe") {
         let orderId;
@@ -1154,8 +1159,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
       setProcessing(true);
 
       const orderId = incompletePayment.orderId;
-      const userId =
-        user?.id || guestId || Math.random().toString(36).substring(7);
+      const userId = user?.id || guestId || generateGuestId();
       const callback = `${window.location.origin}/checkout-status?order_id=${orderId}`;
 
       dispatch(

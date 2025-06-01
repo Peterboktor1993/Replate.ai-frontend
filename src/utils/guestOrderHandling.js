@@ -1,8 +1,3 @@
-
-/**
- * Checks if there are any guest IDs present in localStorage
- * @returns {Object} An object containing guestId and hasGuestOrders flags
- */
 export const checkForGuestId = () => {
   let guestId = null;
   let hasGuestOrders = false;
@@ -23,9 +18,10 @@ export const checkForGuestId = () => {
   return { guestId, hasGuestOrders };
 };
 
-/**
- * Cleans up guest IDs from localStorage after transferring orders to a registered account
- */
+export const generateGuestId = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 export const cleanupGuestIds = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem("guestId");
@@ -33,11 +29,6 @@ export const cleanupGuestIds = () => {
   }
 };
 
-/**
- * Prepares the payload for login/register API to include guest ID
- * @param {Object} payload - The original API payload
- * @returns {Object} - Updated payload with guest_id if available
- */
 export const addGuestIdToPayload = (payload) => {
   const { guestId, hasGuestOrders } = checkForGuestId();
 

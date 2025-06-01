@@ -1,5 +1,3 @@
-// Error utility functions for debugging React errors
-
 export const logError = (error, errorInfo = null, context = "") => {
   if (process.env.NODE_ENV === "development") {
     console.group(`🚨 Error ${context ? `in ${context}` : ""}`);
@@ -12,9 +10,6 @@ export const logError = (error, errorInfo = null, context = "") => {
     }
     console.groupEnd();
   }
-
-  // In production, you might want to send this to an error reporting service
-  // Example: Sentry.captureException(error, { extra: errorInfo, tags: { context } });
 };
 
 export const isValidReactElement = (element) => {
@@ -58,7 +53,6 @@ export const withErrorBoundary = (Component, fallback = null) => {
   };
 };
 
-// React error code decoder
 export const getReactErrorMessage = (errorCode) => {
   const errorMessages = {
     130: "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got undefined or null.",
