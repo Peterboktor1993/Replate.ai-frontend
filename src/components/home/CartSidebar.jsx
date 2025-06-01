@@ -179,16 +179,69 @@ const CartSidebar = ({
                               {/* Item Info */}
                               <div className="item-info-compact flex-grow-1">
                                 <div className="d-flex justify-content-between align-items-start">
-                                  <div>
+                                  <div className="item-details-section">
                                     <h6 className="item-name-small mb-0 fw-bold text-truncate">
                                       {item.item?.name || "Food Item"}
                                     </h6>
-                                    <small className="text-primary fw-bold">
-                                      $
-                                      {(
-                                        parseFloat(item.price) * item.quantity
-                                      ).toFixed(2)}
-                                    </small>
+
+                                    {/* Simplified Price Display */}
+                                    <div className="price-display-simple">
+                                      <span className="item-total-price text-primary fw-bold">
+                                        $
+                                        {(
+                                          parseFloat(item.price) * item.quantity
+                                        ).toFixed(2)}
+                                      </span>
+                                      {item.quantity > 1 && (
+                                        <span className="quantity-info text-muted">
+                                          {" "}
+                                          (${parseFloat(item.price).toFixed(
+                                            2
+                                          )}{" "}
+                                          × {item.quantity})
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Compact Variations Display */}
+                                    {(() => {
+                                      let parsedVariations = [];
+                                      try {
+                                        if (
+                                          typeof item.variation_options ===
+                                          "string"
+                                        ) {
+                                          parsedVariations = JSON.parse(
+                                            item.variation_options
+                                          );
+                                        } else if (
+                                          Array.isArray(item.variation_options)
+                                        ) {
+                                          parsedVariations =
+                                            item.variation_options;
+                                        }
+                                      } catch (error) {
+                                        parsedVariations = [];
+                                      }
+
+                                      return (
+                                        parsedVariations.length > 0 && (
+                                          <div className="variations-compact">
+                                            {parsedVariations.map(
+                                              (variation, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="variation-compact"
+                                                >
+                                                  {variation.name}:{" "}
+                                                  {variation.value}
+                                                </span>
+                                              )
+                                            )}
+                                          </div>
+                                        )
+                                      );
+                                    })()}
                                   </div>
                                   <button
                                     className="btn-remove-compact"
@@ -197,36 +250,6 @@ const CartSidebar = ({
                                     <i className="fas fa-times"></i>
                                   </button>
                                 </div>
-
-                                {/* Variations and Add-ons - Compact */}
-                                {((item.variation_options &&
-                                  Array.isArray(item.variation_options) &&
-                                  item.variation_options.length > 0) ||
-                                  (item.add_ons &&
-                                    Array.isArray(item.add_ons) &&
-                                    item.add_ons.length > 0)) && (
-                                  <div className="extras-compact mt-1">
-                                    {item.variation_options?.map(
-                                      (option, idx) => (
-                                        <span key={idx} className="extra-tag">
-                                          {option.name}: {option.value}
-                                        </span>
-                                      )
-                                    )}
-                                    {item.add_ons?.map((addon, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="extra-tag addon"
-                                      >
-                                        +{addon.name} (+$
-                                        {parseFloat(addon.price || 0).toFixed(
-                                          2
-                                        )}
-                                        )
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
 
                                 {/* Quantity Controls - Compact */}
                                 <div className="quantity-controls-compact d-flex align-items-center mt-2">
@@ -379,13 +402,28 @@ const CartSidebar = ({
                 </div>
               )}
 
-              <Link
-                href={getLinkWithRestaurant("/checkout", restaurant_id)}
-                className="btn btn-primary w-100 btn-lg"
-              >
-                <i className="fa-solid fa-check-circle me-2"></i>
-                Checkout (${calculateTotal().toFixed(2)})
-              </Link>
+              {/* Conditional Checkout Button */}
+              {cartItems.length > 0 ? (
+                <Link
+                  href={getLinkWithRestaurant("/checkout", restaurant_id)}
+                  className="btn btn-primary w-100 btn-lg"
+                >
+                  <i className="fa-solid fa-check-circle me-2"></i>
+                  Checkout (${calculateTotal().toFixed(2)})
+                </Link>
+              ) : (
+                <button
+                  className="btn btn-secondary w-100 btn-lg"
+                  disabled
+                  style={{
+                    cursor: "not-allowed",
+                    opacity: 0.6,
+                  }}
+                >
+                  <i className="fa-solid fa-shopping-cart me-2"></i>
+                  Add Items to Checkout
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -448,6 +486,38 @@ const CartSidebar = ({
           max-width: 120px;
         }
 
+        .item-details-section {
+          flex-grow: 1;
+        }
+
+        .price-display-simple {
+          margin-top: 4px;
+        }
+
+        .item-total-price {
+          font-size: 0.9rem;
+          font-weight: 700;
+        }
+
+        .quantity-info {
+          font-size: 0.75rem;
+        }
+
+        .variations-compact {
+          margin-top: 4px;
+        }
+
+        .variation-compact {
+          font-size: 0.7rem;
+          color: #6c757d;
+          background: #f8f9fa;
+          padding: 2px 6px;
+          border-radius: 4px;
+          margin-right: 6px;
+          margin-bottom: 2px;
+          display: inline-block;
+        }
+
         .btn-remove-compact {
           background: none;
           border: none;
@@ -469,26 +539,98 @@ const CartSidebar = ({
           transform: scale(1.1);
         }
 
-        .extras-compact {
-          max-height: 40px;
-          overflow: hidden;
-        }
-
-        .extra-tag {
-          font-size: 10px;
+        .extras-enhanced {
           background: #f8f9fa;
-          color: #6c757d;
-          padding: 2px 6px;
-          border-radius: 12px;
-          margin-right: 4px;
-          margin-bottom: 2px;
-          display: inline-block;
-          line-height: 1.2;
+          border-radius: 8px;
+          padding: 8px;
+          margin-top: 8px;
+          border-left: 3px solid var(--primary-color, #007bff);
         }
 
-        .extra-tag.addon {
+        .variations-section,
+        .addons-section {
+          margin-bottom: 6px;
+        }
+
+        .variations-header,
+        .addons-header {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #495057;
+          margin-bottom: 4px;
+          display: flex;
+          align-items: center;
+        }
+
+        .variation-icon {
+          color: var(--primary-color, #007bff);
+          font-size: 0.7rem;
+        }
+
+        .addon-icon {
+          color: #28a745;
+          font-size: 0.7rem;
+        }
+
+        .variations-label,
+        .addons-label {
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .variations-list,
+        .addons-list {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .variation-item-enhanced,
+        .addon-item-enhanced {
+          display: flex;
+          align-items: center;
+          font-size: 0.75rem;
+          line-height: 1.2;
+          background: white;
+          padding: 3px 6px;
+          border-radius: 4px;
+          margin-bottom: 2px;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .variation-name,
+        .addon-name {
+          font-weight: 600;
+          color: #495057;
+          margin-right: 4px;
+        }
+
+        .variation-value {
+          color: var(--primary-color, #007bff);
+          font-weight: 500;
+          margin-right: 4px;
+        }
+
+        .variation-price,
+        .addon-price {
+          margin-left: auto;
+          font-size: 0.7rem;
+          color: #28a745;
+          font-weight: 600;
           background: #e8f5e8;
-          color: #198754;
+          padding: 1px 4px;
+          border-radius: 3px;
+        }
+
+        .addon-quantity {
+          margin-left: 4px;
+          font-size: 0.7rem;
+          color: #6c757d;
+          background: #e9ecef;
+          padding: 1px 4px;
+          border-radius: 3px;
+          font-weight: 500;
         }
 
         .quantity-controls-compact {

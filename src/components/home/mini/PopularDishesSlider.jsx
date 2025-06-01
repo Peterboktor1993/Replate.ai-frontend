@@ -9,7 +9,7 @@ import SafeImage from "@/components/common/SafeImage";
 
 const PopularDishesSlider = ({
   products: initialProducts,
-  restaurantId = "2",
+  restaurantId = "3",
   isFiltered = false,
   initialOffset = 1,
   initialLimit = 20,
@@ -100,7 +100,6 @@ const PopularDishesSlider = ({
       setLoading(true);
 
       const currentOffset = currentPageRef.current;
-      const currentProductCount = productsRef.current.length;
 
       const actionResult = await dispatch(
         getAllProducts({
@@ -217,6 +216,21 @@ const PopularDishesSlider = ({
     if (e && e.stopPropagation) {
       e.stopPropagation();
     }
+
+    const isFromModal = e === null;
+    const hasProcessedVariations =
+      product.variation_options && product.variation_options.length > 0;
+
+    if (
+      !isFromModal &&
+      !hasProcessedVariations &&
+      product.variations &&
+      product.variations.length > 0
+    ) {
+      openProductModal(product);
+      return;
+    }
+
     const payload = {
       id: product.id,
       model: product.model || "Food",
@@ -233,7 +247,12 @@ const PopularDishesSlider = ({
         : [],
       add_ons: Array.isArray(product.add_ons) ? product.add_ons : [],
     };
-    dispatch(addToCart(payload, token));
+
+    try {
+      dispatch(addToCart(payload, token));
+    } catch (error) {
+      console.log("❌ Error dispatching addToCart:", error);
+    }
   };
 
   return (
@@ -280,8 +299,19 @@ const PopularDishesSlider = ({
                     <button
                       className="btn btn-sm btn-primary rounded-circle add-to-cart-btn"
                       onClick={(e) => handleAddToCart(e, product)}
+                      title={
+                        product.variations && product.variations.length > 0
+                          ? "Click to choose options"
+                          : "Add to cart"
+                      }
                     >
-                      <i className="fa-solid fa-plus"></i>
+                      <i
+                        className={
+                          product.variations && product.variations.length > 0
+                            ? "fa-solid fa-cog"
+                            : "fa-solid fa-plus"
+                        }
+                      ></i>
                     </button>
                   </div>
                 </div>

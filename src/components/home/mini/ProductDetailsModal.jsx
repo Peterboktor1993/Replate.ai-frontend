@@ -8,12 +8,14 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariations, setSelectedVariations] = useState({});
   const [selectedAddOns, setSelectedAddOns] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
     if (show) {
       setQuantity(1);
       setSelectedVariations({});
       setSelectedAddOns([]);
+      setValidationErrors({});
     }
   }, [show, product?.id]);
 
@@ -22,6 +24,7 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
     setQuantity(1);
     setSelectedVariations({});
     setSelectedAddOns([]);
+    setValidationErrors({});
   };
 
   if (!product) return null;
@@ -36,6 +39,12 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
         selectedOption: option,
       },
     }));
+
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[variation.variation_id];
+      return newErrors;
+    });
   };
 
   const handleAddOnToggle = (addOn) => {
@@ -56,7 +65,48 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
     }
   };
 
+  const calculateTotalPrice = () => {
+    let totalPrice = parseFloat(product.price);
+
+    Object.values(selectedVariations).forEach((variation) => {
+      if (variation.selectedOption?.optionPrice) {
+        totalPrice += parseFloat(variation.selectedOption.optionPrice);
+      }
+    });
+
+    selectedAddOns.forEach((addon) => {
+      if (addon.price) {
+        totalPrice += parseFloat(addon.price);
+      }
+    });
+
+    return totalPrice;
+  };
+
+  const validateVariations = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (product.variations && product.variations.length > 0) {
+      product.variations.forEach((variation) => {
+        if (variation.required === "on" || variation.required === true) {
+          if (!selectedVariations[variation.variation_id]) {
+            errors[variation.variation_id] = `Please select ${variation.name}`;
+            isValid = false;
+          }
+        }
+      });
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   const handleAddToCart = () => {
+    if (!validateVariations()) {
+      return;
+    }
+
     if (product && onAddToCart) {
       const addOnIds = selectedAddOns.map((addon) => addon.id);
       const addOnQtys = selectedAddOns.map(() => 1);
@@ -65,6 +115,7 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
         (variation) => ({
           name: variation.name,
           value: variation.selectedLabel,
+          price: variation.selectedOption?.optionPrice || 0,
         })
       );
 
@@ -76,8 +127,11 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
         isChecked: true,
       }));
 
+      const totalPrice = calculateTotalPrice();
+
       const updatedProduct = {
         ...product,
+        price: totalPrice,
         quantity: quantity,
         add_on_ids: addOnIds,
         add_on_qtys: addOnQtys,
@@ -176,6 +230,32 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
           background-color: rgba(var(--primary-color), 0.1);
         }
 
+        .original-price {
+          font-size: 0.9rem;
+          margin-top: 0.25rem;
+        }
+
+        .product-price-badge {
+          text-align: center;
+          line-height: 1.2;
+        }
+
+        .variation-name .text-danger {
+          font-size: 1.1rem;
+          font-weight: 700;
+        }
+
+        .variation-item.border-danger,
+        .addon-item.border-danger {
+          border-color: #dc3545 !important;
+          background: rgba(220, 53, 69, 0.05);
+        }
+
+        .alert-danger.py-1 {
+          font-size: 0.85rem;
+          border-radius: 0.375rem;
+        }
+
         /* Mobile-only cool and compact design */
         @media (max-width: 576px) {
           .modal-backdrop {
@@ -221,6 +301,12 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
             background: rgba(var(--primary-color), 0.1);
             padding: 0.25rem 0.75rem;
             border-radius: 15px;
+            text-align: center;
+          }
+
+          .product-detail-modal .modal-header .original-price {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
           }
 
           .product-detail-modal .btn-close {
@@ -367,6 +453,12 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
             box-shadow: 0 4px 12px rgba(var(--primary-color), 0.15);
           }
 
+          .variation-item.border-danger,
+          .addon-item.border-danger {
+            border-color: #dc3545 !important;
+            background: rgba(220, 53, 69, 0.05);
+          }
+
           .variation-item h6,
           .addon-item h6 {
             font-size: 0.9rem;
@@ -455,13 +547,22 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
         show={show}
         onHide={handleClose}
         centered
-        style={{ zIndex: 9999999999999999999999999999999 }}
+        style={{ zIndex: 9999999999 }}
         dialogClassName="product-detail-modal"
       >
         <Modal.Header closeButton className="fixed-header">
           <div className="d-flex w-100 justify-content-between align-items-center">
             <Modal.Title className="product-title">{product.name}</Modal.Title>
-            <div className="product-price-badge">${product.price}</div>
+            <div className="product-price-badge">
+              ${calculateTotalPrice().toFixed(2)}
+              {/* {calculateTotalPrice() > parseFloat(product.price) && (
+                <div className="original-price">
+                  <small className="text-muted text-decoration-line-through">
+                    ${parseFloat(product.price).toFixed(2)}
+                  </small>
+                </div>
+              )} */}
+            </div>
           </div>
         </Modal.Header>
         <Modal.Body className="p-0">
@@ -570,12 +671,23 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
                             currentSelectionForGroup
                               ? currentSelectionForGroup.selectedOptionId
                               : null;
+                          const hasError =
+                            validationErrors[variation.variation_id];
 
                           return (
                             <div key={`${variation.variation_id}-${index}`}>
                               <h6 className="variation-name mb-2">
                                 {variation.name}
+                                {(variation.required === "on" ||
+                                  variation.required === true) && (
+                                  <span className="text-danger ms-1">*</span>
+                                )}
                               </h6>
+                              {hasError && (
+                                <div className="alert alert-danger py-1 px-2 mb-2 small">
+                                  {hasError}
+                                </div>
+                              )}
                               <div className="variation-options">
                                 {variation.values &&
                                   variation.values.map(
@@ -587,7 +699,7 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
                                           option.option_id
                                             ? "selected-variation"
                                             : ""
-                                        }`}
+                                        } ${hasError ? "border-danger" : ""}`}
                                         onClick={() =>
                                           handleVariationSelect(
                                             variation,
@@ -602,7 +714,10 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
                                             </h6>
                                             {option.optionPrice > 0 && (
                                               <small className="text-primary">
-                                                +${option.optionPrice}
+                                                +$
+                                                {parseFloat(
+                                                  option.optionPrice
+                                                ).toFixed(2)}
                                               </small>
                                             )}
                                           </div>
@@ -711,7 +826,7 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
           </button>
           <button className="btn btn-primary" onClick={handleAddToCart}>
             <i className="fa-solid fa-cart-plus me-1"></i>
-            Add to Cart
+            Add to Cart - ${(calculateTotalPrice() * quantity).toFixed(2)}
           </button>
         </Modal.Footer>
       </Modal>
