@@ -165,13 +165,19 @@ const Header = ({ details }) => {
                       <hr className="dropdown-divider" />
                     </li>
                     <li>
-                      <Link href="/profile" className="dropdown-item py-2">
+                      <Link
+                        href={`/profile?restaurant=${details?.id}`}
+                        className="dropdown-item py-2"
+                      >
                         <i className="fas fa-user me-2 text-primary"></i>
                         Profile
                       </Link>
                     </li>
                     <li>
-                      <Link href="/orders" className="dropdown-item py-2">
+                      <Link
+                        href={`/orders?restaurant=${details?.id}`}
+                        className="dropdown-item py-2"
+                      >
                         <i className="fas fa-shopping-bag me-2 text-primary"></i>
                         My Orders
                       </Link>

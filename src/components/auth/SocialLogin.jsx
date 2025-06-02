@@ -1,10 +1,14 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { socialLogin } from "@/store/services/authService";
+import AdditionalInfoModal from "./AdditionalInfoModal";
 
 const SocialLogin = ({ mode, loading, onSocialLogin }) => {
   const dispatch = useDispatch();
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [showAdditionalInfoModal, setShowAdditionalInfoModal] = useState(false);
+  const [additionalInfoData, setAdditionalInfoData] = useState(null);
 
   useEffect(() => {
     const loadGoogleScript = () => {
@@ -26,16 +30,18 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
 
     const initializeGoogle = () => {
       if (window.google) {
-        const GOOGLE_CLIENT_ID =
-          process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "lol";
+        const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+        if (!GOOGLE_CLIENT_ID) {
+          return;
+        }
 
         try {
           window.google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
-            callback: handleGoogleSignIn,
+            callback: handleCredentialResponse,
             auto_select: false,
             cancel_on_tap_outside: true,
-            use_fedcm_for_prompt: true,
           });
         } catch (error) {
           console.error("Error initializing Google Sign-In:", error);
@@ -46,30 +52,38 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
     loadGoogleScript();
   }, []);
 
-  const handleGoogleSignIn = async (response) => {
+  const handleCredentialResponse = async (response) => {
     try {
+      const id_token = response.credential;
+      const payload = JSON.parse(atob(id_token.split(".")[1]));
+      const email = payload.email;
+      const sub = payload.sub;
+
       if (onSocialLogin) {
         onSocialLogin("google", { loading: true });
       }
 
-      const googleUser = JSON.parse(atob(response.credential.split(".")[1]));
-
       const socialData = {
-        token: response.credential,
-        unique_id: "google",
-        email: googleUser.email,
+        login_type: "social",
+        token: id_token,
+        unique_id: sub,
+        email: email,
         medium: "google",
       };
 
       const result = await dispatch(socialLogin(socialData));
 
-      const fallbackButton = document.getElementById("google-signin-button");
-      const backdrop = document.getElementById("google-backdrop");
-      if (fallbackButton) {
-        fallbackButton.style.display = "none";
-      }
-      if (backdrop) {
-        backdrop.remove();
+      setShowGoogleModal(false);
+
+      // Handle case when additional info is needed
+      if (result.success && result.needsAdditionalInfo) {
+        setAdditionalInfoData({
+          email: result.email,
+          loginType: result.loginType,
+          socialData: result.socialData,
+        });
+        setShowAdditionalInfoModal(true);
+        return;
       }
 
       if (result.success && onSocialLogin) {
@@ -77,6 +91,9 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
       }
 
       if (result.success && result.isLoggedIn) {
+        if (result.data && result.data.token) {
+          localStorage.setItem("accessToken", result.data.token);
+        }
       } else if (
         result.success &&
         !result.isLoggedIn &&
@@ -91,17 +108,7 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
         }
       }
     } catch (error) {
-      console.error("Google sign-in error:", error);
-
-      const fallbackButton = document.getElementById("google-signin-button");
-      const backdrop = document.getElementById("google-backdrop");
-      if (fallbackButton) {
-        fallbackButton.style.display = "none";
-      }
-      if (backdrop) {
-        backdrop.remove();
-      }
-
+      setShowGoogleModal(false);
       if (onSocialLogin) {
         onSocialLogin("google", {
           success: false,
@@ -111,111 +118,44 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
     }
   };
 
+  const handleAdditionalInfoSuccess = (result) => {
+    if (onSocialLogin) {
+      onSocialLogin("google", result);
+    }
+  };
+
   const handleGoogleButtonClick = () => {
     if (!window.google) {
-      console.warn("Google Identity Services not loaded");
       alert(
         "Google Sign-In is not available. Please refresh the page and try again."
       );
       return;
     }
 
-    const fallbackButton = document.getElementById("google-signin-button");
-    if (fallbackButton) {
-      fallbackButton.innerHTML = `
-        <div style="text-align: center; margin-bottom: 15px;">
-          <h6 style="margin: 0; color: #333; font-size: 16px; font-weight: 600;">
-            Sign in with Google
-          </h6>
-          <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
-            Choose your account to continue
-          </p>
-        </div>
-        <div id="google-button-container" style="margin-top: 15px;"></div>
-      `;
+    setShowGoogleModal(true);
+  };
 
-      fallbackButton.style.display = "block";
-      fallbackButton.style.position = "fixed";
-      fallbackButton.style.top = "50%";
-      fallbackButton.style.left = "50%";
-      fallbackButton.style.transform = "translate(-50%, -50%)";
-      fallbackButton.style.zIndex = "999999";
-      fallbackButton.style.background = "white";
-      fallbackButton.style.padding = "25px";
-      fallbackButton.style.borderRadius = "16px";
-      fallbackButton.style.boxShadow = "0 20px 60px rgba(0,0,0,0.3)";
-      fallbackButton.style.border = "1px solid #e0e0e0";
-      fallbackButton.style.minWidth = "320px";
-      fallbackButton.style.maxWidth = "400px";
-
-      // Add backdrop
-      const backdrop = document.createElement("div");
-      backdrop.id = "google-backdrop";
-      backdrop.style.position = "fixed";
-      backdrop.style.top = "0";
-      backdrop.style.left = "0";
-      backdrop.style.width = "100%";
-      backdrop.style.height = "100%";
-      backdrop.style.backgroundColor = "rgba(0,0,0,0.5)";
-      backdrop.style.zIndex = "999998";
-      backdrop.onclick = () => {
-        fallbackButton.style.display = "none";
-        backdrop.remove();
-      };
-      document.body.appendChild(backdrop);
-
-      // Add close button
-      const closeBtn = document.createElement("button");
-      closeBtn.innerHTML = "×";
-      closeBtn.style.position = "absolute";
-      closeBtn.style.top = "10px";
-      closeBtn.style.right = "15px";
-      closeBtn.style.background = "none";
-      closeBtn.style.border = "none";
-      closeBtn.style.fontSize = "24px";
-      closeBtn.style.cursor = "pointer";
-      closeBtn.style.color = "#999";
-      closeBtn.style.lineHeight = "1";
-      closeBtn.style.padding = "5px";
-      closeBtn.style.borderRadius = "50%";
-      closeBtn.style.width = "32px";
-      closeBtn.style.height = "32px";
-      closeBtn.style.display = "flex";
-      closeBtn.style.alignItems = "center";
-      closeBtn.style.justifyContent = "center";
-      closeBtn.onmouseover = () => (closeBtn.style.backgroundColor = "#f0f0f0");
-      closeBtn.onmouseout = () =>
-        (closeBtn.style.backgroundColor = "transparent");
-      closeBtn.onclick = () => {
-        fallbackButton.style.display = "none";
-        backdrop.remove();
-      };
-      fallbackButton.appendChild(closeBtn);
-
+  const renderGoogleButton = () => {
+    const container = document.getElementById("google-button-container");
+    if (container && window.google) {
       try {
-        window.google.accounts.id.renderButton(
-          document.getElementById("google-button-container"),
-          {
-            theme: "outline",
-            size: "large",
-            width: "100%",
-            text: "continue_with",
-            shape: "rectangular",
-            logo_alignment: "left",
-          }
-        );
-      } catch (renderError) {
-        console.error("Error rendering Google button:", renderError);
-        fallbackButton.innerHTML = `
-          <div style="text-align: center; padding: 20px;">
-            <p style="color: #d32f2f; margin: 0;">
-              Unable to load Google Sign-In. Please refresh the page and try again.
-            </p>
-          </div>
-        `;
-      }
+        window.google.accounts.id.renderButton(container, {
+          theme: "outline",
+          size: "large",
+          width: "100%",
+          text: "continue_with",
+          shape: "rectangular",
+          logo_alignment: "left",
+        });
+      } catch (error) {}
     }
   };
+
+  useEffect(() => {
+    if (showGoogleModal && window.google) {
+      setTimeout(renderGoogleButton, 100);
+    }
+  }, [showGoogleModal]);
 
   return (
     <>
@@ -263,9 +203,6 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
             </div>
             <div className="btn-overlay"></div>
           </button>
-
-          {/* Hidden div for Google button rendering fallback */}
-          <div id="google-signin-button" style={{ display: "none" }}></div>
         </div>
 
         <div className="divider my-4">
@@ -274,6 +211,45 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
           <div className="divider-line"></div>
         </div>
       </div>
+
+      {/* Centered Google Sign-in Modal */}
+      {showGoogleModal && (
+        <div
+          className="google-modal-overlay"
+          onClick={() => setShowGoogleModal(false)}
+        >
+          <div
+            className="google-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="google-modal-header">
+              <h6>Sign in with Google</h6>
+              <button
+                className="google-modal-close"
+                onClick={() => setShowGoogleModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="google-modal-body">
+              <p>Choose your account to continue</p>
+              <div id="google-button-container"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Additional Info Modal */}
+      <AdditionalInfoModal
+        isOpen={showAdditionalInfoModal}
+        onClose={() => {
+          setShowAdditionalInfoModal(false);
+          setAdditionalInfoData(null);
+        }}
+        email={additionalInfoData?.email}
+        loginType={additionalInfoData?.loginType}
+        onSuccess={handleAdditionalInfoSuccess}
+      />
 
       <style jsx>{`
         .social-login {
@@ -415,6 +391,91 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
           color: #1f2937;
         }
 
+        /* Google Modal Styling */
+        .google-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999999;
+          backdrop-filter: blur(2px);
+        }
+
+        .google-modal-content {
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          border: 1px solid #e0e0e0;
+          min-width: 320px;
+          max-width: 400px;
+          width: 90%;
+          overflow: hidden;
+          animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        .google-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 20px 25px 15px 25px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .google-modal-header h6 {
+          margin: 0;
+          color: #333;
+          font-size: 16px;
+          font-weight: 600;
+        }
+
+        .google-modal-close {
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: #999;
+          line-height: 1;
+          padding: 5px;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background-color 0.2s ease;
+        }
+
+        .google-modal-close:hover {
+          background-color: #f0f0f0;
+        }
+
+        .google-modal-body {
+          padding: 20px 25px 25px 25px;
+          text-align: center;
+        }
+
+        .google-modal-body p {
+          margin: 0 0 20px 0;
+          color: #666;
+          font-size: 14px;
+        }
+
         /* Divider styling */
         .divider {
           display: flex;
@@ -461,6 +522,11 @@ const SocialLogin = ({ mode, loading, onSocialLogin }) => {
           .google-icon {
             width: 22px;
             height: 22px;
+          }
+
+          .google-modal-content {
+            min-width: 280px;
+            margin: 20px;
           }
         }
 

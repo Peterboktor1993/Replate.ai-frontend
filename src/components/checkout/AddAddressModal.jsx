@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 const AddAddressModal = ({
@@ -9,7 +9,21 @@ const AddAddressModal = ({
   handleAddressTypeSelect,
   handleAddNewAddress,
   user,
+  setNewAddress,
 }) => {
+  useEffect(() => {
+    if (showAddressModal && user) {
+      const userName = `${user?.f_name || ""} ${user?.l_name || ""}`.trim();
+      const userPhone = user?.phone || "";
+
+      setNewAddress((prev) => ({
+        ...prev,
+        contact_person_name: prev.contact_person_name || userName,
+        contact_person_number: prev.contact_person_number || userPhone,
+      }));
+    }
+  }, [showAddressModal, user, setNewAddress]);
+
   return (
     <Modal
       show={showAddressModal}
@@ -21,37 +35,41 @@ const AddAddressModal = ({
       </Modal.Header>
       <Modal.Body>
         <div className="mb-3">
-          <label className="form-label">Full Name</label>
+          <label className="form-label">
+            Full Name <span className="text-danger">*</span>
+          </label>
           <input
             type="text"
             className="form-control"
             name="contact_person_name"
-            value={
-              newAddress.contact_person_name ||
-              `${user?.f_name || ""} ${user?.l_name || ""}`
-            }
+            value={newAddress.contact_person_name || ""}
             onChange={handleNewAddressChange}
             placeholder="Enter your full name"
+            required
           />
         </div>
         <div className="mb-3">
-          <label className="form-label">Phone Number</label>
+          <label className="form-label">
+            Phone Number <span className="text-danger">*</span>
+          </label>
           <input
             type="text"
             className="form-control"
             name="contact_person_number"
-            value={newAddress.contact_person_number || user?.phone || ""}
+            value={newAddress.contact_person_number || ""}
             onChange={handleNewAddressChange}
             placeholder="Enter your phone number"
             required
           />
         </div>
         <div className="mb-3">
-          <label className="form-label">Address</label>
+          <label className="form-label">
+            Address <span className="text-danger">*</span>
+          </label>
           <textarea
             className="form-control"
             name="address"
-            value={newAddress.address}
+            value={newAddress.address || ""}
             onChange={handleNewAddressChange}
             placeholder="Enter your full address"
             rows="3"

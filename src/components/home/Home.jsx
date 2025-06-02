@@ -23,7 +23,7 @@ import {
 
 import { getOrderList } from "@/store/services/orderService";
 import CartSidebar from "./CartSidebar";
-import { filterCategoriesByProducts } from "@/utils/utils";
+import { setRestaurantId } from "@/store/slices/restaurantSlice";
 
 const BannerPic = "/images/banner-img/pic-2.jpg";
 
@@ -64,7 +64,10 @@ const Home = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
-  // Function to count products for a specific category
+  // disptahc restarnt id
+  useEffect(() => {
+    dispatch(setRestaurantId(restaurantId));
+  }, [dispatch, restaurantId]);
   const countProductsForCategory = (categoryId) => {
     return initialProducts.filter((product) => {
       if (product.category_id === categoryId) {

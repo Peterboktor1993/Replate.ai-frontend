@@ -424,6 +424,21 @@ const CartSummary = ({
                 position: processing ? "relative" : "static",
                 zIndex: processing ? 20 : "auto",
               }}
+              onClick={(e) => {
+                // Add click debugging
+                if (isButtonDisabled()) {
+                  console.warn("🚫 Checkout button clicked but disabled!");
+                  console.log("Button disabled reasons:", {
+                    processing,
+                    cartLength: cartItems.length,
+                    hasValidCartItems: hasValidCartItems
+                      ? hasValidCartItems()
+                      : "function not provided",
+                  });
+                } else {
+                  console.log("✅ Checkout button clicked - should proceed");
+                }
+              }}
             >
               {getButtonText()}
             </button>

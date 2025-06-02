@@ -100,14 +100,14 @@ export const socialLogin = (socialData) => async (dispatch, getState) => {
     }
 
     const response = await axios.post(`${AUTH_URL}/login`, payload, {
-      headers: { "X-localization": "en" },
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
-
     const isSuccessful = response.data.token || response.data.is_exist_user;
 
     if (isSuccessful) {
       const userData = response.data.is_exist_user || response.data;
-
       if (response.data.token) {
         dispatch(
           loginSuccess({
@@ -132,28 +132,20 @@ export const socialLogin = (socialData) => async (dispatch, getState) => {
           dispatch(regenerateGuestId());
         }
 
-        dispatch(
-          addToast({
-            type: "success",
-            title: "Success",
-            message: `Welcome back, ${userData.name}!`,
-          })
-        );
-
         return {
           success: true,
           data: response.data,
           isLoggedIn: true,
         };
+      } else if (response.data.is_exist_user && !response.data.token) {
+        return {
+          success: true,
+          needsAdditionalInfo: true,
+          email: response.data.email,
+          loginType: "social",
+          socialData: socialData,
+        };
       } else {
-        dispatch(
-          addToast({
-            type: "info",
-            title: "Account Found",
-            message: `Hi ${userData.name}! Your account was found. Please sign in with your email and password.`,
-          })
-        );
-
         return {
           success: true,
           data: response.data,
@@ -163,6 +155,16 @@ export const socialLogin = (socialData) => async (dispatch, getState) => {
         };
       }
     } else {
+      if (response.data.email && !response.data.token) {
+        return {
+          success: true,
+          needsAdditionalInfo: true,
+          email: response.data.email,
+          loginType: "social",
+          socialData: socialData,
+        };
+      }
+
       dispatch(
         addToast({
           type: "error",
@@ -186,6 +188,91 @@ export const socialLogin = (socialData) => async (dispatch, getState) => {
     };
   }
 };
+
+//===============================================
+// Update Social User Info (when token is null)
+//===============================================
+export const updateSocialUserInfo =
+  (userInfo) => async (dispatch, getState) => {
+    try {
+      const { guestId } = getState().cart;
+      const hasGuestId = !!guestId;
+
+      const payload = {
+        email: userInfo.email,
+        login_type: userInfo.login_type,
+        name: userInfo.name,
+        phone: userInfo.phone,
+      };
+
+      if (hasGuestId) {
+        payload.guest_id = guestId;
+      }
+
+      const response = await axios.post(`${AUTH_URL}/update-info`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data.token) {
+        dispatch(
+          loginSuccess({
+            token: response.data.token,
+            user: {
+              ...response.data,
+              id: response.data.id,
+              name: response.data.name,
+              image: response.data.image,
+              email: response.data.email,
+              phone: response.data.phone,
+              is_phone_verified: response.data.is_phone_verified,
+              is_email_verified: response.data.is_email_verified,
+              is_personal_info: response.data.is_personal_info,
+              login_type: response.data.login_type,
+            },
+          })
+        );
+
+        if (hasGuestId) {
+          localStorage.removeItem("guest_id");
+          localStorage.removeItem("guestId");
+          dispatch(regenerateGuestId());
+        }
+
+        return {
+          success: true,
+          data: response.data,
+          isLoggedIn: true,
+        };
+      } else {
+        dispatch(
+          addToast({
+            type: "error",
+            title: "Error",
+            message:
+              response.data.message || "Failed to update user information",
+          })
+        );
+        return { success: false, error: response.data.message };
+      }
+    } catch (error) {
+      dispatch(
+        addToast({
+          type: "error",
+          title: "Error",
+          message:
+            error.response?.data?.message ||
+            "Failed to update user information",
+        })
+      );
+      return {
+        success: false,
+        error:
+          error.response?.data?.message || "Failed to update user information",
+      };
+    }
+  };
 
 //===============================================
 // Register User

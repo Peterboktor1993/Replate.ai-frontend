@@ -7,6 +7,7 @@ const initialState = {
     loading: false,
     error: null,
   },
+  restaurantId: null,
 };
 
 const restaurantSlice = createSlice({
@@ -31,6 +32,7 @@ const restaurantSlice = createSlice({
     },
     setRestaurantId: (state, action) => {
       state.currentRestaurant.id = action.payload;
+      state.restaurantId = action.payload;
     },
   },
 });

@@ -3,8 +3,6 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { addToast } from "@/store/slices/toastSlice";
-import { AUTH_URL } from "@/utils/CONSTANTS";
-import axios from "axios";
 
 // Import components
 import SocialLogin from "./SocialLogin";
@@ -25,34 +23,33 @@ const AuthModals = ({ show, onHide, initialMode = "login" }) => {
     setMode(newMode);
   };
 
-  const handleSocialLogin = async (provider) => {
-    try {
+  const handleSocialLogin = async (provider, result) => {
+    if (result.loading) {
       setLoading(true);
+      return;
+    }
 
-      const response = await axios.get(
-        `${AUTH_URL}/${provider}/callback?mode=${mode}`
-      );
+    setLoading(false);
 
-      if (response.data.url) {
-        window.location.href = response.data.url;
+    if (result.success) {
+      if (result.isLoggedIn) {
+        dispatch(
+          addToast({
+            type: "success",
+            title: "Success",
+            message: `Welcome! You're now signed in with ${provider}.`,
+          })
+        );
+        onHide();
       } else {
         dispatch(
           addToast({
             type: "error",
             title: "Error",
-            message: `${
-              mode === "register" ? "Sign up" : "Login"
-            } with ${provider} failed`,
+            message: result.error || `Failed to sign in with ${provider}`,
           })
         );
       }
-    } catch (error) {
-      console.error(
-        `${mode === "register" ? "Sign up" : "Login"} error:`,
-        error
-      );
-    } finally {
-      setLoading(false);
     }
   };
 

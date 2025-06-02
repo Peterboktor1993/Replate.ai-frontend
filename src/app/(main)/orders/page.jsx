@@ -14,7 +14,7 @@ const OrdersPage = () => {
     (state) => state.auth || { token: null, user: null }
   );
   const { guestId } = useSelector((state) => state.cart);
-
+  const { restaurantId } = useSelector((state) => state.restaurant);
   const [orders, setOrders] = useState([]);
   const [runningOrders, setRunningOrders] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
@@ -72,7 +72,6 @@ const OrdersPage = () => {
   }, [token, guestId, pagination.offset, pagination.limit]);
 
   useEffect(() => {
-    // Combine and filter orders when any of these change
     if (!loading && !runningOrdersLoading) {
       const combined = [...runningOrders, ...orders];
       setAllOrders(combined);
@@ -92,7 +91,6 @@ const OrdersPage = () => {
   const applyFilters = (ordersList) => {
     let result = [...ordersList];
 
-    // Filter by tab
     if (activeTab === "running") {
       result = result.filter((order) =>
         [
@@ -144,7 +142,6 @@ const OrdersPage = () => {
       });
     }
 
-    // Filter by status
     if (statusFilter !== "all") {
       result = result.filter(
         (order) => order.order_status?.toLowerCase() === statusFilter
@@ -166,7 +163,6 @@ const OrdersPage = () => {
       const result = await dispatch(getOrderList(params, token));
 
       if (result.success) {
-        // Handle both possible API response structures
         const orderData = result.data.orders || result.data || [];
         const totalOrders =
           result.data.total ||
@@ -193,6 +189,7 @@ const OrdersPage = () => {
     const params = {
       limit: 50,
       offset: 0,
+      restaurant_id: restaurantId,
     };
 
     try {
@@ -217,10 +214,8 @@ const OrdersPage = () => {
     router.push(`/orders/${orderId}`);
   };
 
-  // Handle payment for pending orders
   const handlePayNow = async (order) => {
     try {
-      // Show processing feedback
       setProcessingOrder(order);
       setPaymentPopupOpen(true);
 
@@ -238,7 +233,6 @@ const OrdersPage = () => {
       const orderId = order.id;
       const callback = `${window.location.origin}/checkout-status?order_id=${orderId}`;
 
-      // Call the payment API
       const response = await fetch(
         `/api/pay?order_id=${orderId}&customer_id=${userId}&callback=${encodeURIComponent(
           callback
@@ -253,7 +247,6 @@ const OrdersPage = () => {
         throw new Error(data.error || "Failed to get payment URL");
       }
 
-      // Store order information for tracking
       localStorage.setItem(
         "lastOrderInfo",
         JSON.stringify({
@@ -262,8 +255,6 @@ const OrdersPage = () => {
           timestamp: new Date().toISOString(),
         })
       );
-
-      // Open payment popup
       const popupWidth = 550;
       const popupHeight = 750;
       const left = window.innerWidth / 2 - popupWidth / 2;
@@ -283,7 +274,6 @@ const OrdersPage = () => {
         );
       }
 
-      // Set up an event listener for payment messages
       const handlePaymentMessage = (event) => {
         const { status } = event.data || {};
 
@@ -301,7 +291,6 @@ const OrdersPage = () => {
             })
           );
 
-          // Refresh orders to update status
           fetchOrders();
           fetchRunningOrders();
         } else if (status === "failed" || status === "error") {
@@ -322,7 +311,6 @@ const OrdersPage = () => {
 
       window.addEventListener("message", handlePaymentMessage);
 
-      // Check if popup is closed
       const checkPopupInterval = setInterval(() => {
         if (popup.closed) {
           clearInterval(checkPopupInterval);
@@ -725,7 +713,10 @@ const OrdersPage = () => {
                 <i className="fas fa-shopping-bag text-primary me-2"></i>
                 My Orders
               </h5>
-              <Link href="/" className="btn btn-sm btn-outline-primary">
+              <Link
+                href={`/?restaurant=${restaurantId}`}
+                className="btn btn-sm btn-outline-primary"
+              >
                 <i className="fa fa-arrow-left me-2"></i>Ordering page
               </Link>
             </div>

@@ -5,15 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { addToast } from "@/store/slices/toastSlice";
 import { placeOrder } from "@/store/services/orderService";
-import { fetchCartItems } from "@/store/services/cartService";
-import {
-  fetchUserAddresses,
-  addUserAddress,
-} from "@/store/services/authService";
-import SafeImage from "@/components/common/SafeImage";
+
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import Link from "next/link";
 import { generateGuestId } from "@/utils/guestOrderHandling";
 
 // Import components
@@ -338,10 +332,21 @@ const CheckoutPage = ({ restaurantDetails }) => {
   });
 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const formUpdateRef = useRef(false);
 
   const [showIncompletePaymentBanner, setShowIncompletePaymentBanner] =
     useState(false);
+
+  const [profileData, setProfileData] = useState(null);
+  const [hasCompleteProfile, setHasCompleteProfile] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  // Success modal state for cash on delivery
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successOrderData, setSuccessOrderData] = useState(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(10);
+
+  // Auto-select first address trigger
+  const [autoSelectFirstAddress, setAutoSelectFirstAddress] = useState(null);
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
@@ -352,21 +357,9 @@ const CheckoutPage = ({ restaurantDetails }) => {
       then: (schema) => schema.required("Address is required"),
       otherwise: (schema) => schema.optional(),
     }),
-    city: Yup.string().when("orderType", {
-      is: "delivery",
-      then: (schema) => schema.required("City is required"),
-      otherwise: (schema) => schema.optional(),
-    }),
-    state: Yup.string().when("orderType", {
-      is: "delivery",
-      then: (schema) => schema.required("State is required"),
-      otherwise: (schema) => schema.optional(),
-    }),
-    zipCode: Yup.string().when("orderType", {
-      is: "delivery",
-      then: (schema) => schema.required("ZIP code is required"),
-      otherwise: (schema) => schema.optional(),
-    }),
+    city: Yup.string().optional(),
+    state: Yup.string().optional(),
+    zipCode: Yup.string().optional(),
     paymentMethod: Yup.string().required("Payment method is required"),
     scheduleTime: Yup.date().when("scheduleOrder", {
       is: true,
@@ -383,7 +376,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
     };
 
     fetchCart();
-  }, [dispatch, token]);
+  }, []);
 
   useEffect(() => {
     const checkForIncompletePayments = async () => {
@@ -398,8 +391,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
             (parsedPayment.status === "payment_pending" ||
               !parsedPayment.status)
           ) {
-            console.log("📊 Loading incomplete payment:", parsedPayment);
-            console.log("💰 Incomplete payment amount:", parsedPayment.amount);
             setIncompletePayment(parsedPayment);
 
             if (parsedPayment.orderData) {
@@ -420,7 +411,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
     };
 
     checkForIncompletePayments();
-  }, [cartItems, dispatch, token]);
+  }, []);
 
   useEffect(() => {
     try {
@@ -457,7 +448,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
         setIsInitialLoad(false);
       }
     }
-  }, [cartItems, cartLoading, dispatch, router, isInitialLoad]);
+  }, []);
 
   useEffect(() => {
     if (user && !reorderInfoLoaded) {
@@ -468,13 +459,13 @@ const CheckoutPage = ({ restaurantDetails }) => {
         phoneNumber: user.phone || prevValues.phoneNumber,
       }));
     }
-  }, [user, reorderInfoLoaded]);
+  }, []);
 
   useEffect(() => {
     if (!currentFormValues) {
       setCurrentFormValues(initialValues);
     }
-  }, [initialValues, currentFormValues]);
+  }, []);
 
   useEffect(() => {
     const ensureUserData = async () => {
@@ -486,6 +477,47 @@ const CheckoutPage = ({ restaurantDetails }) => {
 
     ensureUserData();
   }, [token, user, dispatch]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (token && user) {
+        try {
+          setProfileLoading(true);
+          const { getUserProfile } = await import(
+            "@/store/services/authService"
+          );
+          const response = await dispatch(getUserProfile(token));
+
+          if (response.success && response.data) {
+            const profile = response.data;
+            setProfileData(profile);
+
+            const hasComplete = !!(
+              profile.f_name &&
+              profile.l_name &&
+              profile.phone
+            );
+            setHasCompleteProfile(hasComplete);
+
+            if (hasComplete) {
+              setInitialValues((prevValues) => ({
+                ...prevValues,
+                firstName: profile.f_name || prevValues.firstName,
+                lastName: profile.l_name || prevValues.lastName,
+                phoneNumber: profile.phone || prevValues.phoneNumber,
+              }));
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        } finally {
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     const fetchUserAddresses = async () => {
@@ -500,16 +532,8 @@ const CheckoutPage = ({ restaurantDetails }) => {
           if (response.success && response.addresses) {
             setAddressList(response.addresses);
             if (response.addresses.length > 0) {
-              setSelectedAddress(response.addresses[0]);
-
-              const address = response.addresses[0];
-              setInitialValues((prevValues) => ({
-                ...prevValues,
-                address: address.address || prevValues.address,
-                city: address.city || prevValues.city,
-                zipCode: address.zip || prevValues.zipCode,
-                addressType: address.address_type || "Home",
-              }));
+              // Trigger auto-selection of first address within Formik
+              setAutoSelectFirstAddress(response.addresses[0]);
             }
           }
         } catch (error) {
@@ -685,7 +709,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
   useEffect(() => {
     return () => {
       if (paymentPopupOpen && popupRef && !popupRef.closed) {
-        console.log("🧹 Component cleanup - closing popup and resetting state");
         popupRef.close();
       }
       setPaymentPopupOpen(false);
@@ -698,7 +721,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
       const pendingOrderData = localStorage.getItem("pendingOrderData");
       if (pendingOrderData) {
         try {
-          console.log("Found pending order data:", pendingOrderData);
         } catch (error) {
           console.error("Error loading pending order data:", error);
         }
@@ -706,9 +728,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
     }
   }, [cartItems.length]);
 
-  useEffect(() => {
-    console.log("🔄 Processing state changed:", processing);
-  }, [processing]);
+  useEffect(() => {}, [processing]);
 
   const handleTipSelection = (percentage) => {
     setTipPercentage(percentage);
@@ -892,12 +912,36 @@ const CheckoutPage = ({ restaurantDetails }) => {
   };
 
   const handleAddNewAddress = async () => {
-    if (!newAddress.address || !newAddress.contact_person_number) {
+    const requiredFields = {
+      contact_person_name: newAddress.contact_person_name?.trim(),
+      contact_person_number: newAddress.contact_person_number?.trim(),
+      address: newAddress.address?.trim(),
+      address_type: newAddress.address_type,
+    };
+
+    const missingFields = [];
+
+    if (!requiredFields.contact_person_name) {
+      missingFields.push("Full Name");
+    }
+    if (!requiredFields.contact_person_number) {
+      missingFields.push("Phone Number");
+    }
+    if (!requiredFields.address) {
+      missingFields.push("Address");
+    }
+    if (!requiredFields.address_type) {
+      missingFields.push("Address Type");
+    }
+
+    if (missingFields.length > 0) {
       dispatch(
         addToast({
           show: true,
-          title: "Error",
-          message: "Please fill all required fields",
+          title: "Missing Required Fields",
+          message: `Please fill in the following required fields: ${missingFields.join(
+            ", "
+          )}`,
           type: "error",
         })
       );
@@ -909,7 +953,19 @@ const CheckoutPage = ({ restaurantDetails }) => {
         "@/store/services/authService"
       );
 
-      const result = await dispatch(addUserAddress(token, newAddress));
+      const addressData = {
+        contact_person_name: requiredFields.contact_person_name,
+        contact_person_number: requiredFields.contact_person_number,
+        address: requiredFields.address,
+        address_type: requiredFields.address_type,
+        latitude: newAddress.latitude || "30.0606",
+        longitude: newAddress.longitude || "31.2463",
+        ...(newAddress.floor?.trim() && { floor: newAddress.floor.trim() }),
+        ...(newAddress.road?.trim() && { road: newAddress.road.trim() }),
+        ...(newAddress.house?.trim() && { house: newAddress.house.trim() }),
+      };
+
+      const result = await dispatch(addUserAddress(token, addressData));
 
       if (result.success) {
         const response = await dispatch(getUserAddresses(token));
@@ -932,9 +988,28 @@ const CheckoutPage = ({ restaurantDetails }) => {
           latitude: "30.0606",
           longitude: "31.2463",
         });
+      } else {
+        dispatch(
+          addToast({
+            show: true,
+            title: "Error",
+            message:
+              result.message || "Failed to add address. Please try again.",
+            type: "error",
+          })
+        );
       }
     } catch (error) {
       console.error("Error adding new address:", error);
+      dispatch(
+        addToast({
+          show: true,
+          title: "Error",
+          message:
+            "An error occurred while adding the address. Please try again.",
+          type: "error",
+        })
+      );
     }
   };
 
@@ -969,12 +1044,18 @@ const CheckoutPage = ({ restaurantDetails }) => {
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       console.log("🚀 Starting checkout process...");
+      console.log("📋 Form values:", values);
+      console.log("🛒 Cart items:", getCurrentCartItems());
+      console.log("💳 Payment method:", values.paymentMethod);
+      console.log("🏠 Selected address:", selectedAddress);
+
       setProcessing(true);
 
       const currentCartItems =
         cartItems && cartItems.length > 0 ? cartItems : getCurrentCartItems();
 
       if (!currentCartItems || currentCartItems.length === 0) {
+        console.error("❌ Empty cart detected");
         throw new Error(
           "Cannot place an empty order. Please add items to your cart."
         );
@@ -1111,11 +1192,9 @@ const CheckoutPage = ({ restaurantDetails }) => {
             );
           }
 
-          console.log("🔄 Payment popup opened successfully");
           setPaymentPopupOpen(true);
 
           setTimeout(() => {
-            console.log("🔗 Setting popup reference");
             setPopupRef(popup);
           }, 500);
         } catch (error) {
@@ -1125,10 +1204,25 @@ const CheckoutPage = ({ restaurantDetails }) => {
           throw error;
         }
       } else {
+        // Cash on Delivery flow
         const result = await dispatch(placeOrder(orderData, token));
 
         if (result.success) {
-          router.push(`/checkout-status?restaurant=${restaurant}`);
+          // Store order data for success modal
+          setSuccessOrderData({
+            orderId: result.data?.order_id || "N/A",
+            orderAmount: totalAmountWithTips,
+            currency: currency,
+            paymentMethod: "Cash on Delivery",
+            restaurantId: restaurant,
+          });
+
+          // Clear form and cart data
+          clearAllFormData();
+
+          // Reset countdown and show success modal
+          setRedirectCountdown(10);
+          setShowSuccessModal(true);
         } else {
           throw new Error(result.error || "Failed to place order");
         }
@@ -1155,7 +1249,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
     if (!incompletePayment) return;
 
     try {
-      console.log("🔄 Retrying payment...");
       setProcessing(true);
 
       const orderId = incompletePayment.orderId;
@@ -1214,9 +1307,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
         );
       }
 
-      console.log("🔄 Retry payment popup opened successfully");
       setPaymentPopupOpen(true);
-      // Keep processing = true until retry payment completes!
 
       setTimeout(() => {
         setPopupRef(popup);
@@ -1263,6 +1354,29 @@ const CheckoutPage = ({ restaurantDetails }) => {
     const items = getCurrentCartItems();
     return items && items.length > 0;
   };
+
+  // Auto-redirect countdown for success modal
+  useEffect(() => {
+    let interval;
+    if (showSuccessModal && redirectCountdown > 0) {
+      interval = setInterval(() => {
+        setRedirectCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (showSuccessModal && redirectCountdown === 0) {
+      // Auto redirect to home with restaurant ID
+      setShowSuccessModal(false);
+      router.push(`/?restaurant=${successOrderData?.restaurantId}`);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [
+    showSuccessModal,
+    redirectCountdown,
+    router,
+    successOrderData?.restaurantId,
+  ]);
 
   return (
     <>
@@ -1543,6 +1657,40 @@ const CheckoutPage = ({ restaurantDetails }) => {
         .incomplete-reminder .btn-link:hover {
           color: #b07508;
         }
+
+        .profile-filled {
+          border-color: #198754 !important;
+          box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.1) !important;
+        }
+
+        .profile-filled:focus {
+          border-color: #198754 !important;
+          box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+        }
+
+        .badge.bg-success {
+          font-size: 0.65rem;
+          padding: 0.25rem 0.5rem;
+        }
+
+        .form-control:disabled.profile-filled {
+          background-color: #f8f9fa !important;
+          opacity: 0.8;
+        }
+
+        .text-muted {
+          font-size: 0.8rem;
+        }
+
+        .alert-info {
+          border-color: #0dcaf0;
+          background-color: rgba(13, 202, 240, 0.1);
+        }
+
+        .alert-warning {
+          border-color: #ffc107;
+          background-color: rgba(255, 193, 7, 0.1);
+        }
       `}</style>
 
       {/* Payment Processing Overlay */}
@@ -1697,6 +1845,8 @@ const CheckoutPage = ({ restaurantDetails }) => {
                         setFieldValue,
                         errors,
                         touched,
+                        isValid,
+                        dirty,
                       }) => {
                         React.useEffect(() => {
                           if (
@@ -1706,6 +1856,65 @@ const CheckoutPage = ({ restaurantDetails }) => {
                             updateCurrentFormValues(values);
                           }
                         }, [values]);
+
+                        // Enhanced address selection that updates Formik form
+                        const handleFormAddressSelection = (address) => {
+                          console.log("🏠 Address selected:", address);
+                          setSelectedAddress(address);
+
+                          // Get the full address string - this is the key fix
+                          const fullAddress = address.address || "";
+
+                          console.log("📍 Full address to set:", fullAddress);
+
+                          // Update both initialValues and Formik form values
+                          setInitialValues((prevValues) => ({
+                            ...prevValues,
+                            address: fullAddress,
+                            city: address.city || "",
+                            zipCode: address.zip || "",
+                            addressType: address.address_type || "Home",
+                            state: address.state || "",
+                          }));
+
+                          // Update Formik form values immediately
+                          setFieldValue("address", fullAddress);
+                          setFieldValue("city", address.city || "");
+                          setFieldValue("zipCode", address.zip || "");
+                          setFieldValue(
+                            "addressType",
+                            address.address_type || "Home"
+                          );
+                          setFieldValue("state", address.state || "");
+
+                          console.log("✅ Form updated with address:", {
+                            address: fullAddress,
+                            city: address.city || "",
+                            zipCode: address.zip || "",
+                            addressType: address.address_type || "Home",
+                            state: address.state || "",
+                          });
+
+                          // Force form validation after setting values
+                          setTimeout(() => {
+                            console.log(
+                              "🔍 Form values after address selection:",
+                              values
+                            );
+                          }, 100);
+                        };
+
+                        // Auto-select first address when triggered
+                        React.useEffect(() => {
+                          if (autoSelectFirstAddress) {
+                            console.log(
+                              "🔄 Auto-selecting first address:",
+                              autoSelectFirstAddress
+                            );
+                            handleFormAddressSelection(autoSelectFirstAddress);
+                            setAutoSelectFirstAddress(null); // Clear trigger
+                          }
+                        }, [autoSelectFirstAddress]);
 
                         return (
                           <>
@@ -1729,51 +1938,127 @@ const CheckoutPage = ({ restaurantDetails }) => {
                                   </div>
                                 </div>
                               )}
+
                               {/* Contact Information */}
                               <div className="mb-3">
-                                <label>First Name</label>
+                                <label className="d-flex align-items-center">
+                                  First Name
+                                  {hasCompleteProfile && (
+                                    <span className="badge bg-success ms-2 small">
+                                      <i className="fas fa-check me-1"></i>
+                                      From Profile
+                                    </span>
+                                  )}
+                                </label>
                                 <Field
                                   name="firstName"
                                   type="text"
-                                  className="form-control"
+                                  className={`form-control ${
+                                    hasCompleteProfile ? "profile-filled" : ""
+                                  }`}
                                   placeholder="First Name"
-                                  disabled={processing}
+                                  disabled={processing || hasCompleteProfile}
+                                  style={{
+                                    backgroundColor: hasCompleteProfile
+                                      ? "#f8f9fa"
+                                      : "white",
+                                    cursor: hasCompleteProfile
+                                      ? "not-allowed"
+                                      : "text",
+                                  }}
                                 />
                                 <ErrorMessage
                                   name="firstName"
                                   component="div"
                                   className="text-danger"
                                 />
+                                {hasCompleteProfile && (
+                                  <small className="text-muted">
+                                    <i className="fas fa-info-circle me-1"></i>
+                                    This information is from your profile and
+                                    cannot be edited here
+                                  </small>
+                                )}
                               </div>
                               <div className="mb-3">
-                                <label>Last Name</label>
+                                <label className="d-flex align-items-center">
+                                  Last Name
+                                  {hasCompleteProfile && (
+                                    <span className="badge bg-success ms-2 small">
+                                      <i className="fas fa-check me-1"></i>
+                                      From Profile
+                                    </span>
+                                  )}
+                                </label>
                                 <Field
                                   name="lastName"
                                   type="text"
-                                  className="form-control"
+                                  className={`form-control ${
+                                    hasCompleteProfile ? "profile-filled" : ""
+                                  }`}
                                   placeholder="Last Name"
-                                  disabled={processing}
+                                  disabled={processing || hasCompleteProfile}
+                                  style={{
+                                    backgroundColor: hasCompleteProfile
+                                      ? "#f8f9fa"
+                                      : "white",
+                                    cursor: hasCompleteProfile
+                                      ? "not-allowed"
+                                      : "text",
+                                  }}
                                 />
                                 <ErrorMessage
                                   name="lastName"
                                   component="div"
                                   className="text-danger"
                                 />
+                                {hasCompleteProfile && (
+                                  <small className="text-muted">
+                                    <i className="fas fa-info-circle me-1"></i>
+                                    This information is from your profile and
+                                    cannot be edited here
+                                  </small>
+                                )}
                               </div>
                               <div className="mb-3">
-                                <label>Phone Number</label>
+                                <label className="d-flex align-items-center">
+                                  Phone Number
+                                  {hasCompleteProfile && (
+                                    <span className="badge bg-success ms-2 small">
+                                      <i className="fas fa-check me-1"></i>
+                                      From Profile
+                                    </span>
+                                  )}
+                                </label>
                                 <Field
                                   name="phoneNumber"
                                   type="text"
-                                  className="form-control"
+                                  className={`form-control ${
+                                    hasCompleteProfile ? "profile-filled" : ""
+                                  }`}
                                   placeholder="Phone Number"
-                                  disabled={processing}
+                                  disabled={processing || hasCompleteProfile}
+                                  style={{
+                                    backgroundColor: hasCompleteProfile
+                                      ? "#f8f9fa"
+                                      : "white",
+                                    cursor: hasCompleteProfile
+                                      ? "not-allowed"
+                                      : "text",
+                                  }}
                                 />
                                 <ErrorMessage
                                   name="phoneNumber"
                                   component="div"
                                   className="text-danger"
                                 />
+                                {hasCompleteProfile && (
+                                  <small className="text-muted">
+                                    <i className="fas fa-info-circle me-1"></i>
+                                    This information is from your profile and
+                                    cannot be edited here
+                                  </small>
+                                )}
                               </div>
                               {/* Delivery Options */}
                               <DeliveryOptions
@@ -1792,7 +2077,9 @@ const CheckoutPage = ({ restaurantDetails }) => {
                                 addressList={addressList}
                                 selectedAddress={selectedAddress}
                                 loadingAddresses={loadingAddresses}
-                                handleAddressSelection={handleAddressSelection}
+                                handleAddressSelection={
+                                  handleFormAddressSelection
+                                }
                                 setShowAddressModal={setShowAddressModal}
                                 disabled={processing}
                               />
@@ -1895,11 +2182,104 @@ const CheckoutPage = ({ restaurantDetails }) => {
         </div>
       </div>
 
+      {/* Success Modal for Cash on Delivery */}
+      {showSuccessModal && successOrderData && (
+        <div
+          className="modal show"
+          style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              // Allow closing by clicking outside
+              setShowSuccessModal(false);
+              router.push(`/?restaurant=${successOrderData.restaurantId}`);
+            }
+          }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title">
+                  <i className="fas fa-check-circle me-2"></i>
+                  Order Placed Successfully!
+                </h5>
+              </div>
+              <div className="modal-body text-center py-4">
+                <div className="mb-4">
+                  <i
+                    className="fas fa-check-circle text-success"
+                    style={{ fontSize: "4rem" }}
+                  ></i>
+                </div>
+
+                <h4 className="text-success mb-3">Thank You for Your Order!</h4>
+
+                <div className="card bg-light mb-4">
+                  <div className="card-body">
+                    <div className="row">
+                      <div className="col-6 text-start">
+                        <strong>Order ID:</strong>
+                      </div>
+                      <div className="col-6 text-end">
+                        #{successOrderData.orderId}
+                      </div>
+                    </div>
+                    <div className="row">
+                      <div className="col-6 text-start">
+                        <strong>Total Amount:</strong>
+                      </div>
+                      <div className="col-6 text-end">
+                        {successOrderData.currency}{" "}
+                        {parseFloat(successOrderData.orderAmount).toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="row">
+                      <div className="col-6 text-start">
+                        <strong>Payment Method:</strong>
+                      </div>
+                      <div className="col-6 text-end">
+                        <span className="badge bg-warning text-dark">
+                          <i className="fas fa-money-bill-wave me-1"></i>
+                          {successOrderData.paymentMethod}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="alert alert-info">
+                  <i className="fas fa-info-circle me-2"></i>
+                  <strong>Payment Instructions:</strong>
+                  <br />
+                  Please have the exact amount ready for when your order
+                  arrives. Our delivery partner will collect the payment at your
+                  doorstep.
+                </div>
+
+                <p className="text-muted mb-4">
+                  You will receive an email confirmation shortly with your order
+                  details. Our team is now preparing your delicious meal!
+                </p>
+
+                {/* Countdown timer */}
+                <div className="alert alert-light border">
+                  <i className="fas fa-clock me-2"></i>
+                  <strong>
+                    Auto-redirecting to restaurant page in {redirectCountdown}{" "}
+                    seconds...
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add Address Modal */}
       <AddAddressModal
         showAddressModal={showAddressModal}
         setShowAddressModal={setShowAddressModal}
         newAddress={newAddress}
+        setNewAddress={setNewAddress}
         handleNewAddressChange={handleNewAddressChange}
         handleAddressTypeSelect={handleAddressTypeSelect}
         handleAddNewAddress={handleAddNewAddress}
