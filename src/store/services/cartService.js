@@ -119,13 +119,13 @@ export const addToCart =
 // Cart View
 //===============================================
 export const fetchCartItems =
-  (token = null) =>
+  (params, token = null) =>
   async (dispatch, getState) => {
     try {
       dispatch(setCartLoading(true));
 
       const { guestId } = getState().cart;
-      let url = `${CART_URL}/list`;
+      let url = `${CART_URL}/list?${new URLSearchParams(params).toString()}`;
 
       const config = {
         headers: token ? { Authorization: `Bearer ${token}` } : {},

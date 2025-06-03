@@ -32,7 +32,7 @@ export const placeOrder =
       }
 
       const response = await axiosInstance.post(
-        `${ORDER_URL}/place`,
+        `${ORDER_URL}/place/`,
         orderData,
         config
       );
@@ -96,7 +96,10 @@ export const getOrderList =
       };
 
       // Make API call
-      const response = await axiosInstance.get(`${ORDER_URL}/list`, config);
+      const response = await axiosInstance.get(
+        `${ORDER_URL}/list?${new URLSearchParams(params).toString()}`,
+        config
+      );
 
       if (response.status === 200) {
         return {

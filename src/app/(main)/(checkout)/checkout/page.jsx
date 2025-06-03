@@ -372,7 +372,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
   useEffect(() => {
     const fetchCart = async () => {
       const { fetchCartItems } = await import("@/store/services/cartService");
-      dispatch(fetchCartItems(token));
+      dispatch(fetchCartItems({ restaurant_id: restaurant }, token));
     };
 
     fetchCart();
@@ -1943,28 +1943,16 @@ const CheckoutPage = ({ restaurantDetails }) => {
                               <div className="mb-3">
                                 <label className="d-flex align-items-center">
                                   First Name
-                                  {hasCompleteProfile && (
-                                    <span className="badge bg-success ms-2 small">
-                                      <i className="fas fa-check me-1"></i>
-                                      From Profile
-                                    </span>
-                                  )}
                                 </label>
                                 <Field
                                   name="firstName"
                                   type="text"
-                                  className={`form-control ${
-                                    hasCompleteProfile ? "profile-filled" : ""
-                                  }`}
+                                  className={`form-control`}
                                   placeholder="First Name"
-                                  disabled={processing || hasCompleteProfile}
+                                  disabled={processing}
                                   style={{
-                                    backgroundColor: hasCompleteProfile
-                                      ? "#f8f9fa"
-                                      : "white",
-                                    cursor: hasCompleteProfile
-                                      ? "not-allowed"
-                                      : "text",
+                                    backgroundColor: "white",
+                                    cursor: "text",
                                   }}
                                 />
                                 <ErrorMessage
@@ -1972,39 +1960,20 @@ const CheckoutPage = ({ restaurantDetails }) => {
                                   component="div"
                                   className="text-danger"
                                 />
-                                {hasCompleteProfile && (
-                                  <small className="text-muted">
-                                    <i className="fas fa-info-circle me-1"></i>
-                                    This information is from your profile and
-                                    cannot be edited here
-                                  </small>
-                                )}
                               </div>
                               <div className="mb-3">
                                 <label className="d-flex align-items-center">
                                   Last Name
-                                  {hasCompleteProfile && (
-                                    <span className="badge bg-success ms-2 small">
-                                      <i className="fas fa-check me-1"></i>
-                                      From Profile
-                                    </span>
-                                  )}
                                 </label>
                                 <Field
                                   name="lastName"
                                   type="text"
-                                  className={`form-control ${
-                                    hasCompleteProfile ? "profile-filled" : ""
-                                  }`}
+                                  className={`form-control`}
                                   placeholder="Last Name"
-                                  disabled={processing || hasCompleteProfile}
+                                  disabled={processing}
                                   style={{
-                                    backgroundColor: hasCompleteProfile
-                                      ? "#f8f9fa"
-                                      : "white",
-                                    cursor: hasCompleteProfile
-                                      ? "not-allowed"
-                                      : "text",
+                                    backgroundColor: "white",
+                                    cursor: "text",
                                   }}
                                 />
                                 <ErrorMessage
@@ -2012,39 +1981,20 @@ const CheckoutPage = ({ restaurantDetails }) => {
                                   component="div"
                                   className="text-danger"
                                 />
-                                {hasCompleteProfile && (
-                                  <small className="text-muted">
-                                    <i className="fas fa-info-circle me-1"></i>
-                                    This information is from your profile and
-                                    cannot be edited here
-                                  </small>
-                                )}
                               </div>
                               <div className="mb-3">
                                 <label className="d-flex align-items-center">
                                   Phone Number
-                                  {hasCompleteProfile && (
-                                    <span className="badge bg-success ms-2 small">
-                                      <i className="fas fa-check me-1"></i>
-                                      From Profile
-                                    </span>
-                                  )}
                                 </label>
                                 <Field
                                   name="phoneNumber"
                                   type="text"
-                                  className={`form-control ${
-                                    hasCompleteProfile ? "profile-filled" : ""
-                                  }`}
+                                  className={`form-control`}
                                   placeholder="Phone Number"
-                                  disabled={processing || hasCompleteProfile}
+                                  disabled={processing}
                                   style={{
-                                    backgroundColor: hasCompleteProfile
-                                      ? "#f8f9fa"
-                                      : "white",
-                                    cursor: hasCompleteProfile
-                                      ? "not-allowed"
-                                      : "text",
+                                    backgroundColor: "white",
+                                    cursor: "text",
                                   }}
                                 />
                                 <ErrorMessage
@@ -2052,13 +2002,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
                                   component="div"
                                   className="text-danger"
                                 />
-                                {hasCompleteProfile && (
-                                  <small className="text-muted">
-                                    <i className="fas fa-info-circle me-1"></i>
-                                    This information is from your profile and
-                                    cannot be edited here
-                                  </small>
-                                )}
                               </div>
                               {/* Delivery Options */}
                               <DeliveryOptions

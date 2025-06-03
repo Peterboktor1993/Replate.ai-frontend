@@ -157,6 +157,7 @@ const OrdersPage = () => {
     const params = {
       limit: pagination.limit,
       offset: pagination.offset,
+      restaurant_id: restaurantId,
     };
 
     try {

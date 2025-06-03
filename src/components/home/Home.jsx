@@ -64,10 +64,10 @@ const Home = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
-  // disptahc restarnt id
   useEffect(() => {
     dispatch(setRestaurantId(restaurantId));
   }, [dispatch, restaurantId]);
+
   const countProductsForCategory = (categoryId) => {
     return initialProducts.filter((product) => {
       if (product.category_id === categoryId) {
@@ -160,8 +160,8 @@ const Home = ({
   }, []);
 
   useEffect(() => {
-    dispatch(fetchCartItems(token));
-  }, [dispatch, token]);
+    dispatch(fetchCartItems({ restaurant_id: restaurantId }, token));
+  }, [dispatch, token, restaurantId]);
 
   useEffect(() => {
     const fetchRecentOrders = async () => {
@@ -169,7 +169,7 @@ const Home = ({
 
       setLoadingOrders(true);
       try {
-        const params = { limit: 3, offset: 0 };
+        const params = { limit: 3, offset: 0, restaurant_id: restaurantId };
         if (!token) {
           params.guest_id = guestId;
         }

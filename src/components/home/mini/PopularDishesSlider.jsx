@@ -307,13 +307,7 @@ const PopularDishesSlider = ({
                           : "Add to cart"
                       }
                     >
-                      <i
-                        className={
-                          product.variations && product.variations.length > 0
-                            ? "fa-solid fa-cog"
-                            : "fa-solid fa-plus"
-                        }
-                      ></i>
+                      <i className={"fa-solid fa-plus"}></i>
                     </button>
                   </div>
                 </div>
