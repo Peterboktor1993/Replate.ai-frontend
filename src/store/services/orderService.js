@@ -32,7 +32,7 @@ export const placeOrder =
       }
 
       const response = await axiosInstance.post(
-        `${ORDER_URL}/place/`,
+        `${ORDER_URL}/place`,
         orderData,
         config
       );

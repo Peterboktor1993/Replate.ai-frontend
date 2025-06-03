@@ -340,12 +340,10 @@ const CheckoutPage = ({ restaurantDetails }) => {
   const [hasCompleteProfile, setHasCompleteProfile] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  // Success modal state for cash on delivery
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successOrderData, setSuccessOrderData] = useState(null);
   const [redirectCountdown, setRedirectCountdown] = useState(10);
 
-  // Auto-select first address trigger
   const [autoSelectFirstAddress, setAutoSelectFirstAddress] = useState(null);
 
   const validationSchema = Yup.object({
@@ -459,7 +457,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
         phoneNumber: user.phone || prevValues.phoneNumber,
       }));
     }
-  }, []);
+  }, [user, reorderInfoLoaded]);
 
   useEffect(() => {
     if (!currentFormValues) {
@@ -499,14 +497,12 @@ const CheckoutPage = ({ restaurantDetails }) => {
             );
             setHasCompleteProfile(hasComplete);
 
-            if (hasComplete) {
-              setInitialValues((prevValues) => ({
-                ...prevValues,
-                firstName: profile.f_name || prevValues.firstName,
-                lastName: profile.l_name || prevValues.lastName,
-                phoneNumber: profile.phone || prevValues.phoneNumber,
-              }));
-            }
+            setInitialValues((prevValues) => ({
+              ...prevValues,
+              firstName: profile.f_name || prevValues.firstName,
+              lastName: profile.l_name || prevValues.lastName,
+              phoneNumber: profile.phone || prevValues.phoneNumber,
+            }));
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
@@ -516,8 +512,10 @@ const CheckoutPage = ({ restaurantDetails }) => {
       }
     };
 
-    fetchUserProfile();
-  }, []);
+    if (token && user && !profileData && !profileLoading) {
+      fetchUserProfile();
+    }
+  }, [token, user?.id, dispatch]);
 
   useEffect(() => {
     const fetchUserAddresses = async () => {
@@ -532,7 +530,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
           if (response.success && response.addresses) {
             setAddressList(response.addresses);
             if (response.addresses.length > 0) {
-              // Trigger auto-selection of first address within Formik
               setAutoSelectFirstAddress(response.addresses[0]);
             }
           }
@@ -544,8 +541,10 @@ const CheckoutPage = ({ restaurantDetails }) => {
       }
     };
 
-    fetchUserAddresses();
-  }, [token, user, dispatch]);
+    if (token && user && addressList.length === 0 && !loadingAddresses) {
+      fetchUserAddresses();
+    }
+  }, [token, user?.id, dispatch]);
 
   useEffect(() => {
     const handlePaymentMessage = (event) => {
@@ -1016,6 +1015,17 @@ const CheckoutPage = ({ restaurantDetails }) => {
   const getInitialValues = () => {
     const baseValues =
       currentFormValues || preservedFormValues || initialValues;
+
+    if (user) {
+      return {
+        ...baseValues,
+        paymentMethod,
+        firstName: user.f_name || baseValues.firstName,
+        lastName: user.l_name || baseValues.lastName,
+        phoneNumber: user.phone || baseValues.phoneNumber,
+      };
+    }
+
     return { ...baseValues, paymentMethod };
   };
 
@@ -1043,12 +1053,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      console.log("🚀 Starting checkout process...");
-      console.log("📋 Form values:", values);
-      console.log("🛒 Cart items:", getCurrentCartItems());
-      console.log("💳 Payment method:", values.paymentMethod);
-      console.log("🏠 Selected address:", selectedAddress);
-
       setProcessing(true);
 
       const currentCartItems =
@@ -1061,7 +1065,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
         );
       }
 
-      console.log("📦 Preserving form and cart data...");
       preserveFormValues(values);
       setPreservedCartItems([...currentCartItems]);
 
@@ -1204,11 +1207,9 @@ const CheckoutPage = ({ restaurantDetails }) => {
           throw error;
         }
       } else {
-        // Cash on Delivery flow
         const result = await dispatch(placeOrder(orderData, token));
 
         if (result.success) {
-          // Store order data for success modal
           setSuccessOrderData({
             orderId: result.data?.order_id || "N/A",
             orderAmount: totalAmountWithTips,
@@ -1217,10 +1218,8 @@ const CheckoutPage = ({ restaurantDetails }) => {
             restaurantId: restaurant,
           });
 
-          // Clear form and cart data
           clearAllFormData();
 
-          // Reset countdown and show success modal
           setRedirectCountdown(10);
           setShowSuccessModal(true);
         } else {
@@ -1355,7 +1354,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
     return items && items.length > 0;
   };
 
-  // Auto-redirect countdown for success modal
   useEffect(() => {
     let interval;
     if (showSuccessModal && redirectCountdown > 0) {
@@ -1363,7 +1361,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
         setRedirectCountdown((prev) => prev - 1);
       }, 1000);
     } else if (showSuccessModal && redirectCountdown === 0) {
-      // Auto redirect to home with restaurant ID
       setShowSuccessModal(false);
       router.push(`/?restaurant=${successOrderData?.restaurantId}`);
     }
@@ -1714,7 +1711,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
         </div>
       )}
 
-      {/* Processing Overlay for entire page */}
       {processing && <div className="checkout-processing-overlay" />}
 
       {cartItems.length === 0 &&
@@ -1857,17 +1853,11 @@ const CheckoutPage = ({ restaurantDetails }) => {
                           }
                         }, [values]);
 
-                        // Enhanced address selection that updates Formik form
                         const handleFormAddressSelection = (address) => {
-                          console.log("🏠 Address selected:", address);
                           setSelectedAddress(address);
 
-                          // Get the full address string - this is the key fix
                           const fullAddress = address.address || "";
 
-                          console.log("📍 Full address to set:", fullAddress);
-
-                          // Update both initialValues and Formik form values
                           setInitialValues((prevValues) => ({
                             ...prevValues,
                             address: fullAddress,
@@ -1877,7 +1867,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
                             state: address.state || "",
                           }));
 
-                          // Update Formik form values immediately
                           setFieldValue("address", fullAddress);
                           setFieldValue("city", address.city || "");
                           setFieldValue("zipCode", address.zip || "");
@@ -1886,33 +1875,12 @@ const CheckoutPage = ({ restaurantDetails }) => {
                             address.address_type || "Home"
                           );
                           setFieldValue("state", address.state || "");
-
-                          console.log("✅ Form updated with address:", {
-                            address: fullAddress,
-                            city: address.city || "",
-                            zipCode: address.zip || "",
-                            addressType: address.address_type || "Home",
-                            state: address.state || "",
-                          });
-
-                          // Force form validation after setting values
-                          setTimeout(() => {
-                            console.log(
-                              "🔍 Form values after address selection:",
-                              values
-                            );
-                          }, 100);
                         };
 
-                        // Auto-select first address when triggered
                         React.useEffect(() => {
                           if (autoSelectFirstAddress) {
-                            console.log(
-                              "🔄 Auto-selecting first address:",
-                              autoSelectFirstAddress
-                            );
                             handleFormAddressSelection(autoSelectFirstAddress);
-                            setAutoSelectFirstAddress(null); // Clear trigger
+                            setAutoSelectFirstAddress(null);
                           }
                         }, [autoSelectFirstAddress]);
 
@@ -2086,37 +2054,30 @@ const CheckoutPage = ({ restaurantDetails }) => {
 
                   <div className="col-xl-4 d-none d-xl-block">
                     {/* Desktop version of cart summary */}
-                    <Formik
-                      initialValues={getInitialValues()}
-                      enableReinitialize
-                    >
-                      {({ values }) => (
-                        <CartSummary
-                          cartItems={getCurrentCartItems()}
-                          cartLoading={cartLoading}
-                          calculateTaxForItem={calculateTaxForItem}
-                          calculateDiscountForItem={calculateDiscountForItem}
-                          calculateSubtotal={calculateSubtotal}
-                          calculateTotalTax={calculateTotalTax}
-                          calculateTotalDiscount={calculateTotalDiscount}
-                          calculateTip={calculateTip}
-                          calculateTotal={calculateTotal}
-                          currency={currency}
-                          tipPercentage={tipPercentage}
-                          customTip={customTip}
-                          customTipAmount={customTipAmount}
-                          processing={processing}
-                          tipPresets={tipPresets}
-                          enableCustomTip={enableCustomTip}
-                          handleTipSelection={handleTipSelection}
-                          handleCustomTipChange={handleCustomTipChange}
-                          paymentMethod={paymentMethod}
-                          restaurantDetails={restaurantDetails}
-                          incompletePayment={incompletePayment}
-                          hasValidCartItems={hasValidCartItems}
-                        />
-                      )}
-                    </Formik>
+                    <CartSummary
+                      cartItems={getCurrentCartItems()}
+                      cartLoading={cartLoading}
+                      calculateTaxForItem={calculateTaxForItem}
+                      calculateDiscountForItem={calculateDiscountForItem}
+                      calculateSubtotal={calculateSubtotal}
+                      calculateTotalTax={calculateTotalTax}
+                      calculateTotalDiscount={calculateTotalDiscount}
+                      calculateTip={calculateTip}
+                      calculateTotal={calculateTotal}
+                      currency={currency}
+                      tipPercentage={tipPercentage}
+                      customTip={customTip}
+                      customTipAmount={customTipAmount}
+                      processing={processing}
+                      tipPresets={tipPresets}
+                      enableCustomTip={enableCustomTip}
+                      handleTipSelection={handleTipSelection}
+                      handleCustomTipChange={handleCustomTipChange}
+                      paymentMethod={paymentMethod}
+                      restaurantDetails={restaurantDetails}
+                      incompletePayment={incompletePayment}
+                      hasValidCartItems={hasValidCartItems}
+                    />
                   </div>
                 </div>
               )}
@@ -2132,7 +2093,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
           style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              // Allow closing by clicking outside
               setShowSuccessModal(false);
               router.push(`/?restaurant=${successOrderData.restaurantId}`);
             }
