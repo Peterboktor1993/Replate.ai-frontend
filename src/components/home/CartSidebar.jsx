@@ -102,6 +102,14 @@ const CartSidebar = ({
   restaurantDetails,
   checkoutRef,
 }) => {
+  const sideBanners = restaurantDetails?.side_banner_full_url;
+  let sideBannerImages = [];
+  if (Array.isArray(sideBanners)) {
+    sideBannerImages = sideBanners;
+  } else if (typeof sideBanners === "string" && sideBanners.trim() !== "") {
+    sideBannerImages = [sideBanners];
+  }
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showClosedTip, setShowClosedTip] = useState(false);
   const restaurant_id = useSearchParams().get("restaurant") || restaurantId;
@@ -113,6 +121,19 @@ const CartSidebar = ({
   const previousRestaurantRef = useRef(null);
   const isInitializedRef = useRef(false);
   const restaurantStatus = useRestaurantStatus(restaurantDetails);
+
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  useEffect(() => {
+    if (sideBannerImages.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentBanner((prev) => (prev + 1) % sideBannerImages.length);
+      }, 4000);
+      return () => clearInterval(interval);
+    } else {
+      setCurrentBanner(0);
+    }
+  }, [sideBannerImages.length]);
 
   useEffect(() => {
     if (!restaurant_id) return;
@@ -196,17 +217,6 @@ const CartSidebar = ({
     }
   }, [cartItems, guestId, restaurant_id]);
 
-  const sideBanners = restaurantDetails?.side_banner_full_url;
-  let sideBannerImage;
-
-  if (Array.isArray(sideBanners) && sideBanners.length > 0) {
-    sideBannerImage = sideBanners[0];
-  } else if (typeof sideBanners === "string" && sideBanners.trim() !== "") {
-    sideBannerImage = sideBanners;
-  } else {
-    sideBannerImage = BannerPic;
-  }
-
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
   };
@@ -246,7 +256,7 @@ const CartSidebar = ({
               <div className="card bg-primary blance-card">
                 {token && user ? (
                   <>
-                    <div className="card-body bg-gradient p-4">
+                    <div className="card-body bg-gradient p-3">
                       <div className="d-flex align-items-center justify-content-between mb-1">
                         <h4 className="mb-0 fw-bold text-light">My Points</h4>
                         <i className="fas fa-trophy text-warning fa-2x"></i>
@@ -276,6 +286,33 @@ const CartSidebar = ({
                   </>
                 )}
               </div>
+
+              {/* Side Banner Section */}
+              {sideBannerImages.length === 1 && (
+                <div className="my-3 text-center">
+                  <img
+                    src={sideBannerImages[0]}
+                    alt="Side Banner"
+                    style={{ width: "100%", borderRadius: 8 }}
+                  />
+                </div>
+              )}
+              {sideBannerImages.length > 1 && (
+                <div
+                  className="my-3 text-center"
+                  style={{ position: "relative" }}
+                >
+                  <img
+                    src={sideBannerImages[currentBanner]}
+                    alt={`Side Banner ${currentBanner + 1}`}
+                    style={{
+                      width: "100%",
+                      borderRadius: 8,
+                      transition: "opacity 0.5s",
+                    }}
+                  />
+                </div>
+              )}
 
               <div
                 className="border-line"
@@ -654,16 +691,20 @@ const CartSidebar = ({
 
         <div className="col-xl-12 mt-4">
           <div className="d-flex align-items-center justify-content-center">
-            <SafeImage
-              src={sideBannerImage}
-              alt="Sidebar Banner"
-              className="rounded-3"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-            />
+            {sideBannerImages.length === 1 && (
+              <img
+                src={sideBannerImages[0]}
+                alt="Side Banner"
+                style={{ width: "100%" }}
+              />
+            )}
+            {sideBannerImages.length > 1 && (
+              <img
+                src={sideBannerImages[currentBanner]}
+                alt={`Side Banner ${currentBanner + 1}`}
+                style={{ width: "100%", transition: "opacity 0.5s" }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -768,7 +809,7 @@ const CartSidebar = ({
           border-radius: 8px;
           padding: 8px;
           margin-top: 8px;
-          border-left: 3px solid var(--primary-color, #007bff);
+          border-left: 3px solid var(--primary-color);
         }
 
         .variations-section,
@@ -787,7 +828,7 @@ const CartSidebar = ({
         }
 
         .variation-icon {
-          color: var(--primary-color, #007bff);
+          color: var(--primary-color);
           font-size: 0.7rem;
         }
 
@@ -831,7 +872,7 @@ const CartSidebar = ({
         }
 
         .variation-value {
-          color: var(--primary-color, #007bff);
+          color: var(--primary-color);
           font-weight: 500;
           margin-right: 4px;
         }
@@ -846,7 +887,9 @@ const CartSidebar = ({
           padding: 1px 4px;
           border-radius: 3px;
         }
-
+        .blance-card {
+          padding: 4px !important;
+        }
         .addon-quantity {
           margin-left: 4px;
           font-size: 0.7rem;
@@ -882,19 +925,19 @@ const CartSidebar = ({
         }
 
         .btn-qty-compact.btn-primary {
-          background: var(--primary-color, #007bff);
-          border-color: var(--primary-color, #007bff);
+          background: var(--primary-color);
+          border-color: var(--primary-color);
           color: white;
         }
 
         .btn-qty-compact.btn-primary:hover {
-          background: var(--primary-color-dark, #0056b3);
-          border-color: var(--primary-color-dark, #0056b3);
+          background: var(--primary-color-dark);
+          border-color: var(--primary-color-dark);
         }
 
         .qty-display-compact {
           font-weight: 600;
-          color: var(--primary-color, #007bff);
+          color: var(--primary-color);
           font-size: 0.9rem;
           min-width: 20px;
           text-align: center;
