@@ -16,7 +16,7 @@ import Image from "next/image";
 import { clearCartItems, addToCart } from "@/store/services/cartService";
 import { addToast } from "@/store/slices/toastSlice";
 
-const ReorderModal = ({ show, onHide, orderItems = [] }) => {
+const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { token } = useSelector((state) => state.auth || { token: null });
@@ -240,7 +240,9 @@ const ReorderModal = ({ show, onHide, orderItems = [] }) => {
       );
 
       onHide();
-      router.push("/checkout");
+      router.push(
+        `/checkout${restaurantId ? `?restaurant=${restaurantId}` : ""}`
+      );
     } catch (error) {
       console.error("Error adding items to cart:", error);
       dispatch(
@@ -273,67 +275,54 @@ const ReorderModal = ({ show, onHide, orderItems = [] }) => {
       show={show}
       onHide={onHide}
       centered
-      size="lg"
+      size="xl"
       className="reorder-modal"
     >
-      <Modal.Header closeButton>
-        <Modal.Title>Customize Your Order</Modal.Title>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fs-4 fw-bold text-primary">
+          <i className="fas fa-utensils me-2"></i>
+          Customize Your Order
+        </Modal.Title>
       </Modal.Header>
 
       <Modal.Body className="p-0">
         {customizedItems.length === 0 ? (
           <div className="text-center py-5">
-            <p className="mb-0">No items available to reorder</p>
+            <i className="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+            <h5 className="text-muted">No items available to reorder</h5>
+            <p className="text-muted mb-0">Please select a different order</p>
           </div>
         ) : (
           <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
             <Row className="g-0">
-              <Col sm={3} className="border-end">
-                <Nav variant="pills" className="flex-column">
-                  {customizedItems.map((item, index) => (
-                    <Nav.Item key={`nav-${index}`}>
-                      <Nav.Link
-                        eventKey={index}
-                        className="d-flex align-items-center py-3 rounded-0"
-                      >
-                        <div
-                          className="mx-2"
+              <Col sm={4} className="border-end bg-light">
+                <div className="p-3">
+                  <h6 className="text-muted mb-3 fw-bold">
+                    <i className="fas fa-list me-2"></i>
+                    ORDER ITEMS ({customizedItems.length})
+                  </h6>
+                  <Nav variant="pills" className="flex-column">
+                    {customizedItems.map((item, index) => (
+                      <Nav.Item key={`nav-${index}`} className="mb-2">
+                        <Nav.Link
+                          eventKey={index}
+                          className="d-flex align-items-center p-3 rounded-3 border"
                           style={{
-                            width: "40px",
-                            height: "40px",
-                            position: "relative",
+                            backgroundColor:
+                              activeTab === index ? "#007bff" : "white",
+                            color: activeTab === index ? "white" : "#333",
+                            border:
+                              activeTab === index
+                                ? "1px solid #007bff"
+                                : "1px solid #e9ecef",
+                            transition: "all 0.2s ease",
                           }}
                         >
-                          <Image
-                            src={item.image || "/placeholder.png"}
-                            alt={item.name}
-                            fill
-                            className="rounded-circle object-fit-cover"
-                          />
-                        </div>
-                        <div className="text-truncate">
-                          <b className="text-white ms-2">{item.name}</b>
-                          {/* <Badge bg="primary" pill className="ms-1">
-                            {item.quantity}
-                          </Badge> */}
-                        </div>
-                      </Nav.Link>
-                    </Nav.Item>
-                  ))}
-                </Nav>
-              </Col>
-
-              <Col sm={9}>
-                <Tab.Content>
-                  {customizedItems.map((item, index) => (
-                    <Tab.Pane key={`pane-${index}`} eventKey={index}>
-                      <div className="p-3">
-                        <div className="d-flex mb-3">
                           <div
-                            className="me-3"
+                            className="me-3 flex-shrink-0"
                             style={{
-                              width: "120px",
-                              height: "120px",
+                              width: "50px",
+                              height: "50px",
                               position: "relative",
                             }}
                           >
@@ -341,56 +330,120 @@ const ReorderModal = ({ show, onHide, orderItems = [] }) => {
                               src={item.image || "/placeholder.png"}
                               alt={item.name}
                               fill
-                              className="rounded object-fit-cover"
+                              className="rounded-circle object-fit-cover"
+                              style={{ border: "2px solid #f8f9fa" }}
                             />
                           </div>
-                          <div>
-                            <h5>{item.name}</h5>
-                            <p className="small text-muted mb-1">
-                              {item.description}
-                            </p>
-                            <div className="d-flex align-items-center mt-2">
-                              <p className="fw-bold mb-0 me-3">
-                                ${calculateTotalPrice(item)}
+                          <div className="text-start flex-grow-1">
+                            <div
+                              className="fw-bold text-truncate"
+                              style={{ maxWidth: "120px" }}
+                            >
+                              {item.name}
+                            </div>
+                            <small
+                              className={
+                                activeTab === index
+                                  ? "text-light"
+                                  : "text-muted"
+                              }
+                            >
+                              Qty: {item.quantity} • $
+                              {calculateTotalPrice(item)}
+                            </small>
+                          </div>
+                        </Nav.Link>
+                      </Nav.Item>
+                    ))}
+                  </Nav>
+                </div>
+              </Col>
+
+              <Col sm={8}>
+                <Tab.Content>
+                  {customizedItems.map((item, index) => (
+                    <Tab.Pane key={`pane-${index}`} eventKey={index}>
+                      <div className="p-4">
+                        {/* Item Header */}
+                        <div className="d-flex mb-4 pb-3 border-bottom">
+                          <div
+                            className="me-4 flex-shrink-0"
+                            style={{
+                              width: "100px",
+                              height: "100px",
+                              position: "relative",
+                            }}
+                          >
+                            <Image
+                              src={item.image || "/placeholder.png"}
+                              alt={item.name}
+                              fill
+                              className="rounded-3 object-fit-cover"
+                              style={{ border: "1px solid #e9ecef" }}
+                            />
+                          </div>
+                          <div className="flex-grow-1">
+                            <h4 className="mb-2 text-primary">{item.name}</h4>
+                            {item.description && (
+                              <p className="text-muted mb-3 small">
+                                {item.description}
                               </p>
+                            )}
+                            <div className="d-flex align-items-center justify-content-between">
+                              <div className="fw-bold fs-5 text-success">
+                                ${calculateTotalPrice(item)}
+                              </div>
                               <div className="d-flex align-items-center">
-                                <Button
-                                  variant="outline-secondary"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleItemQuantityChange(
-                                      index,
-                                      Math.max(1, item.quantity - 1)
-                                    )
-                                  }
-                                >
-                                  <i className="fas fa-minus"></i>
-                                </Button>
-                                <Form.Control
-                                  type="number"
-                                  className="text-center mx-2"
-                                  style={{ width: "60px" }}
-                                  value={item.quantity}
-                                  min={1}
-                                  onChange={(e) =>
-                                    handleItemQuantityChange(
-                                      index,
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                                <Button
-                                  variant="outline-secondary"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleItemQuantityChange(
-                                      index,
-                                      item.quantity + 1
-                                    )
-                                  }
-                                >
-                                  <i className="fas fa-plus"></i>
-                                </Button>
+                                <span className="me-3 text-muted fw-medium">
+                                  Quantity:
+                                </span>
+                                <div className="d-flex align-items-center border rounded-pill px-2 py-1">
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="p-1 text-decoration-none"
+                                    onClick={() =>
+                                      handleItemQuantityChange(
+                                        index,
+                                        Math.max(1, item.quantity - 1)
+                                      )
+                                    }
+                                    style={{
+                                      fontSize: "12px",
+                                      width: "24px",
+                                      height: "24px",
+                                    }}
+                                  >
+                                    <i className="fas fa-minus"></i>
+                                  </Button>
+                                  <span
+                                    className="mx-3 fw-bold"
+                                    style={{
+                                      minWidth: "20px",
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    {item.quantity}
+                                  </span>
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="p-1 text-decoration-none"
+                                    onClick={() =>
+                                      handleItemQuantityChange(
+                                        index,
+                                        item.quantity + 1
+                                      )
+                                    }
+                                    style={{
+                                      fontSize: "12px",
+                                      width: "24px",
+                                      height: "24px",
+                                    }}
+                                  >
+                                    <i className="fas fa-plus"></i>
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -399,104 +452,101 @@ const ReorderModal = ({ show, onHide, orderItems = [] }) => {
                         {/* Variations section */}
                         {item.variations && item.variations.length > 0 && (
                           <div className="mb-4">
-                            <h6 className="border-bottom pb-2">Variations</h6>
-                            {item.variations.map((variation, vIndex) => (
-                              <div key={`variation-${vIndex}`} className="mb-3">
-                                <Form.Label>{variation.name}</Form.Label>
-                                <Form.Select
-                                  value={variation.value}
-                                  onChange={(e) =>
-                                    handleVariationChange(
-                                      index,
-                                      variation.name,
-                                      e.target.value
-                                    )
-                                  }
+                            <h6 className="text-primary fw-bold mb-3">
+                              <i className="fas fa-cogs me-2"></i>
+                              Variations
+                            </h6>
+                            <div className="row">
+                              {item.variations.map((variation, vIndex) => (
+                                <div
+                                  key={`variation-${vIndex}`}
+                                  className="col-md-6 mb-3"
                                 >
-                                  {variation.options.map((option, oIndex) => (
-                                    <option
-                                      key={`option-${oIndex}`}
-                                      value={option.label}
-                                    >
-                                      {option.label}{" "}
-                                      {option.price > 0
-                                        ? `(+$${option.price.toFixed(2)})`
-                                        : ""}
-                                    </option>
-                                  ))}
-                                </Form.Select>
-                              </div>
-                            ))}
+                                  <label className="form-label fw-medium text-dark">
+                                    {variation.name}
+                                  </label>
+                                  <Form.Select
+                                    value={variation.value}
+                                    onChange={(e) =>
+                                      handleVariationChange(
+                                        index,
+                                        variation.name,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="rounded-3 border-2"
+                                  >
+                                    {variation.options.map((option, oIndex) => (
+                                      <option
+                                        key={`option-${oIndex}`}
+                                        value={option.label}
+                                      >
+                                        {option.label}{" "}
+                                        {option.price > 0
+                                          ? `(+$${option.price.toFixed(2)})`
+                                          : ""}
+                                      </option>
+                                    ))}
+                                  </Form.Select>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
 
+                        {/* Add-ons section */}
                         {item.add_ons && item.add_ons.length > 0 && (
                           <div>
-                            <h6 className="border-bottom pb-2">Add-ons</h6>
-                            {item.add_ons.map((addon, aIndex) => (
-                              <div
-                                key={`addon-${aIndex}`}
-                                className="d-flex justify-content-between align-items-center mb-2 py-2 border-bottom"
-                              >
-                                <div className="d-flex align-items-center">
-                                  <Form.Check
-                                    type="checkbox"
-                                    id={`addon-${index}-${addon.id}`}
-                                    checked={addon.isChecked}
-                                    onChange={() =>
-                                      handleAddOnToggle(index, addon.id)
-                                    }
-                                    label={`${
-                                      addon.name
-                                    } (+$${addon.price.toFixed(2)})`}
-                                  />
-                                </div>
-                                {/* {addon.isChecked && (
-                                  <div className="d-flex align-items-center">
-                                    <Button
-                                      variant="outline-secondary"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleAddOnQuantity(
-                                          index,
-                                          addon.id,
-                                          Math.max(1, addon.quantity - 1)
-                                        )
-                                      }
-                                    >
-                                      <i className="fas fa-minus"></i>
-                                    </Button>
-                                    <Form.Control
-                                      type="tel"
-                                      className="text-center mx-2 rounded-5"
-                                      style={{ width: "40px" }}
-                                      value={addon.quantity}
-                                      min={1}
-                                      onChange={(e) =>
-                                        handleAddOnQuantity(
-                                          index,
-                                          addon.id,
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                    <Button
-                                      variant="outline-secondary"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleAddOnQuantity(
-                                          index,
-                                          addon.id,
-                                          addon.quantity + 1
-                                        )
-                                      }
-                                    >
-                                      <i className="fas fa-plus"></i>
-                                    </Button>
+                            <h6 className="text-primary fw-bold mb-3">
+                              <i className="fas fa-plus-circle me-2"></i>
+                              Add-ons & Extras
+                            </h6>
+                            <div className="row">
+                              {item.add_ons.map((addon, aIndex) => (
+                                <div
+                                  key={`addon-${aIndex}`}
+                                  className="col-md-6 mb-3"
+                                >
+                                  <div
+                                    className="card border-2 h-100"
+                                    style={{
+                                      borderColor: addon.isChecked
+                                        ? "#007bff"
+                                        : "#e9ecef",
+                                      backgroundColor: addon.isChecked
+                                        ? "#f8f9ff"
+                                        : "white",
+                                    }}
+                                  >
+                                    <div className="card-body p-3">
+                                      <div className="d-flex align-items-center justify-content-between">
+                                        <div className="flex-grow-1">
+                                          <Form.Check
+                                            type="checkbox"
+                                            id={`addon-${index}-${addon.id}`}
+                                            checked={addon.isChecked}
+                                            onChange={() =>
+                                              handleAddOnToggle(index, addon.id)
+                                            }
+                                            label={
+                                              <div>
+                                                <div className="fw-medium">
+                                                  {addon.name}
+                                                </div>
+                                                <small className="text-success fw-bold">
+                                                  +${addon.price.toFixed(2)}
+                                                </small>
+                                              </div>
+                                            }
+                                            className="mb-0"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
-                                )} */}
-                              </div>
-                            ))}
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -509,34 +559,42 @@ const ReorderModal = ({ show, onHide, orderItems = [] }) => {
         )}
       </Modal.Body>
 
-      <Modal.Footer>
-        <Button variant="outline-secondary" onClick={onHide}>
-          <i className="fas fa-times me-1"></i> Cancel
-        </Button>
-        <Button
-          variant="primary"
-          onClick={handleAddToCart}
-          disabled={loading || customizedItems.length === 0}
-        >
-          {loading ? (
-            <>
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-                className="me-2"
-              />
-              Processing...
-            </>
-          ) : (
-            <>
-              <i className="fas fa-shopping-cart me-2"></i> Add to Cart &
-              Checkout
-            </>
-          )}
-        </Button>
+      <Modal.Footer className="border-top-0 pt-0 px-4 pb-4">
+        <div className="w-100 d-flex justify-content-between align-items-center">
+          <Button
+            variant="outline-secondary"
+            onClick={onHide}
+            className="px-4 py-2"
+          >
+            <i className="fas fa-times me-2"></i> Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleAddToCart}
+            disabled={loading || customizedItems.length === 0}
+            className="px-5 py-2 fw-bold"
+            style={{ minWidth: "200px" }}
+          >
+            {loading ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Processing...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-shopping-cart me-2"></i>
+                Add to Cart & Checkout
+              </>
+            )}
+          </Button>
+        </div>
       </Modal.Footer>
     </Modal>
   );

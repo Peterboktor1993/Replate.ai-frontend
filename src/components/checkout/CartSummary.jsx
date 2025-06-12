@@ -91,9 +91,8 @@ const CartSummary = ({
     const discount = calculateTotalDiscount();
     const deliveryFee = calculateDeliveryFee();
     const restaurantTax = calculateRestaurantTax();
-    const serviceFees = calculateServiceFees();
+    const convenienceFees = calculateServiceFees() + getAdditionalCharge();
     const tip = calculateTipAmount();
-    const additionalCharge = getAdditionalCharge();
 
     return (
       subtotal +
@@ -101,9 +100,8 @@ const CartSummary = ({
       discount +
       deliveryFee +
       restaurantTax +
-      serviceFees +
-      tip +
-      additionalCharge
+      convenienceFees +
+      tip
     );
   };
 
@@ -325,6 +323,39 @@ const CartSummary = ({
               disabled={processing}
             />
 
+            {/* Redeem Points Section */}
+            <div className="redeem-points-section mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="checkout-title font-bold">Redeem Points</span>
+              </div>
+              <button
+                className="btn btn-outline-primary btn-sm w-100"
+                disabled={true}
+              >
+                <i className="fas fa-gift me-2"></i>
+                Redeem Points (Coming Soon)
+              </button>
+            </div>
+
+            {/* Use Coupon Section */}
+            <div className="coupon-section mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="checkout-title font-bold">Use Coupon</span>
+              </div>
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter coupon code"
+                  disabled={true}
+                />
+                <button className="btn btn-outline-primary" disabled={true}>
+                  Apply
+                </button>
+              </div>
+              <small className="text-muted">Coupon feature coming soon</small>
+            </div>
+
             <div className="bill-details mt-4 border-bottom">
               <h6>Bill Details</h6>
               <div className="d-flex align-items-center justify-content-between mb-3">
@@ -349,11 +380,12 @@ const CartSummary = ({
                 </span>
               </div>
 
-              {/* Service Fees (Commission) */}
+              {/* Consolidated Service Fees (Commission + Additional Charge) */}
               <div className="d-flex align-items-center justify-content-between mb-3">
-                <span>Service Fees</span>
+                <span>Convenience Fees</span>
                 <span>
-                  {currency} {calculateServiceFees().toFixed(2)}
+                  {currency}{" "}
+                  {(calculateServiceFees() + getAdditionalCharge()).toFixed(2)}
                 </span>
               </div>
 
@@ -371,18 +403,6 @@ const CartSummary = ({
                   <span>Tip</span>
                   <span>
                     {currency} {calculateTipAmount().toFixed(2)}
-                  </span>
-                </div>
-              )}
-
-              {/* Additional Charge Information */}
-              {shouldShowAdditionalCharge() && (
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <span className="d-flex align-items-center">
-                    {configData?.additional_charge_name || "Additional Charge"}
-                  </span>
-                  <span>
-                    {currency} {getAdditionalCharge().toFixed(2)}
                   </span>
                 </div>
               )}

@@ -1,11 +1,16 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { getOrderList, getRunningOrders } from "@/store/services/orderService";
+import {
+  getOrderList,
+  getRunningOrders,
+  getOrderDetails,
+} from "@/store/services/orderService";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { addToast } from "@/store/slices/toastSlice";
+import ReorderModal from "@/components/orders/ReorderModal";
 
 const OrdersPage = () => {
   const dispatch = useDispatch();
@@ -30,6 +35,9 @@ const OrdersPage = () => {
 
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false);
   const [processingOrder, setProcessingOrder] = useState(null);
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [selectedOrderForReorder, setSelectedOrderForReorder] = useState(null);
+  const [reorderLoading, setReorderLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -376,101 +384,79 @@ const OrdersPage = () => {
     return 0;
   };
 
-  const renderOrderTable = () => {
-    if (filteredOrders.length === 0) {
+  const renderOrdersTable = (orders, isRunning = false) => {
+    if (orders.length === 0) {
       return (
-        <div className="text-center py-4 my-2">
-          <i className="fas fa-search fa-2x text-muted mb-3"></i>
-          <h6>No Orders Found</h6>
-          <p className="text-muted small">
-            No orders match your current filters.
+        <div className="text-center py-4">
+          <i className="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+          <h5>No Orders Found</h5>
+          <p className="text-muted">
+            {activeTab === "running"
+              ? "You don't have any running orders."
+              : "You haven't placed any orders yet."}
           </p>
-          <button
-            className="btn btn-sm btn-outline-primary mt-2"
-            onClick={handleReset}
-          >
-            <i className="fas fa-redo me-1"></i> Reset Filters
-          </button>
         </div>
       );
     }
 
     return (
-      <div className="table-responsive mt-3">
-        <table className="table table-hover align-middle border-bottom">
-          <thead>
-            <tr className="bg-light">
-              <th style={{ width: "10%" }}>Order ID</th>
-              <th style={{ width: "15%" }}>Date</th>
-              <th style={{ width: "15%" }}>Restaurant</th>
-              <th style={{ width: "12%" }}>Amount</th>
-              <th style={{ width: "13%" }}>Status</th>
-              <th style={{ width: "15%" }}>Payment</th>
-              <th style={{ width: "20%" }}>Actions</th>
+      <div className="table-responsive">
+        <table className="table table-hover">
+          <thead className="table-light">
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map((order) => {
-              const isRunning = [
-                "pending",
-                "confirmed",
-                "processing",
-                "picked_up",
-                "out_for_delivery",
-              ].includes(order.order_status?.toLowerCase());
+            {orders.map((order, index) => {
+              const statusBadge = getStatusBadge(order.order_status);
+              const orderDate = formatDate(order.created_at);
 
               return (
-                <tr key={order.id} className={`${isRunning ? " " : ""}`}>
+                <tr
+                  key={order.id}
+                  onClick={() => handleViewDetails(order.id)}
+                  style={{ cursor: "pointer" }}
+                >
                   <td>
-                    <span className="fw-medium">#{order.id}</span>
+                    <div className="fw-medium">#{order.id}</div>
                     {order.order_type && (
-                      <div className="mt-1">
-                        <span
-                          className={`badge bg-${
-                            order.order_type === "delivery"
-                              ? "info"
-                              : "secondary"
-                          } text-white small`}
-                        >
-                          {order.order_type === "delivery"
-                            ? "Delivery"
-                            : "Pickup"}
-                        </span>
-                      </div>
+                      <small className="text-muted text-capitalize">
+                        {order.order_type}
+                      </small>
                     )}
                   </td>
                   <td>
-                    {formatDate(order.created_at)}
-                    {order.schedule_at &&
-                      order.schedule_at !== order.created_at && (
-                        <div className="mt-1 small text-muted">
-                          <i className="far fa-clock me-1"></i>
-                          Scheduled: {formatDate(order.schedule_at)}
-                        </div>
-                      )}
+                    <div>{orderDate}</div>
+                    {order.schedule_at && (
+                      <small className="text-info">
+                        <i className="fas fa-clock me-1"></i>
+                        Scheduled
+                      </small>
+                    )}
                   </td>
-                  <td>{order.restaurant?.name || "N/A"}</td>
                   <td>
-                    <span className="fw-medium">
+                    <div className="fw-medium">
                       ${parseFloat(order.order_amount || 0).toFixed(2)}
-                    </span>
-                    {order.tax_percentage > 0 && (
-                      <div className="mt-1 small text-muted">
-                        Tax: $
-                        {parseFloat(order.total_tax_amount || 0).toFixed(2)}
-                      </div>
+                    </div>
+                    {order.dm_tips > 0 && (
+                      <small className="text-muted">
+                        +${parseFloat(order.dm_tips).toFixed(2)} tip
+                      </small>
                     )}
                   </td>
                   <td>
-                    <span className={getStatusBadge(order.order_status).class}>
-                      {getStatusBadge(order.order_status).text}
+                    <span
+                      className={`badge ${statusBadge.class} text-white px-2 py-1`}
+                    >
+                      <i className={`fas fa-${statusBadge.icon} me-1`}></i>
+                      {statusBadge.text}
                     </span>
-                    {order.dm_tips > 0 && (
-                      <div className="mt-1 small text-muted">
-                        <i className="fas fa-hand-holding-usd me-1"></i>
-                        Tip: ${parseFloat(order.dm_tips).toFixed(2)}
-                      </div>
-                    )}
                   </td>
                   <td>
                     <span
@@ -502,31 +488,63 @@ const OrdersPage = () => {
                     </div>
                   </td>
                   <td>
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => handleViewDetails(order.id)}
-                    >
-                      <i
-                        className={`fas fa-${
-                          isRunning ? "shipping-fast" : "eye"
-                        } me-1`}
-                      ></i>
-                      Details
-                    </button>
-                    {order.payment_method === "digital_payment" &&
-                      order.payment_status === "unpaid" &&
-                      order.order_status === "pending" && (
-                        <button
-                          className="btn btn-sm btn-success ms-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePayNow(order);
-                          }}
-                        >
-                          <i className="fas fa-credit-card me-1"></i>
-                          Pay Now
-                        </button>
-                      )}
+                    <div className="d-flex gap-1">
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(order.id);
+                        }}
+                      >
+                        <i
+                          className={`fas fa-${
+                            isRunning ? "shipping-fast" : "eye"
+                          } me-1`}
+                        ></i>
+                        Details
+                      </button>
+                      <button
+                        className={`btn btn-sm btn-outline-primary ${
+                          reorderLoading ? "disabled" : ""
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReorder(order);
+                        }}
+                        disabled={reorderLoading}
+                        title="Reorder items from this order"
+                      >
+                        {reorderLoading ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-1"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-redo me-1"></i>
+                            Reorder
+                          </>
+                        )}
+                      </button>
+                      {order.payment_method === "digital_payment" &&
+                        order.payment_status === "unpaid" &&
+                        order.order_status === "pending" && (
+                          <button
+                            className="btn btn-sm btn-success"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePayNow(order);
+                            }}
+                          >
+                            <i className="fas fa-credit-card me-1"></i>
+                            Pay Now
+                          </button>
+                        )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -535,6 +553,51 @@ const OrdersPage = () => {
         </table>
       </div>
     );
+  };
+
+  const handleReorder = async (order) => {
+    if (!token) {
+      dispatch(
+        addToast({
+          show: true,
+          title: "Error",
+          message: "Please login to reorder items",
+          type: "error",
+        })
+      );
+      return;
+    }
+
+    setReorderLoading(true);
+
+    try {
+      const result = await dispatch(getOrderDetails(order.id, token));
+      if (result.success) {
+        setSelectedOrderForReorder(result.data);
+        setShowReorderModal(true);
+      } else {
+        dispatch(
+          addToast({
+            show: true,
+            title: "Error",
+            message: "Failed to fetch order details for reordering",
+            type: "error",
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching order details for reorder:", error);
+      dispatch(
+        addToast({
+          show: true,
+          title: "Error",
+          message: "An error occurred while preparing your reorder",
+          type: "error",
+        })
+      );
+    } finally {
+      setReorderLoading(false);
+    }
   };
 
   return (
@@ -746,7 +809,10 @@ const OrdersPage = () => {
                     : "No orders found for this device. Sign in to view orders linked to your account."}
                 </p>
                 <div className="mt-3">
-                  <Link href="/" className="btn btn-primary me-2">
+                  <Link
+                    href={`/?restaurant=${restaurantId}`}
+                    className="btn btn-primary me-2"
+                  >
                     <i className="fas fa-shopping-cart me-1"></i>
                     Browse Products
                   </Link>
@@ -886,7 +952,7 @@ const OrdersPage = () => {
                   </div>
 
                   {/* Order Table */}
-                  {renderOrderTable()}
+                  {renderOrdersTable(filteredOrders, activeTab === "running")}
 
                   {/* Order Count */}
                   {filteredOrders.length > 0 && (
@@ -901,6 +967,21 @@ const OrdersPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Reorder Modal */}
+      <ReorderModal
+        show={showReorderModal}
+        onHide={() => {
+          setShowReorderModal(false);
+          setSelectedOrderForReorder(null);
+        }}
+        orderItems={
+          selectedOrderForReorder?.details?.filter(
+            (item) => item.food_details
+          ) || []
+        }
+        restaurantId={restaurantId}
+      />
     </div>
   );
 };

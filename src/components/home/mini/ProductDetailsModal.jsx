@@ -3,12 +3,26 @@ import React, { useState, useEffect } from "react";
 import { Modal, Tab, Nav } from "react-bootstrap";
 import Image from "next/image";
 import StarRating from "@/components/common/StarRating";
+import RestaurantClosedTip from "@/components/common/RestaurantClosedTip";
+import { useRestaurantStatus } from "@/utils/restaurantUtils";
+import { useDispatch } from "react-redux";
+import { addToast } from "@/store/slices/toastSlice";
 
-const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
+const ProductDetailsModal = ({
+  show,
+  onHide,
+  product,
+  onAddToCart,
+  restaurantDetails,
+}) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariations, setSelectedVariations] = useState({});
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [showClosedTip, setShowClosedTip] = useState(false);
+
+  const dispatch = useDispatch();
+  const restaurantStatus = useRestaurantStatus(restaurantDetails);
 
   useEffect(() => {
     if (show) {
@@ -103,6 +117,11 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
   };
 
   const handleAddToCart = () => {
+    if (restaurantStatus && !restaurantStatus.isOpen) {
+      setShowClosedTip(true);
+      return;
+    }
+
     if (!validateVariations()) {
       return;
     }
@@ -256,7 +275,6 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
           border-radius: 0.375rem;
         }
 
-        /* Mobile-only cool and compact design */
         @media (max-width: 576px) {
           .modal-backdrop {
             z-index: 999998 !important;
@@ -824,12 +842,31 @@ const ProductDetailsModal = ({ show, onHide, product, onAddToCart }) => {
           <button className="btn btn-outline-primary" onClick={handleClose}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleAddToCart}>
+          <button
+            className={`btn ${
+              restaurantStatus && !restaurantStatus.isOpen
+                ? "btn-secondary"
+                : "btn-primary"
+            }`}
+            onClick={handleAddToCart}
+            disabled={restaurantStatus && !restaurantStatus.isOpen}
+          >
             <i className="fa-solid fa-cart-plus me-1"></i>
-            Add to Cart - ${(calculateTotalPrice() * quantity).toFixed(2)}
+            {restaurantStatus && !restaurantStatus.isOpen
+              ? "Restaurant Closed"
+              : `Add to Cart - $${(calculateTotalPrice() * quantity).toFixed(
+                  2
+                )}`}
           </button>
         </Modal.Footer>
       </Modal>
+
+      <RestaurantClosedTip
+        show={showClosedTip}
+        onClose={() => setShowClosedTip(false)}
+        restaurantStatus={restaurantStatus}
+        restaurantName={restaurantDetails?.name}
+      />
     </>
   );
 };

@@ -11,6 +11,49 @@ const TipSection = ({
   calculateTip,
   disabled = false,
 }) => {
+  const handleCustomTipInput = (e) => {
+    const value = e.target.value;
+
+    if (value === "") {
+      handleCustomTipChange({ target: { value: "0" } });
+      return;
+    }
+
+    if (!/^\d*\.?\d*$/.test(value)) {
+      return;
+    }
+
+    if ((value.match(/\./g) || []).length > 1) {
+      return;
+    }
+
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= 0) {
+      handleCustomTipChange({ target: { value: value } });
+    }
+  };
+
+  const handleTipPresetClick = (presetValue) => {
+    if (disabled) return;
+    handleTipSelection(presetValue);
+  };
+
+  const handleCustomTipClick = () => {
+    if (disabled) return;
+    enableCustomTip();
+  };
+
+  const displayTipAmount = () => {
+    if (customTip) {
+      return customTipAmount > 0
+        ? `$${Number(customTipAmount).toFixed(2)}`
+        : "$0.00";
+    } else if (tipPercentage > 0) {
+      return `$${calculateTip().toFixed(2)}`;
+    }
+    return "$0.00";
+  };
+
   return (
     <div className={`tip-section mb-4 ${disabled ? "disabled" : ""}`}>
       <div className="d-flex justify-content-between align-items-center mb-2">
@@ -27,7 +70,7 @@ const TipSection = ({
                 ? "btn-primary"
                 : "btn-outline-primary"
             } btn-sm me-2 mb-2`}
-            onClick={() => !disabled && handleTipSelection(preset.value)}
+            onClick={() => handleTipPresetClick(preset.value)}
             disabled={disabled}
           >
             {preset.label}
@@ -38,7 +81,7 @@ const TipSection = ({
           className={`btn ${
             customTip ? "btn-primary" : "btn-outline-primary"
           } btn-sm mb-2`}
-          onClick={() => !disabled && enableCustomTip()}
+          onClick={handleCustomTipClick}
           disabled={disabled}
         >
           Custom
@@ -49,11 +92,11 @@ const TipSection = ({
         <div className="input-group mb-3">
           <span className="input-group-text">USD</span>
           <input
-            type="number"
+            type="text"
             className="form-control"
-            placeholder="Enter tip amount"
-            value={customTipAmount}
-            onChange={handleCustomTipChange}
+            placeholder="0.00"
+            value={customTipAmount || ""}
+            onChange={handleCustomTipInput}
             min="0"
             step="0.01"
             disabled={disabled}
@@ -84,12 +127,12 @@ const TipSection = ({
       </div>
 
       {(tipPercentage > 0 || (customTip && customTipAmount > 0)) && (
-        <div className="alert mb-0 py-2">
+        <div className="alert alert-light border mb-0 py-2">
           <div className="d-flex justify-content-between align-items-center">
             <span>
               {customTip ? <>Custom Tip</> : <>{tipPercentage}% Tip</>}
             </span>
-            <span className="fw-bold">USD {calculateTip().toFixed(2)}</span>
+            <span className="fw-bold text-primary">{displayTipAmount()}</span>
           </div>
         </div>
       )}

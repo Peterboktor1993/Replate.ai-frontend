@@ -1,0 +1,114 @@
+/* Reorder Modal Styles */
+.reorder-modal .modal-dialog {
+  max-width: 95vw;
+}
+
+.reorder-modal .modal-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+  color: white;
+  border: none;
+}
+
+.reorder-modal .modal-header .btn-close {
+  filter: invert(1);
+  opacity: 0.8;
+}
+
+.reorder-modal .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.reorder-modal .nav-pills .nav-link {
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.reorder-modal .nav-pills .nav-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.reorder-modal .nav-pills .nav-link.active {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 4px 16px rgba(var(--primary-color), 0.3);
+}
+
+.reorder-modal .tab-content {
+  min-height: 400px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.reorder-modal .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+.reorder-modal .card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.reorder-modal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .reorder-modal .modal-dialog {
+    max-width: 98vw;
+    margin: 0.5rem;
+  }
+
+  .reorder-modal .row .col-sm-4,
+  .reorder-modal .row .col-sm-8 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .reorder-modal .border-end {
+    border-right: none !important;
+    border-bottom: 1px solid #dee2e6 !important;
+  }
+
+  .reorder-modal .nav-pills .nav-link {
+    margin-bottom: 0.25rem;
+    padding: 0.75rem;
+  }
+
+  .reorder-modal .tab-content {
+    max-height: 50vh;
+  }
+}
+
+.restaurant-status {
+  line-height: 1.2;
+}
+
+.restaurant-status .status-dot {
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.restaurant-status .status-text {
+  min-width: 0;
+}
+
+.restaurant-status .status-message {
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+/* Responsive adjustments for header */
+@media (max-width: 768px) {
+  .restaurant-status .status-message {
+    display: none;
+  }
+
+  .restaurant-status .status-text span {
+    font-size: 0.875rem;
+  }
+}

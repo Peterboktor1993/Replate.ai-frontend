@@ -325,6 +325,7 @@ const Home = ({
                 initialLimit={productLimit}
                 totalProducts={totalProductCount}
                 onProductCountUpdate={handleProductCountUpdate}
+                restaurantDetails={restaurantDetails}
               />
             </div>
           </div>

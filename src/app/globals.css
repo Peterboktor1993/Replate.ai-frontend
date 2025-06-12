@@ -338,6 +338,8 @@ input:-webkit-autofill:active {
 
 .nav-link.active {
   color: var(--primary-color) !important;
+  border: 1px solid var(--primary-color) !important;
+  background-color: white !important;
 }
 .fs-6 {
   font-size: 1.2rem !important;

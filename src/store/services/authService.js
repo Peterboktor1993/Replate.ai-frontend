@@ -304,7 +304,6 @@ export const registerUser = (userData) => async (dispatch, getState) => {
     });
 
     if (response.data.token) {
-      // Successfully registered
       dispatch(
         loginSuccess({
           token: response.data.token,
@@ -903,7 +902,7 @@ export const deleteUserAddress = (token, addressId) => async (dispatch) => {
 //===============================================
 export const removeUserAccount = (token) => async (dispatch) => {
   try {
-    const response = await axiosInstance.post(
+    const response = await axiosInstance.delete(
       `${API_URL}/customer/remove-account`,
       {},
       {
@@ -923,7 +922,6 @@ export const removeUserAccount = (token) => async (dispatch) => {
         })
       );
 
-      // Logout after account deletion
       dispatch(logout());
 
       return { success: true };
@@ -932,7 +930,8 @@ export const removeUserAccount = (token) => async (dispatch) => {
         addToast({
           type: "error",
           title: "Error",
-          message: response.data.message || "Failed to delete account",
+          message:
+            response.data.errors[0].message || "Failed to delete account",
         })
       );
       return { success: false, error: response.data.message };
@@ -942,12 +941,14 @@ export const removeUserAccount = (token) => async (dispatch) => {
       addToast({
         type: "error",
         title: "Error",
-        message: error.response?.data?.message || "Failed to delete account",
+        message:
+          error.response?.data?.errors[0].message || "Failed to delete account",
       })
     );
     return {
       success: false,
-      error: error.response?.data?.message || "Failed to delete account",
+      error:
+        error.response?.data?.errors[0].message || "Failed to delete account",
     };
   }
 };

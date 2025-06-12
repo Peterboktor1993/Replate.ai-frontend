@@ -3,9 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart, setCartItems, setGuestId } from "@/store/slices/cartSlice";
 import { addToast } from "@/store/slices/toastSlice";
-import { getLinkWithRestaurant } from "@/utils/restaurantUtils";
+import {
+  getLinkWithRestaurant,
+  useRestaurantStatus,
+} from "@/utils/restaurantUtils";
 import { useSearchParams } from "next/navigation";
 import SafeImage from "../common/SafeImage";
+import RestaurantClosedTip from "../common/RestaurantClosedTip";
 import { generateGuestId } from "@/utils/guestOrderHandling";
 
 const RESTAURANT_CARTS_KEY = "restaurant_carts";
@@ -99,6 +103,7 @@ const CartSidebar = ({
   checkoutRef,
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showClosedTip, setShowClosedTip] = useState(false);
   const restaurant_id = useSearchParams().get("restaurant") || restaurantId;
   const itemsPerSlide = 3;
   const totalSlides = Math.ceil(cartItems.length / itemsPerSlide);
@@ -107,6 +112,7 @@ const CartSidebar = ({
   const { guestId } = useSelector((state) => state.cart);
   const previousRestaurantRef = useRef(null);
   const isInitializedRef = useRef(false);
+  const restaurantStatus = useRestaurantStatus(restaurantDetails);
 
   useEffect(() => {
     if (!restaurant_id) return;
@@ -436,8 +442,26 @@ const CartSidebar = ({
                                 {/* Quantity Controls - Compact */}
                                 <div className="quantity-controls-compact d-flex align-items-center mt-2">
                                   <button
-                                    className="btn-qty-compact"
-                                    onClick={() => handleDecreaseQuantity(item)}
+                                    className={`btn-qty-compact ${
+                                      restaurantStatus &&
+                                      !restaurantStatus.isOpen
+                                        ? "disabled"
+                                        : ""
+                                    }`}
+                                    onClick={() => {
+                                      if (
+                                        restaurantStatus &&
+                                        !restaurantStatus.isOpen
+                                      ) {
+                                        setShowClosedTip(true);
+                                        return;
+                                      }
+                                      handleDecreaseQuantity(item);
+                                    }}
+                                    disabled={
+                                      restaurantStatus &&
+                                      !restaurantStatus.isOpen
+                                    }
                                   >
                                     <i className="fas fa-minus"></i>
                                   </button>
@@ -445,8 +469,26 @@ const CartSidebar = ({
                                     {item.quantity}
                                   </span>
                                   <button
-                                    className="btn-qty-compact btn-primary"
-                                    onClick={() => handleIncreaseQuantity(item)}
+                                    className={`btn-qty-compact btn-primary ${
+                                      restaurantStatus &&
+                                      !restaurantStatus.isOpen
+                                        ? "disabled"
+                                        : ""
+                                    }`}
+                                    onClick={() => {
+                                      if (
+                                        restaurantStatus &&
+                                        !restaurantStatus.isOpen
+                                      ) {
+                                        setShowClosedTip(true);
+                                        return;
+                                      }
+                                      handleIncreaseQuantity(item);
+                                    }}
+                                    disabled={
+                                      restaurantStatus &&
+                                      !restaurantStatus.isOpen
+                                    }
                                   >
                                     <i className="fas fa-plus"></i>
                                   </button>
@@ -957,6 +999,13 @@ const CartSidebar = ({
           }
         }
       `}</style>
+
+      <RestaurantClosedTip
+        show={showClosedTip}
+        onClose={() => setShowClosedTip(false)}
+        restaurantStatus={restaurantStatus}
+        restaurantName={restaurantDetails?.name}
+      />
     </div>
   );
 };

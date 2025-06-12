@@ -15,11 +15,13 @@ const OrderDetailsPage = ({ params }) => {
   const orderId = params.id;
   const { token } = useSelector((state) => state.auth || { token: null });
   const { guestId } = useSelector((state) => state.cart);
+  const { restaurantId } = useSelector((state) => state.restaurant);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [showDetailsDropdown, setShowDetailsDropdown] = useState({});
+  const [reorderLoading, setReorderLoading] = useState(false);
 
   const formatDate = (dateString) => {
     try {
@@ -71,12 +73,13 @@ const OrderDetailsPage = ({ params }) => {
 
   const fetchOrderDetails = async () => {
     setLoading(true);
+    setError(null);
     try {
       const result = await dispatch(getOrderDetails(orderId, token));
       if (result.success) {
         setOrder(result.data);
       } else {
-        setError("Failed to fetch order details");
+        setError(result.error || "Failed to fetch order details");
       }
     } catch (error) {
       setError("An error occurred while fetching the order details");
@@ -99,17 +102,32 @@ const OrderDetailsPage = ({ params }) => {
       return;
     }
 
-    setShowReorderModal(true);
+    setReorderLoading(true);
+    // Add a small delay to show loading state
+    setTimeout(() => {
+      setShowReorderModal(true);
+      setReorderLoading(false);
+    }, 300);
   };
 
   if (loading) {
     return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "300px" }}
-      >
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="container py-4">
+        <div
+          className="d-flex justify-content-center align-items-center flex-column"
+          style={{ minHeight: "300px" }}
+        >
+          <div
+            className="spinner-border text-primary mb-3"
+            role="status"
+            style={{ width: "3rem", height: "3rem" }}
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <h5 className="text-muted">Loading order details...</h5>
+          <p className="text-muted">
+            Please wait while we fetch your order information.
+          </p>
         </div>
       </div>
     );
@@ -121,9 +139,25 @@ const OrderDetailsPage = ({ params }) => {
         <div className="text-center py-4 border rounded bg-light">
           <i className="fas fa-exclamation-circle fa-2x text-danger mb-3"></i>
           <h5>{error || "Order not found"}</h5>
-          <Link href="/orders" className="btn btn-sm btn-primary mt-3">
-            <i className="fas fa-arrow-left me-2"></i>Ordering page
-          </Link>
+          <p className="text-muted">
+            {error === "Failed to fetch order details"
+              ? "We couldn't load this order. Please check your internet connection and try again."
+              : "The order you're looking for doesn't exist or you don't have permission to view it."}
+          </p>
+          <div className="mt-3">
+            <button
+              className="btn btn-primary me-2"
+              onClick={fetchOrderDetails}
+              disabled={loading}
+            >
+              <i className="fas fa-sync-alt me-2"></i>
+              Retry
+            </button>
+            <Link href="/orders" className="btn btn-outline-primary">
+              <i className="fas fa-arrow-left me-2"></i>
+              Back to Orders
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -147,29 +181,37 @@ const OrderDetailsPage = ({ params }) => {
       <div className="card border-0 shadow-sm mb-3">
         <div className="card-header bg-white d-flex justify-content-between align-items-center py-2">
           <div className="d-flex align-items-center">
-            <Link href="/orders" className="btn btn-sm btn-light me-2">
+            <Link
+              href={`/orders${
+                restaurantId ? `?restaurant=${restaurantId}` : ""
+              }`}
+              className="btn btn-sm btn-light me-2"
+            >
               <i className="fas fa-arrow-left"></i>
             </Link>
             <h5 className="mb-0">Order #{params.id}</h5>
           </div>
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center gap-2">
             <button
-              className={`btn btn-sm btn-primary ${loading ? "disabled" : ""}`}
+              className={`btn btn-sm btn-primary ${
+                reorderLoading || loading ? "disabled" : ""
+              }`}
               onClick={handleReorder}
-              disabled={loading}
+              disabled={reorderLoading || loading}
             >
-              {loading ? (
+              {reorderLoading ? (
                 <>
                   <span
                     className="spinner-border spinner-border-sm me-1"
                     role="status"
                     aria-hidden="true"
                   ></span>
-                  Processing...
+                  Loading...
                 </>
               ) : (
                 <>
-                  <i className="fas fa-shopping-cart me-1"></i> Re-order
+                  <i className="fas fa-shopping-cart me-1"></i>
+                  Reorder
                 </>
               )}
             </button>
@@ -348,6 +390,7 @@ const OrderDetailsPage = ({ params }) => {
         show={showReorderModal}
         onHide={() => setShowReorderModal(false)}
         orderItems={order?.details?.filter((item) => item.food_details)}
+        restaurantId={restaurantId}
       />
     </div>
   );

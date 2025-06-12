@@ -164,13 +164,27 @@ const AddressSection = ({
             <input
               type="text"
               className="form-control"
-              placeholder="Address"
+              placeholder="Street Address"
               name="address"
               value={formData.address}
               onChange={handleInputChange}
               required={formData.orderType === "delivery"}
             />
-            <div className="invalid-feedback">Please provide your address.</div>
+            <div className="invalid-feedback">
+              Please provide your street address.
+            </div>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="mb-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Apartment/Suite/Unit # (Optional)"
+              name="apartmentUnit"
+              value={formData.apartmentUnit || ""}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
         <div className="col-md-6">

@@ -2,10 +2,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import StarRating from "@/components/common/StarRating";
 import ProductDetailsModal from "./ProductDetailsModal";
+import RestaurantClosedTip from "@/components/common/RestaurantClosedTip";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/store/services/cartService";
 import { getAllProducts } from "@/store/services/productService";
 import SafeImage from "@/components/common/SafeImage";
+import { useRestaurantStatus } from "@/utils/restaurantUtils";
 
 const PopularDishesSlider = ({
   products: initialProducts,
@@ -16,9 +18,11 @@ const PopularDishesSlider = ({
   initialLimit = 200,
   totalProducts = 0,
   onProductCountUpdate,
+  restaurantDetails,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showClosedTip, setShowClosedTip] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -34,6 +38,7 @@ const PopularDishesSlider = ({
   const initializedRef = useRef(false);
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth || { token: null });
+  const restaurantStatus = useRestaurantStatus(restaurantDetails);
 
   useEffect(() => {
     currentPageRef.current = currentPage;
@@ -210,6 +215,11 @@ const PopularDishesSlider = ({
   );
 
   const openProductModal = (product) => {
+    if (restaurantStatus && !restaurantStatus.isOpen) {
+      setShowClosedTip(true);
+      return;
+    }
+
     setSelectedProduct(product);
     setShowModal(true);
   };
@@ -217,6 +227,11 @@ const PopularDishesSlider = ({
   const handleAddToCart = (e, product) => {
     if (e && e.stopPropagation) {
       e.stopPropagation();
+    }
+
+    if (restaurantStatus && !restaurantStatus.isOpen) {
+      setShowClosedTip(true);
+      return;
     }
 
     const isFromModal = e === null;
@@ -299,10 +314,17 @@ const PopularDishesSlider = ({
                       ${parseFloat(product.price).toFixed(2)}
                     </div>
                     <button
-                      className="btn btn-sm btn-primary rounded-circle add-to-cart-btn"
+                      className={`btn btn-sm rounded-circle add-to-cart-btn ${
+                        restaurantStatus && !restaurantStatus.isOpen
+                          ? "btn-secondary"
+                          : "btn-primary"
+                      }`}
                       onClick={(e) => handleAddToCart(e, product)}
+                      disabled={restaurantStatus && !restaurantStatus.isOpen}
                       title={
-                        product.variations && product.variations.length > 0
+                        restaurantStatus && !restaurantStatus.isOpen
+                          ? "Restaurant is closed"
+                          : product.variations && product.variations.length > 0
                           ? "Click to choose options"
                           : "Add to cart"
                       }
@@ -404,6 +426,14 @@ const PopularDishesSlider = ({
         onHide={() => setShowModal(false)}
         product={selectedProduct}
         onAddToCart={handleAddToCart}
+        restaurantDetails={restaurantDetails}
+      />
+
+      <RestaurantClosedTip
+        show={showClosedTip}
+        onClose={() => setShowClosedTip(false)}
+        restaurantStatus={restaurantStatus}
+        restaurantName={restaurantDetails?.name}
       />
 
       <style jsx>{`

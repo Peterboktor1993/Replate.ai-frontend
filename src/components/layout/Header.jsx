@@ -1,20 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AuthModals from "@/components/auth/AuthModals";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { logout } from "@/store/slices/authSlice";
 import SafeImage from "../common/SafeImage";
+import RestaurantStatus from "../common/RestaurantStatus";
 
 const Header = ({ details }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const { token, user } = useSelector((state) => state.auth || {});
   const dispatch = useDispatch();
+  const router = useRouter();
 
   useEffect(() => {
     const ensureUserData = async () => {
@@ -34,6 +39,40 @@ const Header = ({ details }) => {
     ensureUserData();
   }, [token, user, dispatch]);
 
+  useEffect(() => {
+    if (token && typeof window !== "undefined") {
+      import("bootstrap")
+        .then((bootstrap) => {
+          const dropdownElement = dropdownRef.current;
+          if (dropdownElement) {
+            new bootstrap.Dropdown(dropdownElement);
+          }
+        })
+        .catch((err) => {
+          console.log("Bootstrap not available, using manual dropdown");
+        });
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.parentElement.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
   const handleLogin = () => {
     setAuthMode("login");
     setShowAuthModal(true);
@@ -45,7 +84,18 @@ const Header = ({ details }) => {
   };
 
   const handleLogout = () => {
+    setDropdownOpen(false);
     dispatch(logout());
+
+    router.push(`/?restaurant=${details?.id || 2}`);
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const closeDropdown = () => {
+    setDropdownOpen(false);
   };
 
   return (
@@ -71,11 +121,19 @@ const Header = ({ details }) => {
                       alt={details?.name}
                       width={60}
                       height={60}
-                      className="me-2 w-100"
+                      className="me-3 w-100"
                     />
                   )}
                 </div>
               </Link>
+
+              {/* Restaurant Status */}
+              {details.status !== 1 ||
+                (details.active === false && (
+                  <div className="d-flex flex-column">
+                    <RestaurantStatus restaurant={details} />
+                  </div>
+                ))}
             </div>
 
             {/* Auth Section */}
@@ -98,13 +156,14 @@ const Header = ({ details }) => {
                   </button>
                 </div>
               ) : (
-                <div className="dropdown">
+                <div className="dropdown position-relative">
                   <button
+                    ref={dropdownRef}
                     className="btn btn-primary dropdown-toggle user-dropdown-btn"
                     type="button"
                     id="dropdownMenuButton"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
+                    onClick={toggleDropdown}
+                    aria-expanded={dropdownOpen}
                   >
                     <i className="fas fa-user-circle me-1 me-sm-2"></i>
                     <span className="user-name d-none d-sm-inline">
@@ -123,12 +182,33 @@ const Header = ({ details }) => {
                     </span>
                   </button>
                   <ul
-                    className="dropdown-menu dropdown-menu-end shadow border-0 user-dropdown"
+                    className={`dropdown-menu dropdown-menu-end shadow border-0 user-dropdown ${
+                      dropdownOpen ? "show" : ""
+                    }`}
                     aria-labelledby="dropdownMenuButton"
+                    style={{
+                      position: "absolute",
+                      right: "0",
+                      left: "auto",
+                      transform: "none",
+                      minWidth: "250px",
+                      maxWidth: "300px",
+                    }}
                   >
                     <li className="px-3 py-2 d-flex align-items-center user-info">
                       <div className="rounded-circle bg-primary text-white p-2 me-2 user-avatar">
-                        {isLoadingProfile ? (
+                        {user?.image_full_url ? (
+                          <img
+                            src={user.image_full_url}
+                            alt="Profile"
+                            className="rounded-circle"
+                            style={{
+                              width: "31px",
+                              height: "31px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : isLoadingProfile ? (
                           <div
                             className="spinner-border spinner-border-sm text-white"
                             role="status"
@@ -168,6 +248,7 @@ const Header = ({ details }) => {
                       <Link
                         href={`/profile?restaurant=${details?.id}`}
                         className="dropdown-item py-2"
+                        onClick={closeDropdown}
                       >
                         <i className="fas fa-user me-2 text-primary"></i>
                         Profile
@@ -177,6 +258,7 @@ const Header = ({ details }) => {
                       <Link
                         href={`/orders?restaurant=${details?.id}`}
                         className="dropdown-item py-2"
+                        onClick={closeDropdown}
                       >
                         <i className="fas fa-shopping-bag me-2 text-primary"></i>
                         My Orders
@@ -242,9 +324,11 @@ const Header = ({ details }) => {
         }
 
         .user-dropdown {
-          min-width: 250px;
           border-radius: 12px;
           overflow: hidden;
+          right: 0 !important;
+          left: auto !important;
+          transform: none !important;
         }
 
         .user-info {
@@ -297,7 +381,10 @@ const Header = ({ details }) => {
 
           .user-dropdown {
             min-width: 220px;
-            margin-right: -10px;
+            right: 0 !important;
+            left: auto !important;
+            margin-right: 0;
+            max-width: calc(100vw - 20px);
           }
 
           .user-avatar {

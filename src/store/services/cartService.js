@@ -281,15 +281,25 @@ export const removeItemFromCart =
         payload.guest_id = guestId;
       }
 
+      console.log("🗑️ Removing cart item:", {
+        cartId,
+        token: !!token,
+        payload,
+      });
+
       const config = {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         data: payload,
       };
 
-      const response = await axiosInstance.delete(
-        `${CART_URL}/remove-item`,
-        config
-      );
+      console.log("🗑️ Request config:", config);
+
+      const response = await axiosInstance.delete(`${CART_URL}/remove`, config);
+
+      console.log("🗑️ Remove item response:", response);
 
       if (response.status == 200) {
         dispatch(removeCartItem(cartId));
@@ -307,6 +317,8 @@ export const removeItemFromCart =
         );
       }
     } catch (error) {
+      console.error("🗑️ Remove item error:", error);
+      console.error("🗑️ Error response:", error.response?.data);
       const errorMessage = handleErrorMessage(error);
       dispatch(setCartError(errorMessage));
       dispatch(
@@ -340,7 +352,10 @@ export const clearCartItems =
       }
 
       const config = {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         data: payload,
       };
 
