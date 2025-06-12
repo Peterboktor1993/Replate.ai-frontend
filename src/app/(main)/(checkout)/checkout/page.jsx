@@ -10,7 +10,6 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { generateGuestId } from "@/utils/guestOrderHandling";
 
-// Import components
 import DeliveryOptions from "@/components/checkout/DeliveryOptions";
 import AddressSection from "@/components/checkout/AddressSection";
 import AddAddressModal from "@/components/checkout/AddAddressModal";
@@ -128,6 +127,11 @@ const IncompletePaymentCard = ({
   };
 
   const amount = getAmount();
+  const router = useRouter();
+
+  const restaurantParam =
+    restaurant?.id || restaurant?.restaurant_id || restaurant || "";
+  const homeUrl = `/?restaurant=${restaurantParam}`;
 
   return (
     <div className="card shadow-sm mb-4">
@@ -195,10 +199,31 @@ const IncompletePaymentCard = ({
           </div>
         </div>
 
-        <div className="d-grid gap-3">
-          <button className="btn btn-primary btn-lg" onClick={onRetryPayment}>
+        <div className="d-flex gap-2 flex-wrap justify-content-between">
+          <button
+            className="btn btn-primary btn-lg flex-fill"
+            onClick={onRetryPayment}
+          >
             <i className="fas fa-credit-card me-2"></i>
             Complete Payment Now
+          </button>
+          <button
+            className="btn btn-outline-secondary btn-lg flex-fill"
+            onClick={() =>
+              router && router.push
+                ? router.push(homeUrl)
+                : (window.location.href = homeUrl)
+            }
+          >
+            <i className="fas fa-home me-2"></i>
+            Back to Home
+          </button>
+          <button
+            className="btn btn-outline-danger btn-lg flex-fill"
+            onClick={onCancelPayment}
+          >
+            <i className="fas fa-trash me-2"></i>
+            Cancel Order
           </button>
         </div>
       </div>
@@ -596,7 +621,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
 
           const finalAmount =
             preservedOrderAmount ||
-            orderInfo.amount ||
             orderInfo.calculatedAmount ||
             getCurrentTotal();
 
@@ -651,9 +675,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
                 const orderInfo = JSON.parse(lastOrderInfo);
 
                 const finalAmount =
-                  preservedOrderAmount ||
-                  orderInfo.amount ||
-                  orderInfo.calculatedAmount;
+                  preservedOrderAmount || orderInfo.calculatedAmount;
 
                 const incompletePaymentData = {
                   orderId: orderInfo.orderId,
@@ -1845,6 +1867,8 @@ const CheckoutPage = ({ restaurantDetails }) => {
                         touched,
                         isValid,
                         dirty,
+                        submitForm,
+                        isSubmitting,
                       }) => {
                         React.useEffect(() => {
                           if (
@@ -1854,6 +1878,34 @@ const CheckoutPage = ({ restaurantDetails }) => {
                             updateCurrentFormValues(values);
                           }
                         }, [values]);
+
+                        React.useEffect(() => {
+                          if (
+                            Object.keys(errors).length > 0 &&
+                            Object.keys(touched).length > 0
+                          ) {
+                            const firstErrorField = Object.keys(errors)[0];
+                            const errorElement = document.querySelector(
+                              `[name="${firstErrorField}"]`
+                            );
+                            if (errorElement) {
+                              errorElement.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              errorElement.focus();
+                              errorElement.classList.add("is-invalid");
+                              errorElement.style.borderColor = "#dc3545";
+                              errorElement.style.boxShadow =
+                                "0 0 0 0.25rem rgba(220, 53, 69, 0.25)";
+
+                              setTimeout(() => {
+                                errorElement.style.borderColor = "";
+                                errorElement.style.boxShadow = "";
+                              }, 2000);
+                            }
+                          }
+                        }, [errors, touched]);
 
                         const handleFormAddressSelection = (address) => {
                           setSelectedAddress(address);
