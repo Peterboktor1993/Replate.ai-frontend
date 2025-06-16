@@ -17,6 +17,8 @@ import OrderNote from "@/components/checkout/OrderNote";
 import CartSummary from "@/components/checkout/CartSummary";
 import UserInfoBanner from "@/components/checkout/UserInfoBanner";
 import TermsAgreement from "@/components/checkout/TermsAgreement";
+import IncompletePaymentHandler from "@/components/checkout/IncompletePaymentHandler";
+import { calculateCouponDiscount } from "@/store/services/couponService";
 
 const PaymentMethodSelector = ({ value, onChange, disabled }) => {
   return (
@@ -107,195 +109,6 @@ const tipPresets = [
   { value: 20, label: "20%" },
 ];
 
-const IncompletePaymentCard = ({
-  incompletePayment,
-  onRetryPayment,
-  onCancelPayment,
-  currency = "USD",
-  restaurant,
-}) => {
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
-
-  const getAmount = () => {
-    if (!incompletePayment?.amount && incompletePayment?.amount !== 0) {
-      return 0;
-    }
-    return parseFloat(incompletePayment.amount) || 0;
-  };
-
-  const amount = getAmount();
-  const router = useRouter();
-
-  const restaurantParam =
-    restaurant?.id || restaurant?.restaurant_id || restaurant || "";
-  const homeUrl = `/?restaurant=${restaurantParam}`;
-
-  return (
-    <div className="card shadow-sm mb-4">
-      <div className="card-header bg-primary text-white py-3 d-flex align-items-center">
-        <i className="fas fa-exclamation-circle me-2 fs-4"></i>
-        <h5 className="mb-0">Payment Required</h5>
-      </div>
-      <div className="card-body p-4">
-        <div className="d-flex align-items-center mb-4">
-          <div className="flex-shrink-0">
-            <div className="bg-light rounded p-3">
-              <i className="fa-regular fa-credit-card fs-1 text-primary"></i>
-            </div>
-          </div>
-          <div className="ms-3">
-            <h5 className="mb-1">
-              Order #{incompletePayment?.orderId || "N/A"}
-            </h5>
-            <p className="text-muted mb-0">
-              Created on{" "}
-              {incompletePayment?.timestamp
-                ? formatDate(incompletePayment.timestamp)
-                : "Unknown"}
-            </p>
-            <div className="mt-2">
-              <span className="badge bg-warning text-dark">
-                Payment Pending
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="alert alert-info mb-4 d-flex">
-          <i className="fas fa-info-circle me-2 fs-5 mt-1"></i>
-          <div>
-            <p className="mb-1 fw-bold">
-              Your order has been placed but payment is incomplete.
-            </p>
-            <p className="mb-0">
-              Your items are reserved, but won't be processed until payment is
-              complete.
-            </p>
-          </div>
-        </div>
-
-        <div className="card bg-light mb-4">
-          <div className="card-body">
-            <h6 className="mb-3">Order Summary</h6>
-            <div className="d-flex justify-content-between mb-2">
-              <span>Order ID:</span>
-              <span className="fw-bold">
-                #{incompletePayment?.orderId || "N/A"}
-              </span>
-            </div>
-            <div className="d-flex justify-content-between mb-2">
-              <span>Status:</span>
-              <span className="text-warning fw-bold">Payment Pending</span>
-            </div>
-            <div className="d-flex justify-content-between border-top pt-2 mt-2">
-              <span className="text-dark fw-bold">Amount Due:</span>
-              <span className="text-primary fs-5 fw-bold">
-                {currency} {amount.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="d-flex gap-2 flex-wrap justify-content-between">
-          <button
-            className="btn btn-primary btn-lg flex-fill"
-            onClick={onRetryPayment}
-          >
-            <i className="fas fa-credit-card me-2"></i>
-            Complete Payment Now
-          </button>
-          <button
-            className="btn btn-outline-secondary btn-lg flex-fill"
-            onClick={() =>
-              router && router.push
-                ? router.push(homeUrl)
-                : (window.location.href = homeUrl)
-            }
-          >
-            <i className="fas fa-home me-2"></i>
-            Back to Home
-          </button>
-          <button
-            className="btn btn-outline-danger btn-lg flex-fill"
-            onClick={onCancelPayment}
-          >
-            <i className="fas fa-trash me-2"></i>
-            Cancel Order
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const IncompletePaymentBanner = ({
-  incompletePayment,
-  onRetryPayment,
-  onDismiss,
-  onCancel,
-  currency = "USD",
-}) => {
-  const getAmount = () => {
-    if (!incompletePayment?.amount && incompletePayment?.amount !== 0) {
-      return 0;
-    }
-    return parseFloat(incompletePayment.amount) || 0;
-  };
-
-  const amount = getAmount();
-
-  return (
-    <div className="alert alert-warning border border-warning mb-4 position-relative incomplete-payment-banner">
-      <button
-        type="button"
-        className="btn-close position-absolute top-0 end-0 mt-2 me-2"
-        onClick={onDismiss}
-        aria-label="Dismiss"
-        style={{ fontSize: "0.8rem" }}
-      ></button>
-
-      <div className="d-flex align-items-center">
-        <div className="flex-shrink-0 me-3">
-          <i className="fas fa-exclamation-triangle fs-4 text-warning"></i>
-        </div>
-        <div className="flex-grow-1">
-          <h6 className="alert-heading mb-1">
-            <strong>Incomplete Payment Detected</strong>
-          </h6>
-          <p className="mb-2">
-            You have an incomplete payment for Order #
-            {incompletePayment?.orderId || "N/A"}({currency} {amount.toFixed(2)}
-            ) that needs to be completed.
-          </p>
-          <div className="d-flex gap-2 flex-wrap">
-            <button className="btn btn-warning btn-sm" onClick={onRetryPayment}>
-              <i className="fas fa-credit-card me-1"></i>
-              Complete Payment Now
-            </button>
-            <button
-              className="btn btn-outline-secondary btn-sm"
-              onClick={onDismiss}
-            >
-              <i className="fas fa-times me-1"></i>
-              Continue Shopping
-            </button>
-            <button
-              className="btn btn-outline-danger btn-sm"
-              onClick={onCancel}
-            >
-              <i className="fas fa-trash me-1"></i>
-              Cancel Order
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const CheckoutPage = ({ restaurantDetails }) => {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -312,13 +125,12 @@ const CheckoutPage = ({ restaurantDetails }) => {
   const [customTip, setCustomTip] = useState(false);
   const [customTipAmount, setCustomTipAmount] = useState(0);
   const [currency] = useState("USD");
-  const [paymentMethod, setPaymentMethod] = useState("cash_on_delivery");
+  const [paymentMethod, setPaymentMethod] = useState("Stripe");
 
   const [processing, setProcessing] = useState(false);
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false);
   const [popupRef, setPopupRef] = useState(null);
-  const [incompletePayment, setIncompletePayment] = useState(null);
-  const [showIncompletePayment, setShowIncompletePayment] = useState(false);
+  const [paymentSuccessful, setPaymentSuccessful] = useState(false);
   const [preservedFormValues, setPreservedFormValues] = useState(null);
   const [preservedCartItems, setPreservedCartItems] = useState([]);
   const [preservedOrderAmount, setPreservedOrderAmount] = useState(0);
@@ -359,9 +171,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const [showIncompletePaymentBanner, setShowIncompletePaymentBanner] =
-    useState(false);
-
   const [profileData, setProfileData] = useState(null);
   const [hasCompleteProfile, setHasCompleteProfile] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -371,6 +180,8 @@ const CheckoutPage = ({ restaurantDetails }) => {
   const [redirectCountdown, setRedirectCountdown] = useState(10);
 
   const [autoSelectFirstAddress, setAutoSelectFirstAddress] = useState(null);
+
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
@@ -401,41 +212,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
     };
 
     fetchCart();
-  }, []);
-
-  useEffect(() => {
-    const checkForIncompletePayments = async () => {
-      try {
-        const savedIncompletePayment =
-          localStorage.getItem("incompletePayment");
-        if (savedIncompletePayment) {
-          const parsedPayment = JSON.parse(savedIncompletePayment);
-
-          if (
-            parsedPayment.orderId &&
-            (parsedPayment.status === "payment_pending" ||
-              !parsedPayment.status)
-          ) {
-            setIncompletePayment(parsedPayment);
-
-            if (parsedPayment.orderData) {
-              setPreservedOrderAmount(parsedPayment.amount || 0);
-            }
-
-            if (cartItems.length === 0) {
-              setShowIncompletePayment(true);
-            } else {
-              setShowIncompletePaymentBanner(true);
-            }
-          }
-        } else if (cartItems.length === 0 && token) {
-        }
-      } catch (error) {
-        console.error("Error loading incomplete payment:", error);
-      }
-    };
-
-    checkForIncompletePayments();
   }, []);
 
   useEffect(() => {
@@ -578,6 +354,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
       const { status, message, orderId } = event.data || {};
 
       if (status === "success") {
+        setPaymentSuccessful(true);
         setProcessing(false);
         setPaymentPopupOpen(false);
 
@@ -587,18 +364,22 @@ const CheckoutPage = ({ restaurantDetails }) => {
           popupRef.close();
         }
 
-        router.push(`/checkout-status?order_id=${orderId}`);
+        if (window.incompletePaymentHandler) {
+          window.incompletePaymentHandler.clearIncompletePayment();
+        }
 
-        dispatch(
-          addToast({
-            show: true,
-            title: "Payment Successful",
-            message: "Your order has been placed successfully!",
-            type: "success",
-          })
-        );
+        localStorage.removeItem("lastOrderInfo");
 
-        localStorage.removeItem("incompletePayment");
+        setSuccessOrderData({
+          orderId: orderId || "N/A",
+          orderAmount: preservedOrderAmount || 0,
+          currency: currency,
+          paymentMethod: "Credit/Debit Card",
+          restaurantId: restaurant,
+        });
+
+        setRedirectCountdown(5);
+        setShowSuccessModal(true);
       } else if (status === "failed" || status === "error") {
         setProcessing(false);
         setPaymentPopupOpen(false);
@@ -611,32 +392,24 @@ const CheckoutPage = ({ restaurantDetails }) => {
         if (lastOrderInfo) {
           const orderInfo = JSON.parse(lastOrderInfo);
 
-          const getCurrentTotal = useCallback(() => {
-            const items = getCurrentCartItems();
-            if (items.length === 0) {
-              return preservedOrderAmount || 0;
-            }
-            return calculateTotal();
-          }, [getCurrentCartItems, preservedOrderAmount, calculateTotal]);
-
           const finalAmount =
             preservedOrderAmount ||
             orderInfo.calculatedAmount ||
-            getCurrentTotal();
+            orderInfo.amount;
 
           const incompletePaymentData = {
             orderId: orderInfo.orderId,
             amount: finalAmount,
             timestamp: new Date().toISOString(),
-            orderData: incompletePayment?.orderData || null,
+            orderData: orderInfo.orderData || null,
+            status: "payment_pending",
           };
 
-          localStorage.setItem(
-            "incompletePayment",
-            JSON.stringify(incompletePaymentData)
-          );
-          setIncompletePayment(incompletePaymentData);
-          setShowIncompletePayment(true);
+          if (window.incompletePaymentHandler) {
+            window.incompletePaymentHandler.saveIncompletePayment(
+              incompletePaymentData
+            );
+          }
         }
 
         swal({
@@ -649,14 +422,37 @@ const CheckoutPage = ({ restaurantDetails }) => {
       }
     };
 
+    const checkPopupForSuccess = () => {
+      if (popupRef && !popupRef.closed) {
+        try {
+          const popupUrl = popupRef.location.href;
+          if (popupUrl && popupUrl.includes("status=success")) {
+            const urlParams = new URLSearchParams(popupUrl.split("?")[1]);
+            const orderId = urlParams.get("order_id");
+
+            handlePaymentMessage({ data: { status: "success", orderId } });
+            return true;
+          }
+        } catch (error) {
+          // do nothing
+        }
+      }
+      return false;
+    };
+
+    window.addEventListener("message", handlePaymentMessage);
+
+    window.checkPopupForSuccess = checkPopupForSuccess;
+
     return () => {
       window.removeEventListener("message", handlePaymentMessage);
+      delete window.checkPopupForSuccess;
 
       if (popupRef && !popupRef.closed) {
         popupRef.close();
       }
     };
-  }, [dispatch, router, popupRef, preservedOrderAmount, incompletePayment]);
+  }, [dispatch, router, popupRef, preservedOrderAmount]);
 
   useEffect(() => {
     let checkInterval;
@@ -669,40 +465,51 @@ const CheckoutPage = ({ restaurantDetails }) => {
             setProcessing(false);
             clearInterval(checkInterval);
 
-            const lastOrderInfo = localStorage.getItem("lastOrderInfo");
-            if (lastOrderInfo) {
-              try {
-                const orderInfo = JSON.parse(lastOrderInfo);
-
-                const finalAmount =
-                  preservedOrderAmount || orderInfo.calculatedAmount;
-
-                const incompletePaymentData = {
-                  orderId: orderInfo.orderId,
-                  amount: finalAmount,
-                  timestamp: new Date().toISOString(),
-                  orderData: incompletePayment?.orderData || null,
-                };
-
-                localStorage.setItem(
-                  "incompletePayment",
-                  JSON.stringify(incompletePaymentData)
-                );
-                setIncompletePayment(incompletePaymentData);
-                setShowIncompletePayment(true);
-
-                dispatch(
-                  addToast({
-                    show: true,
-                    title: "Payment Incomplete",
-                    message:
-                      "Your payment process was interrupted. You can complete it now.",
-                    type: "warning",
-                  })
-                );
-              } catch (error) {
-                console.error("Error handling closed popup:", error);
+            setTimeout(() => {
+              if (paymentSuccessful) {
+                return;
               }
+
+              const lastOrderInfo = localStorage.getItem("lastOrderInfo");
+
+              if (lastOrderInfo) {
+                try {
+                  const orderInfo = JSON.parse(lastOrderInfo);
+
+                  const finalAmount =
+                    preservedOrderAmount || orderInfo.calculatedAmount;
+
+                  const incompletePaymentData = {
+                    orderId: orderInfo.orderId,
+                    amount: finalAmount,
+                    timestamp: new Date().toISOString(),
+                    orderData: orderInfo.orderData || null,
+                    status: "payment_pending",
+                  };
+
+                  if (window.incompletePaymentHandler) {
+                    window.incompletePaymentHandler.saveIncompletePayment(
+                      incompletePaymentData
+                    );
+                  }
+
+                  dispatch(
+                    addToast({
+                      show: true,
+                      title: "Payment Incomplete",
+                      message:
+                        "Your payment process was interrupted. You can complete it now.",
+                      type: "warning",
+                    })
+                  );
+                } catch (error) {
+                  console.error("Error handling closed popup:", error);
+                }
+              }
+            }, 1500);
+          } else if (popupRef && !popupRef.closed) {
+            if (window.checkPopupForSuccess && window.checkPopupForSuccess()) {
+              clearInterval(checkInterval);
             }
           }
         }, 1000);
@@ -726,7 +533,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
     popupRef,
     dispatch,
     preservedOrderAmount,
-    incompletePayment,
+    paymentSuccessful,
   ]);
 
   useEffect(() => {
@@ -765,9 +572,8 @@ const CheckoutPage = ({ restaurantDetails }) => {
 
   const handleCustomTipChange = (e) => {
     const value = e.target.value;
-    if (!isNaN(value) && parseFloat(value) >= 0) {
-      setCustomTipAmount(value === "" ? 0 : parseFloat(value));
-    }
+
+    setCustomTipAmount(value);
   };
 
   const getCurrentCartItems = useCallback(() => {
@@ -846,14 +652,25 @@ const CheckoutPage = ({ restaurantDetails }) => {
       ? parseFloat(restaurantDetails.comission)
       : 0;
 
+    const couponDiscount = appliedCoupon
+      ? calculateCouponDiscount(appliedCoupon, subtotal)
+      : 0;
+
     return (
-      subtotal + tax - discount + deliveryFee + restaurantTax + serviceFees
+      subtotal +
+      tax -
+      discount +
+      deliveryFee +
+      restaurantTax +
+      serviceFees -
+      couponDiscount
     );
   }, [
     calculateSubtotal,
     calculateTotalTax,
     calculateTotalDiscount,
     restaurantDetails,
+    appliedCoupon,
   ]);
 
   const calculateOrderAmount = useCallback(() => {
@@ -1115,8 +932,10 @@ const CheckoutPage = ({ restaurantDetails }) => {
           !isNaN(parseFloat(restaurantDetails.delivery_fee))
             ? parseFloat(restaurantDetails.delivery_fee)
             : 0,
-        coupon_discount_amount: 0,
-        coupon_code: null,
+        coupon_discount_amount: appliedCoupon
+          ? calculateCouponDiscount(appliedCoupon, calculateSubtotal())
+          : 0,
+        coupon_code: appliedCoupon?.code || null,
         dm_tips: customTip
           ? customTipAmount
           : (calculateSubtotal() * tipPercentage) / 100,
@@ -1168,12 +987,14 @@ const CheckoutPage = ({ restaurantDetails }) => {
             timestamp: new Date().toISOString(),
             orderData: orderData,
             status: "payment_pending",
+            restaurantId: restaurant,
           };
 
-          localStorage.setItem(
-            "pendingOrderData",
-            JSON.stringify(pendingOrderData)
-          );
+          if (window.incompletePaymentHandler) {
+            window.incompletePaymentHandler.saveIncompletePayment(
+              pendingOrderData
+            );
+          }
 
           const callback = `${window.location.origin}/checkout-status?order_id=${orderId}`;
           const response = await fetch(
@@ -1220,6 +1041,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
           }
 
           setPaymentPopupOpen(true);
+          setPaymentSuccessful(false);
 
           setTimeout(() => {
             setPopupRef(popup);
@@ -1268,13 +1090,13 @@ const CheckoutPage = ({ restaurantDetails }) => {
     }
   };
 
-  const handleRetryPayment = async () => {
-    if (!incompletePayment) return;
+  const handleRetryPayment = async (incompletePaymentData) => {
+    if (!incompletePaymentData) return;
 
     try {
       setProcessing(true);
 
-      const orderId = incompletePayment.orderId;
+      const orderId = incompletePaymentData.orderId;
       const userId = user?.id || guestId || generateGuestId();
       const callback = `${window.location.origin}/checkout-status?order_id=${orderId}`;
 
@@ -1306,7 +1128,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
         JSON.stringify({
           orderId: data.order_id,
           amount: data.total_ammount || totalAmount,
-          orderData: incompletePayment.orderData,
+          orderData: incompletePaymentData.orderData,
           calculatedAmount: totalAmount,
         })
       );
@@ -1331,6 +1153,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
       }
 
       setPaymentPopupOpen(true);
+      setPaymentSuccessful(false);
 
       setTimeout(() => {
         setPopupRef(popup);
@@ -1352,25 +1175,15 @@ const CheckoutPage = ({ restaurantDetails }) => {
   };
 
   const handleCancelIncompletePayment = () => {
-    localStorage.removeItem("incompletePayment");
-    setIncompletePayment(null);
-    setShowIncompletePayment(false);
-    setShowIncompletePaymentBanner(false);
     clearPreservedData();
-
-    dispatch(
-      addToast({
-        show: true,
-        title: "Order Cancelled",
-        message:
-          "Your incomplete order has been cancelled. You can start a new order.",
-        type: "info",
-      })
-    );
   };
 
-  const dismissIncompleteBanner = () => {
-    setShowIncompletePaymentBanner(false);
+  const handleCouponApplied = (coupon) => {
+    setAppliedCoupon(coupon);
+  };
+
+  const handleCouponRemoved = () => {
+    setAppliedCoupon(null);
   };
 
   const hasValidCartItems = () => {
@@ -1712,6 +1525,58 @@ const CheckoutPage = ({ restaurantDetails }) => {
           border-color: #ffc107;
           background-color: rgba(255, 193, 7, 0.1);
         }
+
+        /* Coupon Section Styles */
+        .coupon-section .applied-coupon-card {
+          animation: slideInDown 0.3s ease-out;
+        }
+
+        .coupon-section .coupon-input-form {
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        .coupon-section .coupon-icon {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .coupon-section .btn-outline-primary:hover {
+          transform: translateY(-1px);
+          transition: all 0.2s ease;
+        }
+
+        .coupon-section .card.border-success {
+          border-width: 2px !important;
+          box-shadow: 0 2px 8px rgba(25, 135, 84, 0.15);
+        }
+
+        .coupon-section .input-group .form-control:focus {
+          border-color: #0d6efd;
+          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
       `}</style>
 
       {/* Payment Processing Overlay */}
@@ -1737,61 +1602,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
 
       {processing && <div className="checkout-processing-overlay" />}
 
-      {cartItems.length === 0 &&
-        incompletePayment &&
-        !showIncompletePayment && (
-          <div className="pending-payment-alert">
-            <h4>
-              <i className="fas fa-exclamation-triangle me-2"></i>Payment
-              Required for Recent Order
-            </h4>
-            <p>
-              You have a recent order that requires payment. Complete your
-              payment to process your order.
-            </p>
-
-            <div className="pending-order-card mt-3">
-              <div className="pending-order-header d-flex justify-content-between align-items-center">
-                <div>
-                  <strong>Order #{incompletePayment.orderId}</strong>
-                  <span className="ms-3 badge bg-warning text-dark">
-                    Payment Pending
-                  </span>
-                </div>
-                <div>
-                  Amount:{" "}
-                  <strong className="text-primary">
-                    {currency} {incompletePayment.amount.toFixed(2)}
-                  </strong>
-                </div>
-              </div>
-              <div className="pending-order-body d-flex justify-content-between align-items-center">
-                <div>
-                  <p className="mb-1">
-                    Your order has been placed but payment wasn't completed.
-                  </p>
-                  <p className="text-muted mb-0 small">
-                    Order placed on{" "}
-                    {new Date(incompletePayment.timestamp).toLocaleDateString()}{" "}
-                    at{" "}
-                    {new Date(incompletePayment.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-                <div>
-                  <button
-                    className="btn btn-primary payment-action-btn"
-                    onClick={() => handleRetryPayment()}
-                    disabled={processing}
-                  >
-                    <i className="fas fa-credit-card me-2"></i>
-                    {processing ? "Processing..." : "Pay Now"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
       <div className="row">
         <div className="col-xl-12">
           <div className="card">
@@ -1799,348 +1609,319 @@ const CheckoutPage = ({ restaurantDetails }) => {
               {/* User Info Banner */}
               <UserInfoBanner user={user} />
 
-              {/* Incomplete Payment Banner */}
-              {showIncompletePaymentBanner && incompletePayment && (
-                <IncompletePaymentBanner
-                  incompletePayment={incompletePayment}
-                  onRetryPayment={handleRetryPayment}
-                  onDismiss={dismissIncompleteBanner}
-                  onCancel={handleCancelIncompletePayment}
-                  currency={currency}
-                />
-              )}
+              {/* Incomplete Payment Handler */}
+              <IncompletePaymentHandler
+                restaurantId={restaurant}
+                cartItems={cartItems}
+                token={token}
+                user={user}
+                guestId={guestId}
+                onRetryPayment={handleRetryPayment}
+                onCancelPayment={handleCancelIncompletePayment}
+                currency={currency}
+                restaurant={restaurantDetails}
+                processing={processing}
+              />
 
-              {/* Small Incomplete Payment Reminder */}
-              {!showIncompletePaymentBanner &&
-                incompletePayment &&
-                !showIncompletePayment && (
-                  <div className="alert alert-warning alert-dismissible fade show py-2 mb-3 incomplete-reminder">
-                    <small>
-                      <i className="fas fa-exclamation-circle me-1"></i>
-                      <strong>Reminder:</strong> You have an incomplete payment
-                      of {currency}{" "}
-                      {(incompletePayment?.amount || 0).toFixed(2)}.
-                      <button
-                        className="btn btn-link btn-sm p-0 ms-2"
-                        onClick={() => setShowIncompletePaymentBanner(true)}
-                      >
-                        Show Details
-                      </button>
-                    </small>
-                    <button
-                      type="button"
-                      className="btn-close"
-                      onClick={handleCancelIncompletePayment}
-                      aria-label="Close"
-                      style={{ fontSize: "0.7rem" }}
-                    ></button>
-                  </div>
-                )}
+              <div className="row">
+                <div className="col-xl-8">
+                  <Formik
+                    initialValues={getInitialValues()}
+                    enableReinitialize
+                    validationSchema={validationSchema}
+                    onSubmit={handleSubmit}
+                  >
+                    {({
+                      values,
+                      handleChange,
+                      handleBlur,
+                      setFieldValue,
+                      errors,
+                      touched,
+                      isValid,
+                      dirty,
+                      submitForm,
+                      isSubmitting,
+                    }) => {
+                      React.useEffect(() => {
+                        if (
+                          JSON.stringify(values) !==
+                          JSON.stringify(currentFormValues)
+                        ) {
+                          updateCurrentFormValues(values);
+                        }
+                      }, [values]);
 
-              {showIncompletePayment && incompletePayment ? (
-                <div className="row">
-                  <div className="col-md-8 mx-auto">
-                    <IncompletePaymentCard
-                      incompletePayment={incompletePayment}
-                      onRetryPayment={handleRetryPayment}
-                      onCancelPayment={handleCancelIncompletePayment}
-                      currency={currency}
-                      restaurant={restaurantDetails}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="row">
-                  <div className="col-xl-8">
-                    <Formik
-                      initialValues={getInitialValues()}
-                      enableReinitialize
-                      validationSchema={validationSchema}
-                      onSubmit={handleSubmit}
-                    >
-                      {({
-                        values,
-                        handleChange,
-                        handleBlur,
-                        setFieldValue,
-                        errors,
-                        touched,
-                        isValid,
-                        dirty,
-                        submitForm,
-                        isSubmitting,
-                      }) => {
-                        React.useEffect(() => {
-                          if (
-                            JSON.stringify(values) !==
-                            JSON.stringify(currentFormValues)
-                          ) {
-                            updateCurrentFormValues(values);
-                          }
-                        }, [values]);
-
-                        React.useEffect(() => {
-                          if (
-                            Object.keys(errors).length > 0 &&
-                            Object.keys(touched).length > 0
-                          ) {
-                            const firstErrorField = Object.keys(errors)[0];
-                            const errorElement = document.querySelector(
-                              `[name="${firstErrorField}"]`
-                            );
-                            if (errorElement) {
-                              errorElement.scrollIntoView({
-                                behavior: "smooth",
-                                block: "center",
-                              });
-                              errorElement.focus();
-                              errorElement.classList.add("is-invalid");
-                              errorElement.style.borderColor = "#dc3545";
-                              errorElement.style.boxShadow =
-                                "0 0 0 0.25rem rgba(220, 53, 69, 0.25)";
-
-                              setTimeout(() => {
-                                errorElement.style.borderColor = "";
-                                errorElement.style.boxShadow = "";
-                              }, 2000);
-                            }
-                          }
-                        }, [errors, touched]);
-
-                        const handleFormAddressSelection = (address) => {
-                          setSelectedAddress(address);
-
-                          const fullAddress = address.address || "";
-
-                          setInitialValues((prevValues) => ({
-                            ...prevValues,
-                            address: fullAddress,
-                            city: address.city || "",
-                            zipCode: address.zip || "",
-                            addressType: address.address_type || "Home",
-                            state: address.state || "",
-                          }));
-
-                          setFieldValue("address", fullAddress);
-                          setFieldValue("city", address.city || "");
-                          setFieldValue("zipCode", address.zip || "");
-                          setFieldValue(
-                            "addressType",
-                            address.address_type || "Home"
+                      React.useEffect(() => {
+                        if (
+                          Object.keys(errors).length > 0 &&
+                          Object.keys(touched).length > 0
+                        ) {
+                          const firstErrorField = Object.keys(errors)[0];
+                          const errorElement = document.querySelector(
+                            `[name="${firstErrorField}"]`
                           );
-                          setFieldValue("state", address.state || "");
-                        };
+                          if (errorElement) {
+                            errorElement.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            });
+                            errorElement.focus();
+                            errorElement.classList.add("is-invalid");
+                            errorElement.style.borderColor = "#dc3545";
+                            errorElement.style.boxShadow =
+                              "0 0 0 0.25rem rgba(220, 53, 69, 0.25)";
 
-                        React.useEffect(() => {
-                          if (autoSelectFirstAddress) {
-                            handleFormAddressSelection(autoSelectFirstAddress);
-                            setAutoSelectFirstAddress(null);
+                            setTimeout(() => {
+                              errorElement.style.borderColor = "";
+                              errorElement.style.boxShadow = "";
+                            }, 2000);
                           }
-                        }, [autoSelectFirstAddress]);
+                        }
+                      }, [errors, touched]);
 
-                        return (
-                          <>
-                            <Form
-                              id="checkout-form"
-                              noValidate
-                              className={processing ? "form-disabled" : ""}
-                              style={{
-                                position: "relative",
-                                pointerEvents: processing ? "none" : "auto",
-                              }}
-                            >
-                              {/* Form Processing Overlay */}
-                              {processing && (
-                                <div className="form-processing-overlay">
-                                  <div className="form-processing-message">
-                                    <i className="fas fa-lock fs-3 text-primary mb-2"></i>
-                                    <p className="mb-0 fw-bold">
-                                      Form Locked During Payment
-                                    </p>
-                                  </div>
+                      const handleFormAddressSelection = (address) => {
+                        setSelectedAddress(address);
+
+                        const fullAddress = address.address || "";
+
+                        setInitialValues((prevValues) => ({
+                          ...prevValues,
+                          address: fullAddress,
+                          city: address.city || "",
+                          zipCode: address.zip || "",
+                          addressType: address.address_type || "Home",
+                          state: address.state || "",
+                        }));
+
+                        setFieldValue("address", fullAddress);
+                        setFieldValue("city", address.city || "");
+                        setFieldValue("zipCode", address.zip || "");
+                        setFieldValue(
+                          "addressType",
+                          address.address_type || "Home"
+                        );
+                        setFieldValue("state", address.state || "");
+                      };
+
+                      React.useEffect(() => {
+                        if (autoSelectFirstAddress) {
+                          handleFormAddressSelection(autoSelectFirstAddress);
+                          setAutoSelectFirstAddress(null);
+                        }
+                      }, [autoSelectFirstAddress]);
+
+                      return (
+                        <>
+                          <Form
+                            id="checkout-form"
+                            noValidate
+                            className={processing ? "form-disabled" : ""}
+                            style={{
+                              position: "relative",
+                              pointerEvents: processing ? "none" : "auto",
+                            }}
+                          >
+                            {/* Form Processing Overlay */}
+                            {processing && (
+                              <div className="form-processing-overlay">
+                                <div className="form-processing-message">
+                                  <i className="fas fa-lock fs-3 text-primary mb-2"></i>
+                                  <p className="mb-0 fw-bold">
+                                    Form Locked During Payment
+                                  </p>
                                 </div>
-                              )}
+                              </div>
+                            )}
 
-                              {/* Contact Information */}
-                              <div className="mb-3">
-                                <label className="d-flex align-items-center">
-                                  First Name
-                                </label>
-                                <Field
-                                  name="firstName"
-                                  type="text"
-                                  className={`form-control`}
-                                  placeholder="First Name"
-                                  disabled={processing}
-                                  style={{
-                                    backgroundColor: "white",
-                                    cursor: "text",
-                                  }}
-                                />
-                                <ErrorMessage
-                                  name="firstName"
-                                  component="div"
-                                  className="text-danger"
-                                />
-                              </div>
-                              <div className="mb-3">
-                                <label className="d-flex align-items-center">
-                                  Last Name
-                                </label>
-                                <Field
-                                  name="lastName"
-                                  type="text"
-                                  className={`form-control`}
-                                  placeholder="Last Name"
-                                  disabled={processing}
-                                  style={{
-                                    backgroundColor: "white",
-                                    cursor: "text",
-                                  }}
-                                />
-                                <ErrorMessage
-                                  name="lastName"
-                                  component="div"
-                                  className="text-danger"
-                                />
-                              </div>
-                              <div className="mb-3">
-                                <label className="d-flex align-items-center">
-                                  Phone Number
-                                </label>
-                                <Field
-                                  name="phoneNumber"
-                                  type="text"
-                                  className={`form-control`}
-                                  placeholder="Phone Number"
-                                  disabled={processing}
-                                  style={{
-                                    backgroundColor: "white",
-                                    cursor: "text",
-                                  }}
-                                />
-                                <ErrorMessage
-                                  name="phoneNumber"
-                                  component="div"
-                                  className="text-danger"
-                                />
-                              </div>
-                              {/* Delivery Options */}
-                              <DeliveryOptions
-                                formData={values}
-                                handleInputChange={handleChange}
-                                setFormData={setFieldValue}
-                                restaurantDetails={restaurantDetails}
+                            {/* Contact Information */}
+                            <div className="mb-3">
+                              <label className="d-flex align-items-center">
+                                First Name
+                              </label>
+                              <Field
+                                name="firstName"
+                                type="text"
+                                className={`form-control`}
+                                placeholder="First Name"
                                 disabled={processing}
-                              />
-                              {/* Address Section */}
-                              <AddressSection
-                                formData={values}
-                                handleInputChange={handleChange}
-                                token={token}
-                                user={user}
-                                addressList={addressList}
-                                selectedAddress={selectedAddress}
-                                loadingAddresses={loadingAddresses}
-                                handleAddressSelection={
-                                  handleFormAddressSelection
-                                }
-                                setShowAddressModal={setShowAddressModal}
-                                disabled={processing}
-                              />
-                              {/* Order Note */}
-                              <OrderNote
-                                formData={values}
-                                handleInputChange={handleChange}
-                                disabled={processing}
-                              />
-
-                              {/* Payment Method Selection */}
-                              <PaymentMethodSelector
-                                value={paymentMethod}
-                                onChange={(method) => {
-                                  if (!processing) {
-                                    setPaymentMethod(method);
-                                    setFieldValue("paymentMethod", method);
-                                  }
+                                style={{
+                                  backgroundColor: "white",
+                                  cursor: "text",
                                 }}
-                                disabled={processing}
                               />
-
-                              {/* Terms Agreement */}
-                              <TermsAgreement disabled={processing} />
-                            </Form>
-
-                            <div className="d-block d-xl-none mt-4">
-                              {/* Mobile version of cart summary */}
-                              <CartSummary
-                                cartItems={getCurrentCartItems()}
-                                cartLoading={cartLoading}
-                                calculateTaxForItem={calculateTaxForItem}
-                                calculateDiscountForItem={
-                                  calculateDiscountForItem
-                                }
-                                calculateSubtotal={calculateSubtotal}
-                                calculateTotalTax={calculateTotalTax}
-                                calculateTotalDiscount={calculateTotalDiscount}
-                                calculateTip={calculateTip}
-                                calculateTotal={calculateTotal}
-                                currency={currency}
-                                tipPercentage={tipPercentage}
-                                customTip={customTip}
-                                customTipAmount={customTipAmount}
-                                processing={processing}
-                                tipPresets={tipPresets}
-                                enableCustomTip={enableCustomTip}
-                                handleTipSelection={handleTipSelection}
-                                handleCustomTipChange={handleCustomTipChange}
-                                paymentMethod={paymentMethod}
-                                restaurantDetails={restaurantDetails}
-                                incompletePayment={incompletePayment}
-                                hasValidCartItems={hasValidCartItems}
+                              <ErrorMessage
+                                name="firstName"
+                                component="div"
+                                className="text-danger"
                               />
                             </div>
-                          </>
-                        );
-                      }}
-                    </Formik>
-                  </div>
+                            <div className="mb-3">
+                              <label className="d-flex align-items-center">
+                                Last Name
+                              </label>
+                              <Field
+                                name="lastName"
+                                type="text"
+                                className={`form-control`}
+                                placeholder="Last Name"
+                                disabled={processing}
+                                style={{
+                                  backgroundColor: "white",
+                                  cursor: "text",
+                                }}
+                              />
+                              <ErrorMessage
+                                name="lastName"
+                                component="div"
+                                className="text-danger"
+                              />
+                            </div>
+                            <div className="mb-3">
+                              <label className="d-flex align-items-center">
+                                Phone Number
+                              </label>
+                              <Field
+                                name="phoneNumber"
+                                type="text"
+                                className={`form-control`}
+                                placeholder="Phone Number"
+                                disabled={processing}
+                                style={{
+                                  backgroundColor: "white",
+                                  cursor: "text",
+                                }}
+                              />
+                              <ErrorMessage
+                                name="phoneNumber"
+                                component="div"
+                                className="text-danger"
+                              />
+                            </div>
+                            {/* Delivery Options */}
+                            <DeliveryOptions
+                              formData={values}
+                              handleInputChange={handleChange}
+                              setFormData={setFieldValue}
+                              restaurantDetails={restaurantDetails}
+                              disabled={processing}
+                            />
+                            {/* Address Section */}
+                            <AddressSection
+                              formData={values}
+                              handleInputChange={handleChange}
+                              token={token}
+                              user={user}
+                              addressList={addressList}
+                              selectedAddress={selectedAddress}
+                              loadingAddresses={loadingAddresses}
+                              handleAddressSelection={
+                                handleFormAddressSelection
+                              }
+                              setShowAddressModal={setShowAddressModal}
+                              disabled={processing}
+                            />
+                            {/* Order Note */}
+                            <OrderNote
+                              formData={values}
+                              handleInputChange={handleChange}
+                              disabled={processing}
+                            />
 
-                  <div className="col-xl-4 d-none d-xl-block">
-                    {/* Desktop version of cart summary */}
-                    <CartSummary
-                      cartItems={getCurrentCartItems()}
-                      cartLoading={cartLoading}
-                      calculateTaxForItem={calculateTaxForItem}
-                      calculateDiscountForItem={calculateDiscountForItem}
-                      calculateSubtotal={calculateSubtotal}
-                      calculateTotalTax={calculateTotalTax}
-                      calculateTotalDiscount={calculateTotalDiscount}
-                      calculateTip={calculateTip}
-                      calculateTotal={calculateTotal}
-                      currency={currency}
-                      tipPercentage={tipPercentage}
-                      customTip={customTip}
-                      customTipAmount={customTipAmount}
-                      processing={processing}
-                      tipPresets={tipPresets}
-                      enableCustomTip={enableCustomTip}
-                      handleTipSelection={handleTipSelection}
-                      handleCustomTipChange={handleCustomTipChange}
-                      paymentMethod={paymentMethod}
-                      restaurantDetails={restaurantDetails}
-                      incompletePayment={incompletePayment}
-                      hasValidCartItems={hasValidCartItems}
-                    />
-                  </div>
+                            {/* Payment Method Selection */}
+                            <PaymentMethodSelector
+                              value={paymentMethod}
+                              onChange={(method) => {
+                                if (!processing) {
+                                  setPaymentMethod(method);
+                                  setFieldValue("paymentMethod", method);
+                                }
+                              }}
+                              disabled={processing}
+                            />
+
+                            {/* Terms Agreement */}
+                            <TermsAgreement disabled={processing} />
+                          </Form>
+
+                          <div className="d-block d-xl-none mt-4">
+                            {/* Mobile version of cart summary */}
+                            <CartSummary
+                              cartItems={getCurrentCartItems()}
+                              cartLoading={cartLoading}
+                              calculateTaxForItem={calculateTaxForItem}
+                              calculateDiscountForItem={
+                                calculateDiscountForItem
+                              }
+                              calculateSubtotal={calculateSubtotal}
+                              calculateTotalTax={calculateTotalTax}
+                              calculateTotalDiscount={calculateTotalDiscount}
+                              calculateTip={calculateTip}
+                              calculateTotal={calculateTotal}
+                              currency={currency}
+                              tipPercentage={tipPercentage}
+                              customTip={customTip}
+                              customTipAmount={customTipAmount}
+                              processing={processing}
+                              tipPresets={tipPresets}
+                              enableCustomTip={enableCustomTip}
+                              handleTipSelection={handleTipSelection}
+                              handleCustomTipChange={handleCustomTipChange}
+                              paymentMethod={paymentMethod}
+                              restaurantDetails={restaurantDetails}
+                              hasValidCartItems={hasValidCartItems}
+                              token={token}
+                              user={user}
+                              restaurantId={restaurant}
+                              appliedCoupon={appliedCoupon}
+                              onCouponApplied={handleCouponApplied}
+                              onCouponRemoved={handleCouponRemoved}
+                            />
+                          </div>
+                        </>
+                      );
+                    }}
+                  </Formik>
                 </div>
-              )}
+
+                <div className="col-xl-4 d-none d-xl-block">
+                  {/* Desktop version of cart summary */}
+                  <CartSummary
+                    cartItems={getCurrentCartItems()}
+                    cartLoading={cartLoading}
+                    calculateTaxForItem={calculateTaxForItem}
+                    calculateDiscountForItem={calculateDiscountForItem}
+                    calculateSubtotal={calculateSubtotal}
+                    calculateTotalTax={calculateTotalTax}
+                    calculateTotalDiscount={calculateTotalDiscount}
+                    calculateTip={calculateTip}
+                    calculateTotal={calculateTotal}
+                    currency={currency}
+                    tipPercentage={tipPercentage}
+                    customTip={customTip}
+                    customTipAmount={customTipAmount}
+                    processing={processing}
+                    tipPresets={tipPresets}
+                    enableCustomTip={enableCustomTip}
+                    handleTipSelection={handleTipSelection}
+                    handleCustomTipChange={handleCustomTipChange}
+                    paymentMethod={paymentMethod}
+                    restaurantDetails={restaurantDetails}
+                    hasValidCartItems={hasValidCartItems}
+                    token={token}
+                    user={user}
+                    restaurantId={restaurant}
+                    appliedCoupon={appliedCoupon}
+                    onCouponApplied={handleCouponApplied}
+                    onCouponRemoved={handleCouponRemoved}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Success Modal for Cash on Delivery */}
       {showSuccessModal && successOrderData && (
         <div
           className="modal show"
@@ -2194,8 +1975,22 @@ const CheckoutPage = ({ restaurantDetails }) => {
                         <strong>Payment Method:</strong>
                       </div>
                       <div className="col-6 text-end">
-                        <span className="badge bg-warning text-dark">
-                          <i className="fas fa-money-bill-wave me-1"></i>
+                        <span
+                          className={`badge ${
+                            successOrderData.paymentMethod ===
+                            "Cash on Delivery"
+                              ? "bg-warning text-dark"
+                              : "bg-success text-white"
+                          }`}
+                        >
+                          <i
+                            className={`${
+                              successOrderData.paymentMethod ===
+                              "Cash on Delivery"
+                                ? "fas fa-money-bill-wave"
+                                : "fas fa-credit-card"
+                            } me-1`}
+                          ></i>
                           {successOrderData.paymentMethod}
                         </span>
                       </div>
@@ -2203,14 +1998,24 @@ const CheckoutPage = ({ restaurantDetails }) => {
                   </div>
                 </div>
 
-                <div className="alert alert-info">
-                  <i className="fas fa-info-circle me-2"></i>
-                  <strong>Payment Instructions:</strong>
-                  <br />
-                  Please have the exact amount ready for when your order
-                  arrives. Our delivery partner will collect the payment at your
-                  doorstep.
-                </div>
+                {successOrderData.paymentMethod === "Cash on Delivery" ? (
+                  <div className="alert alert-info">
+                    <i className="fas fa-info-circle me-2"></i>
+                    <strong>Payment Instructions:</strong>
+                    <br />
+                    Please have the exact amount ready for when your order
+                    arrives. Our delivery partner will collect the payment at
+                    your doorstep.
+                  </div>
+                ) : (
+                  <div className="alert alert-success">
+                    <i className="fas fa-check-circle me-2"></i>
+                    <strong>Payment Confirmed:</strong>
+                    <br />
+                    Your payment has been successfully processed. No additional
+                    payment is required upon delivery.
+                  </div>
+                )}
 
                 <p className="text-muted mb-4">
                   You will receive an email confirmation shortly with your order

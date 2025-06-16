@@ -78,8 +78,6 @@ export async function getAllProductsServer(
         url = `${url}?offset=${offset}`;
       }
     }
-    console.log(url);
-    console.log("Using zone_id:", zoneId);
 
     const response = await axios({
       method: "get",
@@ -93,7 +91,7 @@ export async function getAllProductsServer(
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching products:", error);
+    // do nothing
     throw error;
   }
 }

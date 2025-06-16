@@ -65,6 +65,27 @@ const OrderDetailsPage = ({ params }) => {
     );
   };
 
+  const calculateItemTotal = (item) => {
+    const basePrice = parseFloat(item.price || 0);
+    const quantity = parseInt(item.quantity || 1);
+    const discount = parseFloat(item.discount_on_food || 0);
+    const tax = parseFloat(item.tax_amount || 0);
+    const addOnPrice = parseFloat(item.total_add_on_price || 0);
+
+    // Calculate: (base price * quantity) - discount + tax + add-ons
+    return basePrice * quantity - discount + tax + addOnPrice;
+  };
+
+  const calculateOrderTotal = () => {
+    if (!order?.details || order.details.length === 0) {
+      return parseFloat(order?.order_amount || 0);
+    }
+
+    return order.details.reduce((total, item) => {
+      return total + calculateItemTotal(item);
+    }, 0);
+  };
+
   useEffect(() => {
     if (orderId) {
       fetchOrderDetails();
@@ -324,6 +345,9 @@ const OrderDetailsPage = ({ params }) => {
                               )}
                               <div>
                                 <div className="fw-medium">{foodName}</div>
+                                <small className="text-muted">
+                                  ${parseFloat(item.price).toFixed(2)} each
+                                </small>
                                 {/* Display Selected Add-ons */}
                                 {item.add_ons && item.add_ons.length > 0 && (
                                   <div className="mt-1">
@@ -341,6 +365,23 @@ const OrderDetailsPage = ({ params }) => {
                                     ))}
                                   </div>
                                 )}
+                                {/* Display Discount if exists */}
+                                {item.discount_on_food > 0 && (
+                                  <small className="text-success d-block">
+                                    <i className="fas fa-tag me-1"></i>
+                                    Discount: -$
+                                    {parseFloat(item.discount_on_food).toFixed(
+                                      2
+                                    )}
+                                  </small>
+                                )}
+                                {/* Display Tax if exists */}
+                                {item.tax_amount > 0 && (
+                                  <small className="text-muted d-block">
+                                    Tax: +$
+                                    {parseFloat(item.tax_amount).toFixed(2)}
+                                  </small>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -348,10 +389,7 @@ const OrderDetailsPage = ({ params }) => {
                             {item.quantity}
                           </td>
                           <td className="text-end pe-3 align-middle fw-medium">
-                            $
-                            {(parseFloat(item.price) * item.quantity).toFixed(
-                              2
-                            )}
+                            ${calculateItemTotal(item).toFixed(2)}
                           </td>
                         </tr>
                       );
@@ -363,7 +401,7 @@ const OrderDetailsPage = ({ params }) => {
                         Total:
                       </td>
                       <td className="text-end pe-3 fw-bold">
-                        ${parseFloat(order.order_amount || 0).toFixed(2)}
+                        ${calculateOrderTotal().toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>

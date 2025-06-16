@@ -48,7 +48,7 @@ const CheckoutSuccessContent = () => {
             "*"
           );
         } catch (error) {
-          // Ignore error
+          // do nothing error
         }
       });
     }
@@ -89,7 +89,6 @@ const CheckoutSuccessContent = () => {
             setMessage(result.error || "Failed to verify payment status.");
           }
         } else {
-          // No order ID, assume successful order placement without payment verification
           setStatus("success");
           setMessage("Your order has been placed successfully!");
         }

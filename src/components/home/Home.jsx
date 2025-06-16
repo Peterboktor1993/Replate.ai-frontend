@@ -182,7 +182,7 @@ const Home = ({
           );
         }
       } catch (error) {
-        console.error("Error fetching recent orders:", error);
+        // do nothing
       } finally {
         setLoadingOrders(false);
       }

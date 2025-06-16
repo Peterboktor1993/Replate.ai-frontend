@@ -15,11 +15,18 @@ const TipSection = ({
     const value = e.target.value;
 
     if (value === "") {
-      handleCustomTipChange({ target: { value: "0" } });
+      handleCustomTipChange({ target: { value: "" } });
       return;
     }
 
-    if (!/^\d*\.?\d*$/.test(value)) {
+    if (value === ".") {
+      handleCustomTipChange({ target: { value: value } });
+      return;
+    }
+
+    const floatRegex = /^(\d*\.?\d{0,2}|\.\d{0,2})$/;
+
+    if (!floatRegex.test(value)) {
       return;
     }
 
@@ -27,10 +34,7 @@ const TipSection = ({
       return;
     }
 
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue >= 0) {
-      handleCustomTipChange({ target: { value: value } });
-    }
+    handleCustomTipChange({ target: { value: value } });
   };
 
   const handleTipPresetClick = (presetValue) => {
@@ -90,16 +94,18 @@ const TipSection = ({
 
       {customTip && (
         <div className="input-group mb-3">
-          <span className="input-group-text">USD</span>
+          <span className="input-group-text">$</span>
           <input
             type="text"
             className="form-control"
-            placeholder="0.00"
-            value={customTipAmount || ""}
+            placeholder="2.50"
+            value={customTipAmount}
             onChange={handleCustomTipInput}
             min="0"
             step="0.01"
             disabled={disabled}
+            title="Enter tip amount (e.g., 2.50, 5.75, 10.25)"
+            inputMode="decimal"
           />
         </div>
       )}

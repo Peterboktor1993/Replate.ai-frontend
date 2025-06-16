@@ -144,7 +144,7 @@ export const fetchCartItems =
                 try {
                   parsedVariations = JSON.parse(item.variation_options);
                 } catch (e) {
-                  console.error("Error parsing variation_options:", e);
+                  // do nothing
                 }
               } else if (Array.isArray(item.variation_options)) {
                 parsedVariations = item.variation_options;
@@ -154,7 +154,7 @@ export const fetchCartItems =
                 try {
                   parsedAddOns = JSON.parse(item.add_ons);
                 } catch (e) {
-                  console.error("Error parsing add_ons:", e);
+                  // do nothing
                 }
               } else if (Array.isArray(item.add_ons)) {
                 parsedAddOns = item.add_ons;
@@ -281,12 +281,6 @@ export const removeItemFromCart =
         payload.guest_id = guestId;
       }
 
-      console.log("🗑️ Removing cart item:", {
-        cartId,
-        token: !!token,
-        payload,
-      });
-
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -295,11 +289,7 @@ export const removeItemFromCart =
         data: payload,
       };
 
-      console.log("🗑️ Request config:", config);
-
       const response = await axiosInstance.delete(`${CART_URL}/remove`, config);
-
-      console.log("🗑️ Remove item response:", response);
 
       if (response.status == 200) {
         dispatch(removeCartItem(cartId));
@@ -317,8 +307,7 @@ export const removeItemFromCart =
         );
       }
     } catch (error) {
-      console.error("🗑️ Remove item error:", error);
-      console.error("🗑️ Error response:", error.response?.data);
+      // do nothing
       const errorMessage = handleErrorMessage(error);
       dispatch(setCartError(errorMessage));
       dispatch(

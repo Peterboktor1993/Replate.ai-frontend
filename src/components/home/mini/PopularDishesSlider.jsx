@@ -268,7 +268,7 @@ const PopularDishesSlider = ({
     try {
       dispatch(addToCart(payload, token));
     } catch (error) {
-      console.log("❌ Error dispatching addToCart:", error);
+      // do nothing
     }
   };
 

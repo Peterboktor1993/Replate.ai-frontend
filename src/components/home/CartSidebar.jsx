@@ -8,9 +8,9 @@ import {
   useRestaurantStatus,
 } from "@/utils/restaurantUtils";
 import { useSearchParams } from "next/navigation";
-import SafeImage from "../common/SafeImage";
 import RestaurantClosedTip from "../common/RestaurantClosedTip";
 import { generateGuestId } from "@/utils/guestOrderHandling";
+import AutoBannerSlider from "../AutoBannerSlider/AutoBannerSlider";
 
 const RESTAURANT_CARTS_KEY = "restaurant_carts";
 const CURRENT_RESTAURANT_KEY = "current_restaurant_id";
@@ -44,13 +44,9 @@ const saveCartForRestaurant = (restaurantId, cartItems, guestId) => {
     };
 
     localStorage.setItem(RESTAURANT_CARTS_KEY, JSON.stringify(savedCarts));
-    console.log(
-      `💾 Saved cart for restaurant ${restaurantId}:`,
-      savedCarts[restaurantId]
-    );
     return true;
   } catch (error) {
-    console.error("Error saving cart:", error);
+    // do nothing
     return false;
   }
 };
@@ -63,10 +59,6 @@ const loadCartForRestaurant = (restaurantId) => {
     const restaurantData = savedCarts[restaurantId];
 
     if (restaurantData) {
-      console.log(
-        `📦 Loaded cart for restaurant ${restaurantId}:`,
-        restaurantData
-      );
       return {
         cartItems: restaurantData.cartItems || [],
         guestId: restaurantData.guestId,
@@ -78,7 +70,7 @@ const loadCartForRestaurant = (restaurantId) => {
       guestId: getRestaurantGuestId(restaurantId),
     };
   } catch (error) {
-    console.error("Error loading cart:", error);
+    // do nothing
     return {
       cartItems: [],
       guestId: getRestaurantGuestId(restaurantId),
@@ -106,8 +98,6 @@ const CartSidebar = ({
   let sideBannerImages = [];
   if (Array.isArray(sideBanners)) {
     sideBannerImages = sideBanners;
-  } else if (typeof sideBanners === "string" && sideBanners.trim() !== "") {
-    sideBannerImages = [sideBanners];
   }
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -141,8 +131,6 @@ const CartSidebar = ({
     const currentRestaurantId = String(restaurant_id);
 
     if (!isInitializedRef.current) {
-      console.log(`🏪 Initializing cart for restaurant ${currentRestaurantId}`);
-
       const savedCart = loadCartForRestaurant(currentRestaurantId);
 
       dispatch(setGuestId(savedCart.guestId));
@@ -240,9 +228,8 @@ const CartSidebar = ({
         );
         delete savedCarts[String(restaurant_id)];
         localStorage.setItem(RESTAURANT_CARTS_KEY, JSON.stringify(savedCarts));
-        console.log(`🗑️ Cleared saved cart for restaurant ${restaurant_id}`);
       } catch (error) {
-        console.error("Error clearing saved cart:", error);
+        // do nothing
       }
     }
   };
@@ -286,33 +273,6 @@ const CartSidebar = ({
                   </>
                 )}
               </div>
-
-              {/* Side Banner Section */}
-              {sideBannerImages.length === 1 && (
-                <div className="my-3 text-center">
-                  <img
-                    src={sideBannerImages[0]}
-                    alt="Side Banner"
-                    style={{ width: "100%", borderRadius: 8 }}
-                  />
-                </div>
-              )}
-              {sideBannerImages.length > 1 && (
-                <div
-                  className="my-3 text-center"
-                  style={{ position: "relative" }}
-                >
-                  <img
-                    src={sideBannerImages[currentBanner]}
-                    alt={`Side Banner ${currentBanner + 1}`}
-                    style={{
-                      width: "100%",
-                      borderRadius: 8,
-                      transition: "opacity 0.5s",
-                    }}
-                  />
-                </div>
-              )}
 
               <div
                 className="border-line"
@@ -589,80 +549,6 @@ const CartSidebar = ({
                   Service charge may apply
                 </p>
               </div>
-
-              {/* {recentOrders.length > 0 && (
-                <div className="recent-orders-hint mb-3">
-                  <h6 className="font-w500 mb-2">
-                    <i className="fas fa-clock me-1 text-primary"></i>
-                    Recent Orders
-                  </h6>
-                  <div className="recent-orders-list">
-                    {recentOrders.map((order) => (
-                      <Link
-                        href={getLinkWithRestaurant(
-                          `/orders/${order.id}`,
-                          restaurant_id
-                        )}
-                        key={order.id}
-                        className="d-flex align-items-center justify-content-between p-2 mb-1 border rounded text-decoration-none"
-                      >
-                        <div>
-                          <small className="text-muted">#{order.id}</small>
-                          <small
-                            className={`d-block ${
-                              order.order_status === "delivered"
-                                ? "text-success"
-                                : order.order_status === "canceled"
-                                ? "text-danger"
-                                : "text-primary"
-                            }`}
-                          >
-                            {order.order_status.charAt(0).toUpperCase() +
-                              order.order_status.slice(1)}
-                          </small>
-                        </div>
-                        <div className="text-end">
-                          <small className="text-primary fw-bold">
-                            ${parseFloat(order.order_amount).toFixed(2)}
-                          </small>
-                          <small className="d-block text-muted">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </small>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )} */}
-
-              {/* {token ? (
-                <Link
-                  href={getLinkWithRestaurant("/orders", restaurant_id)}
-                  className="btn btn-outline-primary w-100 mb-2"
-                >
-                  <i className="fa-solid fa-shopping-bag me-1"></i> View My
-                  Orders
-                </Link>
-              ) : (
-                <div className="alert alert-warning py-2 mb-2 text-center small">
-                  <i className="fas fa-info-circle me-1"></i>
-                  {recentOrders.length > 0 ? (
-                    <>
-                      Your orders are saved to this device.{" "}
-                      <Link
-                        href={getLinkWithRestaurant("/login", restaurant_id)}
-                        className="fw-bold text-decoration-none"
-                      >
-                        Sign in
-                      </Link>{" "}
-                      to access them from anywhere.
-                    </>
-                  ) : (
-                    <>Sign in to track your orders</>
-                  )}
-                </div>
-              )} */}
-
               {/* Conditional Checkout Button */}
               {cartItems.length > 0 ? (
                 <Link
@@ -690,22 +576,10 @@ const CartSidebar = ({
         </div>
 
         <div className="col-xl-12 mt-4">
-          <div className="d-flex align-items-center justify-content-center">
-            {sideBannerImages.length === 1 && (
-              <img
-                src={sideBannerImages[0]}
-                alt="Side Banner"
-                style={{ width: "100%" }}
-              />
-            )}
-            {sideBannerImages.length > 1 && (
-              <img
-                src={sideBannerImages[currentBanner]}
-                alt={`Side Banner ${currentBanner + 1}`}
-                style={{ width: "100%", transition: "opacity 0.5s" }}
-              />
-            )}
-          </div>
+          <AutoBannerSlider
+            sideBannerImages={sideBannerImages}
+            interval={4000}
+          />
         </div>
       </div>
 

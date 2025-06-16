@@ -1,6 +1,5 @@
 export const logError = (error, errorInfo = null, context = "") => {
   if (process.env.NODE_ENV === "development") {
-    console.group(`🚨 Error ${context ? `in ${context}` : ""}`);
     console.error("Error:", error);
     if (errorInfo) {
       console.error("Error Info:", errorInfo);

@@ -21,7 +21,6 @@ const StarRating = ({
   className = "",
   showRating = false,
 }) => {
-  // Convert rating to a number between 0 and 5
   let ratingValue = 0;
 
   if (typeof rating === "number") {
@@ -30,7 +29,6 @@ const StarRating = ({
     ratingValue = parseFloat(rating) || 0;
   }
 
-  // Clamp the rating between 0 and totalStars
   ratingValue = Math.max(0, Math.min(ratingValue, totalStars));
 
   return (

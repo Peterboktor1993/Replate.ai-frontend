@@ -1,13 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-
 export default function Error({ error, reset }) {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error("App Router Error:", error);
-  }, [error]);
-
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100">
       <div className="text-center p-4">

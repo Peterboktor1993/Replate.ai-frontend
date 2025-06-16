@@ -375,3 +375,6 @@ input:-webkit-autofill:active {
   display: flex;
   justify-content: space-between;
 }
+.modal {
+  z-index: 9999999999 !important;
+}

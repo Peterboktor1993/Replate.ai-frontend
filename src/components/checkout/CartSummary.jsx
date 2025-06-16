@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TipSection from "./TipSection";
+import CouponSection from "./CouponSection";
+import { calculateCouponDiscount } from "@/store/services/couponService";
 
 const CartSummary = ({
   cartItems,
@@ -22,8 +24,14 @@ const CartSummary = ({
   handleCustomTipChange,
   paymentMethod = "cash_on_delivery",
   restaurantDetails,
-  incompletePayment = null,
   hasValidCartItems = null,
+  // New props for coupon functionality
+  token = null,
+  user = null,
+  restaurantId = null,
+  appliedCoupon = null,
+  onCouponApplied = null,
+  onCouponRemoved = null,
 }) => {
   const [configData, setConfigData] = useState(null);
   const [configLoading, setConfigLoading] = useState(true);
@@ -93,6 +101,9 @@ const CartSummary = ({
     const restaurantTax = calculateRestaurantTax();
     const convenienceFees = calculateServiceFees() + getAdditionalCharge();
     const tip = calculateTipAmount();
+    const couponDiscount = appliedCoupon
+      ? calculateCouponDiscount(appliedCoupon, subtotal)
+      : 0;
 
     return (
       subtotal +
@@ -101,7 +112,8 @@ const CartSummary = ({
       deliveryFee +
       restaurantTax +
       convenienceFees +
-      tip
+      tip -
+      couponDiscount
     );
   };
 
@@ -148,68 +160,10 @@ const CartSummary = ({
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>
-        ) : cartItems.length === 0 && !incompletePayment ? (
+        ) : cartItems.length === 0 ? (
           <div className="text-center py-4">
             <i className="fa-solid fa-shopping-cart fa-2x text-muted mb-3"></i>
             <p className="text-muted">Your cart is empty</p>
-          </div>
-        ) : cartItems.length === 0 && incompletePayment ? (
-          <div className="checkout-right">
-            <div className="alert alert-warning mb-3">
-              <i className="fas fa-exclamation-triangle me-2"></i>
-              <strong>Incomplete Payment</strong>
-              <br />
-              <small>
-                Order #{incompletePayment?.orderId || "N/A"} requires payment
-                completion.
-              </small>
-            </div>
-
-            <div className="bill-details mt-4 border-bottom">
-              <h6>Order Summary</h6>
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <span>Order Amount</span>
-                <span>
-                  {currency} {(incompletePayment?.amount || 0).toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            <div className="d-flex align-items-center justify-content-between my-3">
-              <span className="fw-bold">TOTAL</span>
-              <span className="fw-bold text-primary">
-                {currency} {(incompletePayment?.amount || 0).toFixed(2)}
-              </span>
-            </div>
-
-            <div className="payment-method-info mb-3">
-              <div className="d-flex align-items-center">
-                <i className="fa-regular fa-credit-card me-2"></i>
-                <span>Payment: Credit/Debit Card</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="btn btn-primary btn-lg w-100 mt-3"
-              disabled={processing}
-              onClick={() => window.location.reload()}
-            >
-              {processing ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                  Processing...
-                </>
-              ) : (
-                `Complete Payment (${currency} ${(
-                  incompletePayment?.amount || 0
-                ).toFixed(2)})`
-              )}
-            </button>
           </div>
         ) : (
           <div
@@ -338,23 +292,17 @@ const CartSummary = ({
             </div>
 
             {/* Use Coupon Section */}
-            <div className="coupon-section mb-4">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span className="checkout-title font-bold">Use Coupon</span>
-              </div>
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter coupon code"
-                  disabled={true}
-                />
-                <button className="btn btn-outline-primary" disabled={true}>
-                  Apply
-                </button>
-              </div>
-              <small className="text-muted">Coupon feature coming soon</small>
-            </div>
+            <CouponSection
+              token={token}
+              user={user}
+              restaurantId={restaurantId}
+              subtotal={calculateSubtotal()}
+              appliedCoupon={appliedCoupon}
+              onCouponApplied={onCouponApplied}
+              onCouponRemoved={onCouponRemoved}
+              disabled={processing}
+              currency={currency}
+            />
 
             <div className="bill-details mt-4 border-bottom">
               <h6>Bill Details</h6>
@@ -394,6 +342,22 @@ const CartSummary = ({
                   <span>Total Discount</span>
                   <span className="text-success">
                     -{currency} {calculateTotalDiscount().toFixed(2)}
+                  </span>
+                </div>
+              )}
+
+              {appliedCoupon && (
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <span>
+                    Coupon Discount ({appliedCoupon.code})
+                    <i className="fas fa-ticket-alt ms-1 text-success"></i>
+                  </span>
+                  <span className="text-success fw-bold">
+                    -{currency}{" "}
+                    {calculateCouponDiscount(
+                      appliedCoupon,
+                      calculateSubtotal()
+                    ).toFixed(2)}
                   </span>
                 </div>
               )}
@@ -445,18 +409,7 @@ const CartSummary = ({
                 zIndex: processing ? 20 : "auto",
               }}
               onClick={(e) => {
-                // Add click debugging
                 if (isButtonDisabled()) {
-                  console.warn("🚫 Checkout button clicked but disabled!");
-                  console.log("Button disabled reasons:", {
-                    processing,
-                    cartLength: cartItems.length,
-                    hasValidCartItems: hasValidCartItems
-                      ? hasValidCartItems()
-                      : "function not provided",
-                  });
-                } else {
-                  console.log("✅ Checkout button clicked - should proceed");
                 }
               }}
             >

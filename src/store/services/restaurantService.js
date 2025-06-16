@@ -9,14 +9,13 @@ export const getRestaurantDetailsServer = async (restaurantId) => {
   );
 
   if (!response.ok) {
-    console.error(`Failed to fetch: ${response.status}`);
     return null;
   }
 
   try {
     return await response.json();
   } catch (err) {
-    console.error("Error parsing JSON:", err);
+    // do nothing
     return null;
   }
 };

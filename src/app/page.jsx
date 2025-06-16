@@ -14,7 +14,6 @@ export default async function HomePage({ searchParams }) {
     getAllCategoriesServer(),
   ]);
 
-  console.log(productsData);
   const initialProducts = Array.isArray(productsData?.products)
     ? productsData.products
     : [];

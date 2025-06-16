@@ -24,7 +24,6 @@ const fetchRestaurantDetails = async (restaurantId, dispatch) => {
       dispatch(setRestaurantError("No restaurant data received"));
     }
   } catch (error) {
-    console.error("Error fetching restaurant details:", error);
     dispatch(setRestaurantError(error.message));
   }
 };

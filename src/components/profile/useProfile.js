@@ -434,7 +434,7 @@ export const useProfile = (router = null, restaurantId = null) => {
         resetAddressForm();
       }
     } catch (error) {
-      console.error("Error saving address:", error);
+      // do nothing
     } finally {
       setAddressLoading(false);
     }
@@ -449,7 +449,7 @@ export const useProfile = (router = null, restaurantId = null) => {
         await fetchAddresses();
       }
     } catch (error) {
-      console.error("Error deleting address:", error);
+      // do nothing
     } finally {
       setAddressLoading(false);
     }
@@ -495,18 +495,16 @@ export const useProfile = (router = null, restaurantId = null) => {
     try {
       setLoading(true);
       const result = await dispatch(removeUserAccount(token));
-      console.log("Remove account result:", result);
 
       if (result.success) {
         setLoading(false);
-        // Redirect to home with restaurant parameter after successful account deletion
         if (router) {
           router.push(`/?restaurant=${restaurantId || 2}`);
         }
         return;
       }
     } catch (error) {
-      console.error("Error removing account:", error);
+      // do nothing
     } finally {
       setLoading(false);
     }

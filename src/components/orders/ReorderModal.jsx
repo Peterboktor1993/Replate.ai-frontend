@@ -244,7 +244,6 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
         `/checkout${restaurantId ? `?restaurant=${restaurantId}` : ""}`
       );
     } catch (error) {
-      console.error("Error adding items to cart:", error);
       dispatch(
         addToast({
           message: "Failed to add items to cart. Please try again.",

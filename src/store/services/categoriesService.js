@@ -42,7 +42,6 @@ export async function getAllCategoriesServer() {
       error: null,
     };
   } catch (error) {
-    console.error("Error fetching categories:", error);
     return {
       categories: [],
       error: error.message,

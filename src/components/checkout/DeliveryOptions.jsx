@@ -12,20 +12,16 @@ const DeliveryOptions = ({
 }) => {
   const { setFieldValue, values } = useFormikContext();
 
-  // Check if delivery is available from restaurant details
   const isDeliveryAvailable = restaurantDetails?.delivery !== false;
 
-  // Check if schedule order is available from restaurant details
   const isScheduleOrderAvailable = restaurantDetails?.schedule_order !== false;
 
-  // Auto-switch to pickup if delivery is not available and currently selected
   useEffect(() => {
     if (!isDeliveryAvailable && formData.orderType === "delivery") {
       setFormData("orderType", "pickup");
     }
   }, [isDeliveryAvailable, formData.orderType, setFormData]);
 
-  // Clear schedule order if it's not available and currently selected
   useEffect(() => {
     if (!isScheduleOrderAvailable && formData.scheduleOrder) {
       setFormData("scheduleOrder", false);
@@ -60,7 +56,6 @@ const DeliveryOptions = ({
         <h4 className="fw-bold text-primary mb-0">Delivery Options</h4>
       </div>
 
-      {/* Notification for disabled options */}
       {(!isDeliveryAvailable || !isScheduleOrderAvailable) && (
         <div className="alert alert-info mb-3 d-flex align-items-start">
           <i className="fas fa-info-circle me-2 mt-1"></i>

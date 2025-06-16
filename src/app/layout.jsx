@@ -26,7 +26,6 @@ export default async function RootLayout({ children }) {
         new URLSearchParams(searchParamsString)
       );
     } catch (error) {
-      console.error("Error parsing search params:", error);
       searchParams = {};
     }
   }

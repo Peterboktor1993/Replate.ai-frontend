@@ -29,7 +29,7 @@ const Header = ({ details }) => {
         try {
           await dispatch(getUserProfile(token));
         } catch (error) {
-          console.error("Error fetching user profile:", error);
+          // do nothing
         } finally {
           setIsLoadingProfile(false);
         }
@@ -48,9 +48,7 @@ const Header = ({ details }) => {
             new bootstrap.Dropdown(dropdownElement);
           }
         })
-        .catch((err) => {
-          console.log("Bootstrap not available, using manual dropdown");
-        });
+        .catch((err) => {});
     }
   }, [token]);
 
@@ -128,12 +126,21 @@ const Header = ({ details }) => {
               </Link>
 
               {/* Restaurant Status */}
-              {details.status !== 1 ||
-                (details.active === false && (
-                  <div className="d-flex flex-column">
-                    <RestaurantStatus restaurant={details} />
-                  </div>
-                ))}
+              {details && (
+                <div className="d-flex flex-column ms-2">
+                  {details.status === 1 && details.active !== false ? (
+                    <div className="restaurant-status-open d-flex align-items-center">
+                      <span className="status-dot-open me-1"></span>
+                      <span className="status-text">Online and Opened</span>
+                    </div>
+                  ) : (
+                    <div className="restaurant-status-closed d-flex align-items-center">
+                      <span className="status-dot-closed me-1"></span>
+                      <span className="status-text">Closed</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Auth Section */}
@@ -474,6 +481,125 @@ const Header = ({ details }) => {
           .auth-btn,
           .user-dropdown-btn {
             padding: 4px 12px;
+          }
+        }
+
+        /* Restaurant Status Styles */
+        .restaurant-status-open {
+          background: rgba(34, 197, 94, 0.1);
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          border-radius: 20px;
+          padding: 4px 12px;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #16a34a;
+          white-space: nowrap;
+        }
+
+        .restaurant-status-closed {
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          border-radius: 20px;
+          padding: 4px 12px;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #dc2626;
+          white-space: nowrap;
+        }
+
+        .status-dot-open {
+          width: 8px;
+          height: 8px;
+          background: #22c55e;
+          border-radius: 50%;
+          display: inline-block;
+          animation: pulse-green 2s infinite;
+        }
+
+        .status-dot-closed {
+          width: 8px;
+          height: 8px;
+          background: #ef4444;
+          border-radius: 50%;
+          display: inline-block;
+          animation: pulse-red 2s infinite;
+        }
+
+        .status-text {
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+
+        @keyframes pulse-green {
+          0% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+          }
+        }
+
+        @keyframes pulse-red {
+          0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+          }
+        }
+
+        /* Mobile Responsive for Restaurant Status */
+        @media (max-width: 575.98px) {
+          .restaurant-status-open,
+          .restaurant-status-closed {
+            padding: 3px 8px;
+            font-size: 0.7rem;
+          }
+
+          .status-dot-open,
+          .status-dot-closed {
+            width: 6px;
+            height: 6px;
+          }
+
+          .status-text {
+            font-size: 0.7rem;
+          }
+        }
+
+        @media (max-width: 479.98px) {
+          .restaurant-status-open,
+          .restaurant-status-closed {
+            padding: 2px 6px;
+            font-size: 0.65rem;
+          }
+
+          .status-dot-open,
+          .status-dot-closed {
+            width: 5px;
+            height: 5px;
+          }
+
+          .status-text {
+            font-size: 0.65rem;
+          }
+        }
+
+        @media (max-width: 359.98px) {
+          .restaurant-status-open,
+          .restaurant-status-closed {
+            padding: 2px 4px;
+            font-size: 0.6rem;
+          }
+
+          .status-text {
+            font-size: 0.6rem;
           }
         }
 
