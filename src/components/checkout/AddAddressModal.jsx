@@ -10,6 +10,7 @@ const AddAddressModal = ({
   handleAddNewAddress,
   user,
   setNewAddress,
+  addressList = [],
 }) => {
   const US_STATES = [
     { value: "", label: "Select State" },
@@ -221,36 +222,53 @@ const AddAddressModal = ({
             <div className="col-12">
               <Form.Group className="mb-3">
                 <Form.Label>Address Type</Form.Label>
-                <div className="d-flex">
-                  <Form.Check
-                    type="radio"
-                    label="Home"
-                    name="address_type"
-                    id="home-add"
-                    value="home"
-                    checked={newAddress.address_type === "home"}
-                    onChange={handleNewAddressChange}
-                    className="me-3"
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="Office"
-                    name="address_type"
-                    id="office-add"
-                    value="office"
-                    checked={newAddress.address_type === "office"}
-                    onChange={handleNewAddressChange}
-                    className="me-3"
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="Other"
-                    name="address_type"
-                    id="other-add"
-                    value="other"
-                    checked={newAddress.address_type === "other"}
-                    onChange={handleNewAddressChange}
-                  />
+                <div className="d-flex flex-column">
+                  <div className="d-flex">
+                    <Form.Check
+                      type="radio"
+                      label="Home"
+                      name="address_type"
+                      id="home-add"
+                      value="home"
+                      checked={newAddress.address_type === "home"}
+                      onChange={handleNewAddressChange}
+                      className="me-3"
+                    />
+                    <Form.Check
+                      type="radio"
+                      label="Office"
+                      name="address_type"
+                      id="office-add"
+                      value="office"
+                      checked={newAddress.address_type === "office"}
+                      onChange={handleNewAddressChange}
+                      className="me-3"
+                    />
+                    <Form.Check
+                      type="radio"
+                      label="Other"
+                      name="address_type"
+                      id="other-add"
+                      value="other"
+                      checked={newAddress.address_type === "other"}
+                      onChange={handleNewAddressChange}
+                    />
+                  </div>
+
+                  {/* Warning for address replacement */}
+                  {addressList.some(
+                    (addr) => addr.address_type === newAddress.address_type
+                  ) && (
+                    <div className="alert alert-warning mt-2 mb-0" role="alert">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
+                      <small>
+                        <strong>Note:</strong> You already have a{" "}
+                        {newAddress.address_type.toUpperCase()} address. Saving
+                        this will replace your existing{" "}
+                        {newAddress.address_type} address.
+                      </small>
+                    </div>
+                  )}
                 </div>
               </Form.Group>
             </div>

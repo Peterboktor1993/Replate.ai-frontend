@@ -200,6 +200,7 @@ const ProfilePage = () => {
                   <Tab.Pane eventKey="security">
                     <SecuritySection
                       formData={formData}
+                      profileData={profileData}
                       loading={loading}
                       handleInputChange={handleInputChange}
                       updateProfile={updateProfile}
@@ -222,6 +223,7 @@ const ProfilePage = () => {
         addressLoading={addressLoading}
         handleAddressInputChange={handleAddressInputChange}
         onSave={saveAddress}
+        addresses={addresses}
       />
 
       {/* Auth Modals */}

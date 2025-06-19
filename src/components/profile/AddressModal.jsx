@@ -9,6 +9,7 @@ const AddressModal = ({
   addressLoading,
   handleAddressInputChange,
   onSave,
+  addresses = [],
 }) => {
   const US_STATES = [
     { value: "", label: "Select State" },
@@ -186,36 +187,57 @@ const AddressModal = ({
             <div className="col-12">
               <Form.Group className="mb-3">
                 <Form.Label>Address Type</Form.Label>
-                <div className="d-flex">
-                  <Form.Check
-                    type="radio"
-                    label="Home"
-                    name="address_type"
-                    id="home"
-                    value="home"
-                    checked={addressForm.address_type === "home"}
-                    onChange={handleAddressInputChange}
-                    className="me-3"
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="Office"
-                    name="address_type"
-                    id="office"
-                    value="office"
-                    checked={addressForm.address_type === "office"}
-                    onChange={handleAddressInputChange}
-                    className="me-3"
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="Other"
-                    name="address_type"
-                    id="other"
-                    value="other"
-                    checked={addressForm.address_type === "other"}
-                    onChange={handleAddressInputChange}
-                  />
+                <div className="d-flex flex-column">
+                  <div className="d-flex">
+                    <Form.Check
+                      type="radio"
+                      label="Home"
+                      name="address_type"
+                      id="home"
+                      value="home"
+                      checked={addressForm.address_type === "home"}
+                      onChange={handleAddressInputChange}
+                      className="me-3"
+                    />
+                    <Form.Check
+                      type="radio"
+                      label="Office"
+                      name="address_type"
+                      id="office"
+                      value="office"
+                      checked={addressForm.address_type === "office"}
+                      onChange={handleAddressInputChange}
+                      className="me-3"
+                    />
+                    <Form.Check
+                      type="radio"
+                      label="Other"
+                      name="address_type"
+                      id="other"
+                      value="other"
+                      checked={addressForm.address_type === "other"}
+                      onChange={handleAddressInputChange}
+                    />
+                  </div>
+
+                  {/* Warning for address replacement */}
+                  {!editAddressId &&
+                    addresses.some(
+                      (addr) => addr.address_type === addressForm.address_type
+                    ) && (
+                      <div
+                        className="alert alert-warning mt-2 mb-0"
+                        role="alert"
+                      >
+                        <i className="fas fa-exclamation-triangle me-2"></i>
+                        <small>
+                          <strong>Note:</strong> You already have a{" "}
+                          {addressForm.address_type.toUpperCase()} address.
+                          Saving this will replace your existing{" "}
+                          {addressForm.address_type} address.
+                        </small>
+                      </div>
+                    )}
                 </div>
               </Form.Group>
             </div>

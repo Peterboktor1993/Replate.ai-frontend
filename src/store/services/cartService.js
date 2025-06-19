@@ -28,7 +28,7 @@ export const handleErrorMessage = (error) => {
 // Add to Cart
 //===============================================
 export const addToCart =
-  (item, token = null) =>
+  (item, token = null, restaurantId = null) =>
   async (dispatch, getState) => {
     try {
       dispatch(setCartLoading(true));
@@ -85,7 +85,7 @@ export const addToCart =
       );
 
       if (response.status == 200) {
-        dispatch(fetchCartItems(token));
+        dispatch(fetchCartItems({ restaurant_id: restaurantId }, token));
         dispatch(
           addToast({
             show: true,
@@ -129,7 +129,12 @@ export const fetchCartItems =
 
       const config = {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
-        params: !token ? { guest_id: guestId } : {},
+        params: token
+          ? { restaurant_id: params.restaurant_id || params.restaurant }
+          : {
+              guest_id: guestId,
+              restaurant_id: params.restaurant_id || params.restaurant,
+            },
       };
 
       const response = await axiosInstance.get(url, config);
@@ -192,7 +197,7 @@ export const fetchCartItems =
 // Cart Update
 //===============================================
 export const updateCartItemQuantity =
-  (item, token = null) =>
+  (item, token = null, restaurantId = null) =>
   async (dispatch, getState) => {
     try {
       dispatch(setCartLoading(true));
@@ -242,7 +247,7 @@ export const updateCartItemQuantity =
       );
 
       if (response.status == 200) {
-        dispatch(fetchCartItems(token));
+        dispatch(fetchCartItems({ restaurant_id: restaurantId }, token));
       } else {
         throw new Error(response.data.message || "Error updating cart item");
       }

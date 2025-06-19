@@ -5,6 +5,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch } from "react-redux";
 import { registerUser } from "@/store/services/authService";
+import { validateNorthAmericanPhone } from "@/utils/phoneValidation";
 
 const RegisterForm = ({ loading, setLoading, onModeChange, onHide }) => {
   const dispatch = useDispatch();
@@ -24,7 +25,16 @@ const RegisterForm = ({ loading, setLoading, onModeChange, onHide }) => {
       email: Yup.string()
         .email("Invalid email address")
         .required("Email is required"),
-      phone: Yup.string().required("Phone number is required"),
+      phone: Yup.string()
+        .required("Phone number is required")
+        .test(
+          "is-valid-north-american-phone",
+          "Please enter a valid US or Canadian phone number",
+          (value) => {
+            const validation = validateNorthAmericanPhone(value);
+            return validation.isValid;
+          }
+        ),
       password: Yup.string()
         .min(8, "Password must be at least 8 characters")
         .required("Password is required"),

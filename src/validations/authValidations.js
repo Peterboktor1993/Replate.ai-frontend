@@ -1,4 +1,5 @@
 import * as Yup from "yup";
+import { validateNorthAmericanPhone } from "@/utils/phoneValidation";
 
 export const loginValidationSchema = Yup.object().shape({
   email_or_phone: Yup.string()
@@ -8,8 +9,13 @@ export const loginValidationSchema = Yup.object().shape({
       "Invalid email or phone number",
       (value) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^[0-9]{10,}$/;
-        return emailRegex.test(value) || phoneRegex.test(value);
+
+        if (value && value.includes("@")) {
+          return emailRegex.test(value);
+        }
+
+        const phoneValidation = validateNorthAmericanPhone(value);
+        return phoneValidation.isValid;
       }
     ),
   password: Yup.string()
@@ -36,7 +42,14 @@ export const signupValidationSchema = Yup.object().shape({
     .email("Invalid email format"),
   phone: Yup.string()
     .required("Phone number is required")
-    .matches(/^[0-9]{10,}$/, "Invalid phone number"),
+    .test(
+      "is-valid-north-american-phone",
+      "Please enter a valid US or Canadian phone number",
+      (value) => {
+        const validation = validateNorthAmericanPhone(value);
+        return validation.isValid;
+      }
+    ),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters")
@@ -50,4 +63,43 @@ export const signupValidationSchema = Yup.object().shape({
   ref_code: Yup.string().nullable(),
   ref_by: Yup.number().nullable(),
   social_id: Yup.string().nullable(),
+});
+
+export const profileValidationSchema = Yup.object().shape({
+  name: Yup.string()
+    .required("Full name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name cannot exceed 100 characters"),
+  email: Yup.string()
+    .required("Email is required")
+    .email("Invalid email format"),
+  phone: Yup.string()
+    .required("Phone number is required")
+    .test(
+      "is-valid-north-american-phone",
+      (value) => {
+        const validation = validateNorthAmericanPhone(value);
+        return (
+          validation.error || "Please enter a valid US or Canadian phone number"
+        );
+      },
+      (value) => {
+        const validation = validateNorthAmericanPhone(value);
+        return validation.isValid;
+      }
+    ),
+});
+
+export const passwordChangeValidationSchema = Yup.object().shape({
+  current_password: Yup.string().required("Current password is required"),
+  new_password: Yup.string()
+    .required("New password is required")
+    .min(8, "Password must be at least 8 characters")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
+  confirm_password: Yup.string()
+    .required("Please confirm your new password")
+    .oneOf([Yup.ref("new_password"), null], "Passwords must match"),
 });

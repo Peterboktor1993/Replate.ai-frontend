@@ -3,15 +3,15 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { getOrderDetails } from "@/store/services/orderService";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { addToast } from "@/store/slices/toastSlice";
 import ReorderModal from "@/components/orders/ReorderModal";
-import { addToCart, clearCartItems } from "@/store/services/cartService";
 
 const OrderDetailsPage = ({ params }) => {
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const orderId = params.id;
   const { token } = useSelector((state) => state.auth || { token: null });
   const { guestId } = useSelector((state) => state.cart);
@@ -20,7 +20,6 @@ const OrderDetailsPage = ({ params }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showReorderModal, setShowReorderModal] = useState(false);
-  const [showDetailsDropdown, setShowDetailsDropdown] = useState({});
   const [reorderLoading, setReorderLoading] = useState(false);
 
   const formatDate = (dateString) => {
@@ -59,10 +58,22 @@ const OrderDetailsPage = ({ params }) => {
     return (
       statusMap[status?.toLowerCase()] || {
         class: "bg-secondary",
-        text: order.order_status || "Unknown",
+        text: status || "Unknown",
         icon: "question-circle",
       }
     );
+  };
+
+  const formatPaymentMethod = (method) => {
+    const methodMap = {
+      cash_on_delivery: "Cash on Delivery",
+      digital_payment: "Credit/Debit Card",
+      stripe: "Credit/Debit Card",
+      paypal: "PayPal",
+      wallet: "Wallet",
+    };
+
+    return methodMap[method?.toLowerCase()] || method || "N/A";
   };
 
   const calculateItemTotal = (item) => {
@@ -78,7 +89,7 @@ const OrderDetailsPage = ({ params }) => {
 
   const calculateOrderTotal = () => {
     if (!order?.details || order.details.length === 0) {
-      return parseFloat(order?.order_amount || 0);
+      return parseFloat(orderAmount || 0);
     }
 
     return order.details.reduce((total, item) => {
@@ -124,7 +135,6 @@ const OrderDetailsPage = ({ params }) => {
     }
 
     setReorderLoading(true);
-    // Add a small delay to show loading state
     setTimeout(() => {
       setShowReorderModal(true);
       setReorderLoading(false);
@@ -184,7 +194,17 @@ const OrderDetailsPage = ({ params }) => {
     );
   }
 
-  const statusInfo = getStatusBadge(order.order_status);
+  const orderStatus = order.order_status || searchParams.get("status");
+  const paymentStatus =
+    order.payment_status || searchParams.get("payment_status");
+  const paymentMethod =
+    order.payment_method || searchParams.get("payment_method");
+  const orderAmount = order.order_amount || searchParams.get("order_amount");
+  const createdAt = order.created_at || searchParams.get("created_at");
+  const orderType = order.order_type || searchParams.get("order_type");
+
+  const statusInfo = getStatusBadge(orderStatus);
+  const formattedPaymentMethod = formatPaymentMethod(paymentMethod);
 
   return (
     <div className="container py-3">
@@ -244,9 +264,7 @@ const OrderDetailsPage = ({ params }) => {
             <div className="col-md-3 col-6">
               <div className="border rounded p-2 h-100">
                 <small className="text-muted d-block">Date</small>
-                <div className="fw-medium small">
-                  {formatDate(order.created_at)}
-                </div>
+                <div className="fw-medium small">{formatDate(createdAt)}</div>
               </div>
             </div>
             <div className="col-md-3 col-6">
@@ -254,26 +272,22 @@ const OrderDetailsPage = ({ params }) => {
                 <small className="text-muted d-block">Payment</small>
                 <div
                   className={`fw-medium small ${
-                    order.payment_status === "paid"
-                      ? "text-success"
-                      : "text-warning"
+                    paymentStatus === "paid" ? "text-success" : "text-warning"
                   }`}
                 >
                   <i
                     className={`fas fa-${
-                      order.payment_status === "paid" ? "check-circle" : "clock"
+                      paymentStatus === "paid" ? "check-circle" : "clock"
                     } me-1`}
                   ></i>
-                  {order.payment_status === "paid" ? "Paid" : "Pending"}
+                  {paymentStatus === "paid" ? "Paid" : "Pending"}
                 </div>
               </div>
             </div>
             <div className="col-md-3 col-6">
               <div className="border rounded p-2 h-100">
                 <small className="text-muted d-block">Method</small>
-                <div className="fw-medium small">
-                  {order.payment_method || "N/A"}
-                </div>
+                <div className="fw-medium small">{formattedPaymentMethod}</div>
               </div>
             </div>
             <div className="col-md-3 col-6">
@@ -296,12 +310,10 @@ const OrderDetailsPage = ({ params }) => {
                 <div className="fw-medium small">
                   <i
                     className={`fas fa-${
-                      order.order_type === "take_away"
-                        ? "shopping-bag"
-                        : "truck"
+                      orderType === "take_away" ? "shopping-bag" : "truck"
                     } me-1`}
                   ></i>
-                  {order.order_type === "take_away" ? "Pickup" : "Delivery"}
+                  {orderType === "take_away" ? "Pickup" : "Delivery"}
                 </div>
               </div>
             </div>

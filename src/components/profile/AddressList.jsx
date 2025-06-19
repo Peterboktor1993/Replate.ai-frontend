@@ -16,23 +16,55 @@ const AddressList = ({
     );
   }
 
+  const addressesByType = addresses.reduce((acc, address) => {
+    const type = address.address_type;
+    if (
+      !acc[type] ||
+      new Date(address.updated_at || address.created_at) >
+        new Date(acc[type].updated_at || acc[type].created_at)
+    ) {
+      acc[type] = address;
+    }
+    return acc;
+  }, {});
+
+  const uniqueAddresses = Object.values(addressesByType);
+  const availableTypes = ["home", "office", "other"];
+  const usedTypes = uniqueAddresses.map((addr) => addr.address_type);
+  const availableTypesForNew = availableTypes.filter(
+    (type) => !usedTypes.includes(type)
+  );
+
   return (
     <div className="addresses-content">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h5 className="mb-0">Saved Addresses</h5>
+        <h5 className="mb-0">Saved Addresses ({uniqueAddresses.length}/3)</h5>
         <Button variant="primary" size="sm" onClick={onAddAddress}>
           <i className="fas fa-plus me-2"></i>Add New Address
         </Button>
       </div>
 
-      {addresses.length === 0 ? (
+      {availableTypesForNew.length > 0 && (
+        <div className="alert alert-info mb-3">
+          <i className="fas fa-info-circle me-2"></i>
+          <small>
+            <strong>Available address types:</strong>{" "}
+            {availableTypesForNew.map((type) => type.toUpperCase()).join(", ")}
+          </small>
+        </div>
+      )}
+
+      {uniqueAddresses.length === 0 ? (
         <div className="text-center py-4">
           <i className="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
           <p className="text-muted">No addresses saved yet</p>
+          <p className="text-muted small">
+            You can save up to 3 addresses: Home, Office, and Other
+          </p>
         </div>
       ) : (
         <div className="row">
-          {addresses.map((address) => (
+          {uniqueAddresses.map((address) => (
             <div className="col-md-6 mb-3" key={address.id}>
               <Card className="h-100">
                 <Card.Body>

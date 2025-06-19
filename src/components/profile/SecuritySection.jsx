@@ -1,17 +1,30 @@
 import React from "react";
-import { Form, Button, Spinner } from "react-bootstrap";
+import { Form, Button, Spinner, Alert } from "react-bootstrap";
 
 const SecuritySection = ({
   formData,
+  profileData,
   loading,
   handleInputChange,
   updateProfile,
   onRemoveAccount,
 }) => {
+  const isSocialLogin =
+    profileData?.login_medium !== "manual" || profileData?.social_id !== null;
   return (
     <div className="security-content">
       <div className="password-section mb-5">
         <h6 className="mb-3">Change Password</h6>
+
+        {isSocialLogin && (
+          <Alert variant="info" className="mb-3">
+            <i className="fas fa-info-circle me-2"></i>
+            Password change is not available for accounts that signed in with
+            Google or other social media platforms. Your account is secured
+            through your social media provider.
+          </Alert>
+        )}
+
         <Form>
           <div className="row">
             <div className="col-md-6">
@@ -23,6 +36,7 @@ const SecuritySection = ({
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Enter new password"
+                  disabled={isSocialLogin}
                 />
               </Form.Group>
             </div>
@@ -35,6 +49,7 @@ const SecuritySection = ({
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="Confirm new password"
+                  disabled={isSocialLogin}
                 />
               </Form.Group>
             </div>
@@ -43,6 +58,7 @@ const SecuritySection = ({
             variant="primary"
             onClick={() => updateProfile("change_password")}
             disabled={
+              isSocialLogin ||
               loading ||
               !formData.password ||
               !formData.confirmPassword ||
@@ -55,7 +71,8 @@ const SecuritySection = ({
               "Update Password"
             )}
           </Button>
-          {formData.password &&
+          {!isSocialLogin &&
+            formData.password &&
             formData.confirmPassword &&
             formData.password !== formData.confirmPassword && (
               <p className="text-danger mt-2">Passwords do not match</p>

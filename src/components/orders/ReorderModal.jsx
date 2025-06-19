@@ -229,7 +229,7 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
           cartItem.add_ons = [];
         }
 
-        await dispatch(addToCart(cartItem, token));
+        await dispatch(addToCart(cartItem, token, restaurantId));
       }
 
       dispatch(
@@ -277,10 +277,112 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
       size="xl"
       className="reorder-modal"
     >
+      <style jsx global>{`
+        .reorder-modal .modal-dialog {
+          max-width: 95vw;
+          width: 95vw;
+          margin: 1rem auto;
+        }
+
+        @media (min-width: 576px) {
+          .reorder-modal .modal-dialog {
+            max-width: 90vw;
+            width: 90vw;
+          }
+        }
+
+        @media (min-width: 768px) {
+          .reorder-modal .modal-dialog {
+            max-width: 85vw;
+            width: 85vw;
+          }
+        }
+
+        @media (min-width: 992px) {
+          .reorder-modal .modal-dialog {
+            max-width: 1200px;
+            width: 1200px;
+          }
+        }
+
+        /* Mobile navigation styles */
+        .mobile-item-nav {
+          background: #f8f9fa;
+          border-bottom: 1px solid #dee2e6;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+
+        .mobile-item-nav::-webkit-scrollbar {
+          height: 4px;
+        }
+
+        .mobile-item-nav::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+
+        .mobile-item-nav::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 2px;
+        }
+
+        .mobile-nav-item {
+          display: inline-block;
+          margin-right: 0.5rem;
+          min-width: 100px;
+        }
+
+        .mobile-nav-item .nav-link {
+          padding: 0.5rem 0.75rem;
+          border-radius: 1rem;
+          text-align: center;
+          white-space: nowrap;
+          font-size: 0.875rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+          .reorder-modal .modal-body {
+            max-height: 80vh;
+            overflow-y: auto;
+          }
+
+          .item-image-mobile {
+            width: 80px !important;
+            height: 80px !important;
+          }
+
+          .variations-mobile .col-md-6 {
+            width: 100% !important;
+          }
+
+          .addons-mobile .col-md-6 {
+            width: 100% !important;
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .reorder-modal .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100vw - 1rem);
+            width: calc(100vw - 1rem);
+          }
+
+          .item-image-mobile {
+            width: 60px !important;
+            height: 60px !important;
+          }
+        }
+      `}</style>
+
       <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fs-4 fw-bold text-primary">
+        <Modal.Title className="fs-4 fw-bold text-primary d-none d-md-block">
           <i className="fas fa-utensils me-2"></i>
           Customize Your Order
+        </Modal.Title>
+        <Modal.Title className="fs-5 fw-bold text-primary d-md-none">
+          <i className="fas fa-utensils me-2"></i>
+          Customize Order
         </Modal.Title>
       </Modal.Header>
 
@@ -293,19 +395,62 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
           </div>
         ) : (
           <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
+            {/* Mobile Navigation - Only visible on small screens */}
+            <div className="d-md-none mobile-item-nav p-2">
+              <Nav variant="pills" className="d-flex flex-nowrap">
+                {customizedItems.map((item, index) => (
+                  <div key={`mobile-nav-${index}`} className="mobile-nav-item">
+                    <Nav.Link
+                      eventKey={index}
+                      className="nav-link text-center border"
+                      style={{
+                        backgroundColor:
+                          activeTab === index ? "#007bff" : "white",
+                        color: activeTab === index ? "white" : "#333",
+                        border:
+                          activeTab === index
+                            ? "1px solid #007bff"
+                            : "1px solid #e9ecef",
+                        transition: "all 0.2s ease",
+                        minHeight: "60px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div className="fw-bold" style={{ fontSize: "0.75rem" }}>
+                        {item.name.length > 10
+                          ? `${item.name.substring(0, 10)}...`
+                          : item.name}
+                      </div>
+                      <small style={{ fontSize: "0.6rem", opacity: 0.8 }}>
+                        ${calculateTotalPrice(item)}
+                      </small>
+                    </Nav.Link>
+                  </div>
+                ))}
+              </Nav>
+            </div>
+
             <Row className="g-0">
-              <Col sm={4} className="border-end bg-light">
+              {/* Desktop Sidebar - Hidden on mobile */}
+              <Col lg={4} className="border-end bg-light d-none d-md-block">
                 <div className="p-3">
-                  <h6 className="text-muted mb-3 fw-bold">
+                  <h6 className="text-muted mb-3 fw-bold d-none d-lg-block">
                     <i className="fas fa-list me-2"></i>
                     ORDER ITEMS ({customizedItems.length})
+                  </h6>
+                  <h6 className="text-muted mb-3 fw-bold d-lg-none">
+                    <i className="fas fa-list me-2"></i>
+                    ITEMS ({customizedItems.length})
                   </h6>
                   <Nav variant="pills" className="flex-column">
                     {customizedItems.map((item, index) => (
                       <Nav.Item key={`nav-${index}`} className="mb-2">
                         <Nav.Link
                           eventKey={index}
-                          className="d-flex align-items-center p-3 rounded-3 border"
+                          className="d-flex align-items-center p-2 p-lg-3 rounded-3 border"
                           style={{
                             backgroundColor:
                               activeTab === index ? "#007bff" : "white",
@@ -318,10 +463,10 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                           }}
                         >
                           <div
-                            className="me-3 flex-shrink-0"
+                            className="me-2 me-lg-3 flex-shrink-0"
                             style={{
-                              width: "50px",
-                              height: "50px",
+                              width: "40px",
+                              height: "40px",
                               position: "relative",
                             }}
                           >
@@ -336,7 +481,7 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                           <div className="text-start flex-grow-1">
                             <div
                               className="fw-bold text-truncate"
-                              style={{ maxWidth: "120px" }}
+                              style={{ maxWidth: "100px" }}
                             >
                               {item.name}
                             </div>
@@ -358,15 +503,15 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                 </div>
               </Col>
 
-              <Col sm={8}>
+              <Col xs={12} md={8} lg={8}>
                 <Tab.Content>
                   {customizedItems.map((item, index) => (
                     <Tab.Pane key={`pane-${index}`} eventKey={index}>
-                      <div className="p-4">
+                      <div className="p-2 p-md-4">
                         {/* Item Header */}
-                        <div className="d-flex mb-4 pb-3 border-bottom">
+                        <div className="d-flex mb-3 mb-md-4 pb-3 border-bottom flex-column flex-md-row">
                           <div
-                            className="me-4 flex-shrink-0"
+                            className="me-0 me-md-4 flex-shrink-0 align-self-center align-self-md-start mb-3 mb-md-0 item-image-mobile"
                             style={{
                               width: "100px",
                               height: "100px",
@@ -381,20 +526,25 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                               style={{ border: "1px solid #e9ecef" }}
                             />
                           </div>
-                          <div className="flex-grow-1">
-                            <h4 className="mb-2 text-primary">{item.name}</h4>
+                          <div className="flex-grow-1 text-center text-md-start">
+                            <h4 className="mb-2 text-primary fs-5 fs-md-4">
+                              {item.name}
+                            </h4>
                             {item.description && (
                               <p className="text-muted mb-3 small">
                                 {item.description}
                               </p>
                             )}
-                            <div className="d-flex align-items-center justify-content-between">
-                              <div className="fw-bold fs-5 text-success">
+                            <div className="d-flex align-items-center justify-content-between flex-column flex-md-row">
+                              <div className="fw-bold fs-5 text-success mb-2 mb-md-0">
                                 ${calculateTotalPrice(item)}
                               </div>
                               <div className="d-flex align-items-center">
-                                <span className="me-3 text-muted fw-medium">
+                                <span className="me-2 me-md-3 text-muted fw-medium d-none d-sm-inline">
                                   Quantity:
+                                </span>
+                                <span className="me-2 text-muted fw-medium d-sm-none">
+                                  Qty:
                                 </span>
                                 <div className="d-flex align-items-center border rounded-pill px-2 py-1">
                                   <Button
@@ -416,7 +566,7 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                                     <i className="fas fa-minus"></i>
                                   </Button>
                                   <span
-                                    className="mx-3 fw-bold"
+                                    className="mx-2 mx-md-3 fw-bold"
                                     style={{
                                       minWidth: "20px",
                                       textAlign: "center",
@@ -450,18 +600,18 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
 
                         {/* Variations section */}
                         {item.variations && item.variations.length > 0 && (
-                          <div className="mb-4">
-                            <h6 className="text-primary fw-bold mb-3">
+                          <div className="mb-3 mb-md-4">
+                            <h6 className="text-primary fw-bold mb-3 fs-6 fs-md-6">
                               <i className="fas fa-cogs me-2"></i>
                               Variations
                             </h6>
-                            <div className="row">
+                            <div className="row variations-mobile">
                               {item.variations.map((variation, vIndex) => (
                                 <div
                                   key={`variation-${vIndex}`}
-                                  className="col-md-6 mb-3"
+                                  className="col-12 col-md-6 mb-3"
                                 >
-                                  <label className="form-label fw-medium text-dark">
+                                  <label className="form-label fw-medium text-dark small">
                                     {variation.name}
                                   </label>
                                   <Form.Select
@@ -474,6 +624,7 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                                       )
                                     }
                                     className="rounded-3 border-2"
+                                    size="sm"
                                   >
                                     {variation.options.map((option, oIndex) => (
                                       <option
@@ -496,15 +647,15 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                         {/* Add-ons section */}
                         {item.add_ons && item.add_ons.length > 0 && (
                           <div>
-                            <h6 className="text-primary fw-bold mb-3">
+                            <h6 className="text-primary fw-bold mb-3 fs-6 fs-md-6">
                               <i className="fas fa-plus-circle me-2"></i>
                               Add-ons & Extras
                             </h6>
-                            <div className="row">
+                            <div className="row addons-mobile">
                               {item.add_ons.map((addon, aIndex) => (
                                 <div
                                   key={`addon-${aIndex}`}
-                                  className="col-md-6 mb-3"
+                                  className="col-12 col-md-6 mb-3"
                                 >
                                   <div
                                     className="card border-2 h-100"
@@ -517,7 +668,7 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                                         : "white",
                                     }}
                                   >
-                                    <div className="card-body p-3">
+                                    <div className="card-body p-2 p-md-3">
                                       <div className="d-flex align-items-center justify-content-between">
                                         <div className="flex-grow-1">
                                           <Form.Check
@@ -529,7 +680,7 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                                             }
                                             label={
                                               <div>
-                                                <div className="fw-medium">
+                                                <div className="fw-medium small">
                                                   {addon.name}
                                                 </div>
                                                 <small className="text-success fw-bold">
@@ -558,12 +709,13 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
         )}
       </Modal.Body>
 
-      <Modal.Footer className="border-top-0 pt-0 px-4 pb-4">
-        <div className="w-100 d-flex justify-content-between align-items-center">
+      <Modal.Footer className="border-top-0 pt-0 px-2 px-md-4 pb-3 pb-md-4">
+        <div className="w-100 d-flex  justify-content-between align-items-center flex-column flex-md-row">
           <Button
             variant="outline-secondary"
             onClick={onHide}
-            className="px-4 py-2"
+            className="px-3 px-md-4 py-2 w-100 w-md-auto order-2 order-md-1"
+            size="sm"
           >
             <i className="fas fa-times me-2"></i> Cancel
           </Button>
@@ -571,8 +723,9 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
             variant="primary"
             onClick={handleAddToCart}
             disabled={loading || customizedItems.length === 0}
-            className="px-5 py-2 fw-bold"
+            className="px-4 ms-3 px-md-5 py-2 fw-bold w-100 w-md-auto order-1 order-md-2"
             style={{ minWidth: "200px" }}
+            size="sm"
           >
             {loading ? (
               <>
@@ -584,12 +737,16 @@ const ReorderModal = ({ show, onHide, orderItems = [], restaurantId }) => {
                   aria-hidden="true"
                   className="me-2"
                 />
-                Processing...
+                <span className="d-none d-sm-inline">Processing...</span>
+                <span className="d-sm-none">Loading...</span>
               </>
             ) : (
               <>
                 <i className="fas fa-shopping-cart me-2"></i>
-                Add to Cart & Checkout
+                <span className="d-none d-sm-inline">
+                  Add to Cart & Checkout
+                </span>
+                <span className="d-sm-none">Add & Checkout</span>
               </>
             )}
           </Button>

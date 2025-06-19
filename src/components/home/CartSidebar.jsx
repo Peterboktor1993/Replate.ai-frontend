@@ -238,7 +238,7 @@ const CartSidebar = ({
     <div className="cart-sidebar-container">
       <div className="row mx-0">
         <div className="col-xl-12">
-          <div className="card bg-primary-light border-primary cart-sidebar-sticky overflow-hidden">
+          <div className=" bg-primary-light border-primary cart-sidebar-sticky overflow-hidden">
             <div className="card-body py-4">
               <div className="card bg-primary blance-card">
                 {token && user ? (
@@ -277,7 +277,6 @@ const CartSidebar = ({
               <div
                 className="border-line"
                 style={{
-                  borderBottom: "1px solid var(--primary-color)",
                   margin: "0 -1.9rem",
                   width: "calc(100% + 3.8rem)",
                   marginTop: "4.4rem",
@@ -299,7 +298,7 @@ const CartSidebar = ({
                   </p>
                 </div>
               ) : (
-                <>
+                <div className="px-3 px-md-1">
                   {/* Cart Header with Counter */}
                   <div className="cart-header d-flex align-items-center justify-content-between mt-3 mb-3">
                     <h6 className="mb-0 fw-bold">
@@ -512,11 +511,11 @@ const CartSidebar = ({
                       </div>
                     )}
                   </div>
-                </>
+                </div>
               )}
 
               {cartItems.length > 0 && (
-                <>
+                <div className="px-3 px-md-1">
                   <div className="d-flex align-items-center justify-content-between mb-2 pt-2 border-top">
                     <button
                       className="btn btn-outline-danger btn-sm"
@@ -529,7 +528,7 @@ const CartSidebar = ({
                       in cart
                     </small>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
@@ -576,10 +575,12 @@ const CartSidebar = ({
         </div>
 
         <div className="col-xl-12 mt-4">
-          <AutoBannerSlider
-            sideBannerImages={sideBannerImages}
-            interval={4000}
-          />
+          <div className="banner-wrapper">
+            <AutoBannerSlider
+              sideBannerImages={sideBannerImages}
+              interval={4000}
+            />
+          </div>
         </div>
       </div>
 
@@ -913,6 +914,238 @@ const CartSidebar = ({
           .extra-tag {
             font-size: 9px;
             padding: 1px 4px;
+          }
+        }
+
+        /* Enhanced responsive design for different screen sizes */
+        @media (min-width: 992px) and (max-width: 1199.98px) {
+          .cart-sidebar-container {
+            transform: scale(0.95);
+            transform-origin: top left;
+          }
+
+          .item-name-small {
+            max-width: 95px;
+            font-size: 0.8rem;
+          }
+
+          .item-total-price {
+            font-size: 0.8rem;
+          }
+
+          .quantity-info {
+            font-size: 0.7rem;
+          }
+        }
+
+        @media (min-width: 1000px) and (max-width: 1136px) {
+          .cart-sidebar-container {
+            transform: scale(0.98);
+            transform-origin: top left;
+            padding: 0.25rem;
+          }
+
+          .cart-sidebar-sticky {
+            padding: 0.5rem;
+          }
+
+          .compact-cart-item {
+            padding: 4px;
+            margin-bottom: 4px;
+          }
+
+          .item-image-small img {
+            width: 32px;
+            height: 32px;
+          }
+
+          .item-name-small {
+            max-width: 75px;
+            font-size: 0.75rem;
+            line-height: 1.1;
+          }
+
+          .item-total-price {
+            font-size: 0.75rem;
+          }
+
+          .btn-qty-compact {
+            width: 20px;
+            height: 20px;
+            font-size: 8px;
+          }
+
+          .qty-display-compact {
+            font-size: 0.75rem;
+            min-width: 18px;
+          }
+
+          .variation-compact {
+            font-size: 0.6rem;
+            padding: 1px 3px;
+          }
+
+          .card-body {
+            padding: 0.75rem;
+          }
+
+          .btn-lg {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+          }
+
+          .display-4 {
+            font-size: 1.75rem;
+          }
+        }
+
+        @media (min-width: 1200px) and (max-width: 1399.98px) {
+          .cart-sidebar-container {
+            transform: scale(0.97);
+            transform-origin: top left;
+          }
+
+          .compact-cart-item {
+            padding: 6px;
+          }
+
+          .item-name-small {
+            max-width: 105px;
+            font-size: 0.85rem;
+          }
+
+          .btn-qty-compact {
+            width: 22px;
+            height: 22px;
+            font-size: 9px;
+          }
+
+          .qty-display-compact {
+            font-size: 0.8rem;
+          }
+        }
+
+        @media (min-width: 1400px) {
+          .cart-sidebar-container {
+            transform: scale(1);
+          }
+        }
+
+        /* Mobile layout improvements */
+        @media (max-width: 991.98px) {
+          .cart-sidebar-container {
+            position: relative;
+            top: 0;
+            transform: none;
+          }
+
+          .cart-sidebar-sticky {
+            position: relative;
+            top: 0;
+          }
+
+          .compact-cart-item {
+            padding: 12px;
+          }
+
+          .item-name-small {
+            max-width: 150px;
+            font-size: 1rem;
+          }
+
+          .item-total-price {
+            font-size: 1rem;
+          }
+
+          .btn-qty-compact {
+            width: 28px;
+            height: 28px;
+            font-size: 11px;
+          }
+
+          .qty-display-compact {
+            font-size: 1rem;
+          }
+        }
+
+        /* Banner wrapper responsive alignment */
+        .banner-wrapper {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin: 0 auto;
+        }
+
+        .banner-wrapper img {
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+          max-width: 100%;
+          height: auto;
+        }
+
+        .banner-wrapper img:hover {
+          transform: scale(1.02);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Responsive banner sizing */
+        @media (max-width: 991.98px) {
+          .banner-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+          }
+        }
+
+        @media (min-width: 992px) and (max-width: 1199.98px) {
+          .banner-wrapper {
+            max-width: 100%;
+          }
+
+          .banner-wrapper img {
+            transform: scale(0.95);
+          }
+
+          .banner-wrapper img:hover {
+            transform: scale(0.97);
+          }
+        }
+
+        /* Banner optimization for 1000-1136px range */
+        @media (min-width: 1000px) and (max-width: 1136px) {
+          .banner-wrapper {
+            max-width: 100%;
+            padding: 0 0.25rem;
+          }
+
+          .banner-wrapper img {
+            transform: scale(0.88);
+            border-radius: 6px;
+          }
+
+          .banner-wrapper img:hover {
+            transform: scale(0.9);
+          }
+        }
+
+        @media (min-width: 1200px) and (max-width: 1399.98px) {
+          .banner-wrapper {
+            max-width: 100%;
+          }
+
+          .banner-wrapper img {
+            transform: scale(0.97);
+          }
+
+          .banner-wrapper img:hover {
+            transform: scale(0.99);
+          }
+        }
+
+        @media (min-width: 1400px) {
+          .banner-wrapper {
+            max-width: 100%;
           }
         }
       `}</style>

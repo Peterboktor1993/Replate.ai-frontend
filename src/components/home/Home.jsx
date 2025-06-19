@@ -203,7 +203,8 @@ const Home = ({
           price: item.price,
           quantity: item.quantity + 1,
         },
-        token
+        token,
+        restaurantId
       )
     );
   };
@@ -217,7 +218,8 @@ const Home = ({
             price: item.price,
             quantity: item.quantity - 1,
           },
-          token
+          token,
+          restaurantId
         )
       );
     } else {
@@ -242,7 +244,7 @@ const Home = ({
   return (
     <>
       <div className={`row g-0 ${className}`}>
-        <div className="col-xl-10 col-xxl-9 px-0">
+        <div className="col-12 col-lg-8 col-xl-9 col-xxl-9 px-0">
           <div className="row mx-0">
             <div className="col-xl-12 px-0">
               <BannerSlider restaurantDetails={restaurantDetails} />
@@ -330,23 +332,25 @@ const Home = ({
             </div>
           </div>
         </div>
-        <div className="col-xl-2 col-xxl-3" ref={checkoutRef}>
-          <CartSidebar
-            checkoutRef={checkoutRef}
-            token={token}
-            user={user}
-            cartLoading={cartLoading}
-            cartItems={cartItems}
-            handleClearCart={handleClearCart}
-            handleDecreaseQuantity={handleDecreaseQuantity}
-            handleIncreaseQuantity={handleIncreaseQuantity}
-            handleRemoveItem={handleRemoveItem}
-            calculateTotal={calculateTotal}
-            recentOrders={recentOrders}
-            BannerPic={BannerPic}
-            restaurantId={restaurantId}
-            restaurantDetails={restaurantDetails}
-          />
+        <div className="col-12 col-lg-4 col-xl-3 col-xxl-3" ref={checkoutRef}>
+          <div className="cart-responsive-wrapper">
+            <CartSidebar
+              checkoutRef={checkoutRef}
+              token={token}
+              user={user}
+              cartLoading={cartLoading}
+              cartItems={cartItems}
+              handleClearCart={handleClearCart}
+              handleDecreaseQuantity={handleDecreaseQuantity}
+              handleIncreaseQuantity={handleIncreaseQuantity}
+              handleRemoveItem={handleRemoveItem}
+              calculateTotal={calculateTotal}
+              recentOrders={recentOrders}
+              BannerPic={BannerPic}
+              restaurantId={restaurantId}
+              restaurantDetails={restaurantDetails}
+            />
+          </div>
         </div>
       </div>
 
@@ -493,6 +497,357 @@ const Home = ({
           position: sticky;
           top: 24px;
           z-index: 1020;
+        }
+
+        /* Cart Responsive Wrapper */
+        .cart-responsive-wrapper {
+          width: 100%;
+          min-height: 100%;
+        }
+
+        /* Mobile First Approach - Cart at bottom on small screens */
+        @media (max-width: 991.98px) {
+          .cart-responsive-wrapper {
+            margin-top: 2rem;
+            padding: 0 1rem;
+          }
+
+          .cart-sidebar-sticky {
+            position: relative;
+            top: 0;
+          }
+
+          .cart-responsive-wrapper .card {
+            max-width: 600px;
+            margin: 0 auto;
+          }
+        }
+
+        /* Medium screens (992px - 1199px) */
+        @media (min-width: 992px) and (max-width: 1199.98px) {
+          .cart-responsive-wrapper .card {
+            font-size: 0.9rem;
+          }
+
+          .cart-responsive-wrapper .card-body {
+            padding: 1rem;
+          }
+
+          .cart-responsive-wrapper .btn-lg {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+          }
+
+          .cart-responsive-wrapper .display-4 {
+            font-size: 2rem;
+          }
+        }
+
+        /* Large screens (1200px - 1399px) - Fix the tight space issue */
+        @media (min-width: 1200px) and (max-width: 1399.98px) {
+          .cart-responsive-wrapper {
+            padding-left: 1rem;
+          }
+
+          .cart-responsive-wrapper .card {
+            font-size: 0.95rem;
+          }
+
+          .cart-responsive-wrapper .card-body {
+            padding: 1.25rem;
+          }
+
+          .cart-responsive-wrapper .btn-lg {
+            padding: 11px 20px;
+            font-size: 0.95rem;
+          }
+
+          .cart-responsive-wrapper .display-4 {
+            font-size: 2.25rem;
+          }
+
+          /* Optimize spacing for 1200-1300px range */
+          .cart-responsive-wrapper .item-name-small {
+            max-width: 110px;
+            font-size: 0.85rem;
+          }
+
+          .cart-responsive-wrapper .variation-compact {
+            font-size: 0.65rem;
+            padding: 1px 4px;
+          }
+        }
+
+        /* Extra large screens (1400px+) */
+        @media (min-width: 1400px) {
+          .cart-responsive-wrapper {
+            padding-left: 1.5rem;
+          }
+
+          .cart-responsive-wrapper .card-body {
+            padding: 1.5rem;
+          }
+        }
+
+        /* Ultra-wide screens optimization */
+        @media (min-width: 1600px) {
+          .cart-responsive-wrapper {
+            max-width: 400px;
+          }
+        }
+
+        /* Tablet landscape specific fixes */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+          .cart-responsive-wrapper {
+            margin-top: 1.5rem;
+            padding: 0 2rem;
+          }
+
+          .cart-responsive-wrapper .card {
+            max-width: 500px;
+            margin: 0 auto;
+          }
+        }
+
+        /* Mobile landscape */
+        @media (max-width: 767.98px) and (orientation: landscape) {
+          .cart-responsive-wrapper {
+            margin-top: 1rem;
+            padding: 0 0.5rem;
+          }
+        }
+
+        /* Very small mobile screens */
+        @media (max-width: 575.98px) {
+          .cart-responsive-wrapper {
+            padding: 0 0.5rem;
+          }
+
+          .cart-responsive-wrapper .card-body {
+            padding: 0.75rem;
+          }
+
+          .cart-responsive-wrapper .btn-lg {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+          }
+        }
+
+        @media (min-width: 1200px) and (max-width: 1299.98px) {
+          .popular-dishes-grid .col-xl-2 {
+            flex: 0 0 auto;
+            width: 20% !important; /* 5 items per row on XL (1200-1299px) */
+          }
+        }
+
+        @media (min-width: 1300px) {
+          .popular-dishes-grid .col-xl-2 {
+            flex: 0 0 auto;
+            width: 16.666667% !important; /* 6 items per row on 1300px+ */
+          }
+        }
+
+        @media (min-width: 992px) and (max-width: 1199.98px) {
+          .popular-dishes-grid .col-lg-3 {
+            flex: 0 0 auto;
+            width: 25% !important; /* 4 items per row on LG */
+          }
+        }
+
+        @media (min-width: 576px) and (max-width: 991.98px) {
+          .popular-dishes-grid .col-sm-4 {
+            flex: 0 0 auto;
+            width: 33.33333333% !important; /* 3 items per row on SM-MD */
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .popular-dishes-grid .col-6 {
+            flex: 0 0 auto;
+            width: 50% !important; /* 2 items per row on XS */
+          }
+        }
+
+        /* Extra small screens - optimized for 300-360px */
+        @media (max-width: 360px) {
+          .popular-dishes-grid .col-6 {
+            flex: 0 0 auto;
+            width: 100% !important; /* 1 item per row on very small screens */
+            max-width: 280px;
+            margin: 0 auto;
+          }
+
+          .popular-dishes-grid .product-card {
+            height: 240px;
+            margin-bottom: 1rem;
+          }
+
+          .popular-dishes-grid .text-center {
+            padding: 1.5rem;
+          }
+
+          .popular-dishes-grid .card-footer {
+            padding: 1rem;
+          }
+
+          .popular-dishes-grid .product-name {
+            font-size: 14px;
+            line-height: 1.2;
+          }
+
+          .popular-dishes-grid .add-to-cart-btn {
+            width: 28px;
+            height: 28px;
+          }
+
+          .cate-title {
+            font-size: 1.1rem;
+          }
+        }
+
+        /* Ultra small screens (320px and below) */
+        @media (max-width: 320px) {
+          .popular-dishes-grid .col-6 {
+            max-width: 250px;
+          }
+
+          .popular-dishes-grid .product-card {
+            height: 220px;
+          }
+
+          .popular-dishes-grid .text-center {
+            padding: 1rem;
+          }
+
+          .popular-dishes-grid .card-footer {
+            padding: 0.75rem;
+          }
+
+          .popular-dishes-grid .product-name {
+            font-size: 13px;
+          }
+
+          .popular-dishes-grid .add-to-cart-btn {
+            width: 26px;
+            height: 26px;
+          }
+
+          .popular-dishes-grid .add-to-cart-btn i {
+            font-size: 10px;
+          }
+
+          .cate-title {
+            font-size: 1rem;
+          }
+
+          .title-section h4 {
+            font-size: 1rem;
+          }
+        }
+
+        /* Ensure products have consistent sizing */
+        .popular-dishes-grid .product-card {
+          height: 280px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .popular-dishes-grid .card-footer {
+          margin-top: auto;
+        }
+
+        /* Better responsive spacing for main content area */
+        @media (min-width: 992px) and (max-width: 1199.98px) {
+          .col-lg-8 {
+            padding-right: 0.75rem;
+          }
+        }
+
+        /* Specific handling for 1000-1136px range */
+        @media (min-width: 1000px) and (max-width: 1136px) {
+          .col-lg-8 {
+            flex: 0 0 auto;
+            width: 68% !important;
+            padding-right: 0.5rem;
+          }
+
+          .col-lg-4 {
+            flex: 0 0 auto;
+            width: 32% !important;
+            padding-left: 0.5rem;
+          }
+
+          .popular-dishes-grid .col-lg-3 {
+            flex: 0 0 auto;
+            width: 33.33333333% !important; /* 3 items per row in this range */
+          }
+        }
+
+        @media (min-width: 1200px) and (max-width: 1399.98px) {
+          .col-xl-9 {
+            padding-right: 1rem;
+          }
+        }
+
+        @media (min-width: 1400px) {
+          .col-xxl-9 {
+            padding-right: 1.5rem;
+          }
+        }
+
+        /* Enhanced mobile layout */
+        @media (max-width: 991.98px) {
+          .row.mx-0 {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
+
+          .col-xl-12.px-0 {
+            padding-left: 15px !important;
+            padding-right: 15px !important;
+          }
+        }
+
+        /* Very small screen layout fixes */
+        @media (max-width: 360px) {
+          .col-xl-12.px-0 {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
+
+          .row.mx-0 {
+            margin-left: -5px !important;
+            margin-right: -5px !important;
+          }
+
+          .row.g-3 > * {
+            padding-left: 5px !important;
+            padding-right: 5px !important;
+          }
+
+          .d-flex.align-items-center.justify-content-between {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.5rem;
+          }
+        }
+
+        /* Ultra small screens */
+        @media (max-width: 320px) {
+          .col-xl-12.px-0 {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+          }
+
+          .row.mx-0 {
+            margin-left: -3px !important;
+            margin-right: -3px !important;
+          }
+
+          .row.g-3 > * {
+            padding-left: 3px !important;
+            padding-right: 3px !important;
+          }
         }
       `}</style>
     </>

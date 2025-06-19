@@ -266,7 +266,7 @@ const PopularDishesSlider = ({
     };
 
     try {
-      dispatch(addToCart(payload, token));
+      dispatch(addToCart(payload, token, restaurantId));
     } catch (error) {
       // do nothing
     }
@@ -283,7 +283,7 @@ const PopularDishesSlider = ({
           products?.map((product, index) => (
             <div
               key={product.id}
-              className="col-6 col-sm-4 col-md-3 col-lg-2"
+              className="col-6 col-sm-4 col-lg-3 col-xl-2"
               onClick={() => openProductModal(product)}
               style={{ cursor: "pointer" }}
               ref={index === products.length - 1 ? lastProductElementRef : null}
@@ -344,7 +344,7 @@ const PopularDishesSlider = ({
           {/* Skeleton Loading Cards */}
           <div className="row g-3 mb-3">
             {[...Array(6)].map((_, index) => (
-              <div key={index} className="col-6 col-sm-4 col-md-3 col-lg-2">
+              <div key={index} className="col-6 col-sm-4 col-lg-3 col-xl-2">
                 <div className="card skeleton-card border rounded shadow-sm h-100">
                   <div className="text-center p-3">
                     <div className="skeleton-image rounded-2"></div>

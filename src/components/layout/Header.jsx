@@ -136,7 +136,15 @@ const Header = ({ details }) => {
                   ) : (
                     <div className="restaurant-status-closed d-flex align-items-center">
                       <span className="status-dot-closed me-1"></span>
-                      <span className="status-text">Closed</span>
+                      <div className="d-flex flex-column">
+                        <span className="status-text">Closed</span>
+                        {details.opening_time &&
+                          details.opening_time !== null && (
+                            <span className="opening-time-text">
+                              Opens at {details.opening_time.slice(0, 5)}
+                            </span>
+                          )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -530,6 +538,14 @@ const Header = ({ details }) => {
           font-weight: 500;
         }
 
+        .opening-time-text {
+          font-size: 0.65rem;
+          font-weight: 400;
+          color: #ef4444;
+          opacity: 0.8;
+          margin-top: 1px;
+        }
+
         @keyframes pulse-green {
           0% {
             box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
@@ -571,6 +587,10 @@ const Header = ({ details }) => {
           .status-text {
             font-size: 0.7rem;
           }
+
+          .opening-time-text {
+            font-size: 0.6rem;
+          }
         }
 
         @media (max-width: 479.98px) {
@@ -589,6 +609,10 @@ const Header = ({ details }) => {
           .status-text {
             font-size: 0.65rem;
           }
+
+          .opening-time-text {
+            font-size: 0.55rem;
+          }
         }
 
         @media (max-width: 359.98px) {
@@ -600,6 +624,10 @@ const Header = ({ details }) => {
 
           .status-text {
             font-size: 0.6rem;
+          }
+
+          .opening-time-text {
+            font-size: 0.5rem;
           }
         }
 

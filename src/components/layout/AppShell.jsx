@@ -112,7 +112,7 @@ const AppShell = ({ children, details }) => {
           </Suspense>
 
           <main className="flex-grow-1 py-4">
-            <div className="container-fluid px-4 px-md-5">
+            <div className="container-fluid px-4 px-md-2 px-lg-3">
               <LoadingWrapper delay={50}>{renderChildren()}</LoadingWrapper>
             </div>
           </main>

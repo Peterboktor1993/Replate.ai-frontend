@@ -10,6 +10,10 @@ import {
   removeUserAccount,
 } from "@/store/services/authService";
 import { addToast } from "@/store/slices/toastSlice";
+import {
+  validateNorthAmericanPhone,
+  cleanPhoneNumber,
+} from "@/utils/phoneValidation";
 
 export const useProfile = (router = null, restaurantId = null) => {
   const [profileData, setProfileData] = useState({
@@ -265,9 +269,26 @@ export const useProfile = (router = null, restaurantId = null) => {
         return;
       }
 
-      const fullPhoneNumber = requiredFields.phone.trim()
-        ? `${countryCode}${requiredFields.phone.trim()}`
-        : profileData.phone || "";
+      let fullPhoneNumber = profileData.phone || "";
+      if (requiredFields.phone.trim()) {
+        const phoneToValidate = requiredFields.phone.trim();
+        const phoneValidation = validateNorthAmericanPhone(phoneToValidate);
+
+        if (!phoneValidation.isValid) {
+          dispatch(
+            addToast({
+              type: "error",
+              title: "Phone Validation Error",
+              message: phoneValidation.error,
+            })
+          );
+          return;
+        }
+
+        const cleanedPhone = cleanPhoneNumber(phoneToValidate);
+        fullPhoneNumber =
+          cleanedPhone.length === 11 ? cleanedPhone : `1${cleanedPhone}`;
+      }
 
       const phoneChanged =
         fullPhoneNumber && fullPhoneNumber !== profileData.phone;
@@ -325,7 +346,6 @@ export const useProfile = (router = null, restaurantId = null) => {
     try {
       setAddressLoading(true);
 
-      // Validate required fields
       if (!addressForm.contact_person_name.trim()) {
         dispatch(
           addToast({
@@ -400,7 +420,6 @@ export const useProfile = (router = null, restaurantId = null) => {
         return;
       }
 
-      // Create a full address from the components
       const fullAddress = [
         addressForm.street_address,
         addressForm.apartment,
@@ -411,18 +430,58 @@ export const useProfile = (router = null, restaurantId = null) => {
 
       const addressData = {
         contact_person_name: addressForm.contact_person_name,
-        contact_person_number: userPhone, // Use profile phone number
+        contact_person_number: userPhone,
         address_type: addressForm.address_type,
         address: fullAddress,
         longitude: addressForm.longitude,
         latitude: addressForm.latitude,
-        // Keep the individual components for potential future use
         street_address: addressForm.street_address,
         apartment: addressForm.apartment,
         city: addressForm.city,
         state: addressForm.state,
         zip_code: addressForm.zip_code,
       };
+
+      if (!editAddressId) {
+        const existingAddressWithSameType = addresses.find(
+          (addr) => addr.address_type === addressData.address_type
+        );
+
+        if (existingAddressWithSameType) {
+          const confirmOverride = await new Promise((resolve) => {
+            const swal = require("sweetalert");
+            swal({
+              title: "Address Already Exists",
+              text: `You already have a ${addressData.address_type.toUpperCase()} address. Do you want to replace it with this new address?`,
+              icon: "warning",
+              buttons: {
+                cancel: {
+                  text: "Cancel",
+                  value: false,
+                  visible: true,
+                },
+                confirm: {
+                  text: "Replace Address",
+                  value: true,
+                  visible: true,
+                },
+              },
+              dangerMode: true,
+            }).then((willReplace) => {
+              resolve(willReplace);
+            });
+          });
+
+          if (!confirmOverride) {
+            setAddressLoading(false);
+            return;
+          }
+
+          await dispatch(
+            deleteUserAddress(token, existingAddressWithSameType.id)
+          );
+        }
+      }
 
       const result = editAddressId
         ? await dispatch(updateUserAddress(token, editAddressId, addressData))

@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { addToast } from "@/store/slices/toastSlice";
 import { placeOrder } from "@/store/services/orderService";
+import PhoneInput from "@/components/ui/PhoneInput";
 
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { generateGuestId } from "@/utils/guestOrderHandling";
+import { regenerateGuestId } from "@/store/slices/cartSlice";
 
 import DeliveryOptions from "@/components/checkout/DeliveryOptions";
 import AddressSection from "@/components/checkout/AddressSection";
@@ -182,11 +184,29 @@ const CheckoutPage = ({ restaurantDetails }) => {
   const [autoSelectFirstAddress, setAutoSelectFirstAddress] = useState(null);
 
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [retryAttempts, setRetryAttempts] = useState(0);
+  const [phoneValidation, setPhoneValidation] = useState({
+    isValid: true,
+    error: null,
+  });
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
-    phoneNumber: Yup.string().required("Phone number is required"),
+    phoneNumber: Yup.string()
+      .required("Phone number is required")
+      .test(
+        "is-valid-north-american-phone",
+        "Please enter a valid US or Canadian phone number",
+        (value) => {
+          if (!value) return false;
+          const {
+            validateNorthAmericanPhone,
+          } = require("@/utils/phoneValidation");
+          const validation = validateNorthAmericanPhone(value);
+          return validation.isValid;
+        }
+      ),
     address: Yup.string().when("orderType", {
       is: "delivery",
       then: (schema) => schema.required("Street address is required"),
@@ -805,6 +825,47 @@ const CheckoutPage = ({ restaurantDetails }) => {
         ...(newAddress.house?.trim() && { house: newAddress.house.trim() }),
       };
 
+      const existingAddressWithSameType = addressList.find(
+        (addr) => addr.address_type === requiredFields.address_type
+      );
+
+      if (existingAddressWithSameType) {
+        const confirmOverride = await new Promise((resolve) => {
+          swal({
+            title: "Address Already Exists",
+            text: `You already have a ${requiredFields.address_type.toUpperCase()} address. Do you want to replace it with this new address?`,
+            icon: "warning",
+            buttons: {
+              cancel: {
+                text: "Cancel",
+                value: false,
+                visible: true,
+              },
+              confirm: {
+                text: "Replace Address",
+                value: true,
+                visible: true,
+              },
+            },
+            dangerMode: true,
+            className: "swal-high-z-index",
+          }).then((willReplace) => {
+            resolve(willReplace);
+          });
+        });
+
+        if (!confirmOverride) {
+          return;
+        }
+
+        const { deleteUserAddress } = await import(
+          "@/store/services/authService"
+        );
+        await dispatch(
+          deleteUserAddress(token, existingAddressWithSameType.id)
+        );
+      }
+
       const result = await dispatch(addUserAddress(token, addressData));
 
       if (result.success) {
@@ -892,7 +953,52 @@ const CheckoutPage = ({ restaurantDetails }) => {
     setCurrentFormValues(values);
   };
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const isEmptyCartError = (error) => {
+    const errorMessage = error?.message || error || "";
+    const emptyCartKeywords = [
+      "empty order",
+      "cart is empty",
+      "no items",
+      "cannot place empty",
+      "cart items not found",
+    ];
+
+    return emptyCartKeywords.some((keyword) =>
+      errorMessage.toLowerCase().includes(keyword.toLowerCase())
+    );
+  };
+
+  const handleEmptyCartRetry = async (values, setSubmitting) => {
+    if (retryAttempts >= 2) {
+      dispatch(
+        addToast({
+          show: true,
+          title: "Cart Sync Error",
+          message:
+            "Unable to sync your cart. Please refresh the page and try again.",
+          type: "error",
+        })
+      );
+      return false;
+    }
+
+    try {
+      setRetryAttempts((prev) => prev + 1);
+
+      dispatch(regenerateGuestId());
+
+      const { fetchCartItems } = await import("@/store/services/cartService");
+      await dispatch(fetchCartItems({ restaurant_id: restaurant }, token));
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      return await handleSubmit(values, { setSubmitting }, true); // true flag for silent retry
+    } catch (retryError) {
+      return false;
+    }
+  };
+
+  const handleSubmit = async (values, { setSubmitting }, isRetry = false) => {
     try {
       setProcessing(true);
 
@@ -900,7 +1006,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
         cartItems && cartItems.length > 0 ? cartItems : getCurrentCartItems();
 
       if (!currentCartItems || currentCartItems.length === 0) {
-        console.error("❌ Empty cart detected");
         throw new Error(
           "Cannot place an empty order. Please add items to your cart."
         );
@@ -1047,7 +1152,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
             setPopupRef(popup);
           }, 500);
         } catch (error) {
-          console.error("Error processing payment:", error);
           setProcessing(false);
           setPaymentPopupOpen(false);
           throw error;
@@ -1069,11 +1173,26 @@ const CheckoutPage = ({ restaurantDetails }) => {
           setRedirectCountdown(10);
           setShowSuccessModal(true);
         } else {
-          throw new Error(result.error || "Failed to place order");
+          const error = new Error(result.error || "Failed to place order");
+          error.originalError = result.error;
+          throw error;
         }
       }
     } catch (error) {
-      console.error("Error in checkout:", error);
+      if (
+        !isRetry &&
+        isEmptyCartError(error) &&
+        !token &&
+        cartItems.length > 0
+      ) {
+        setProcessing(false);
+
+        const retrySuccess = await handleEmptyCartRetry(values, setSubmitting);
+        if (retrySuccess) {
+          return;
+        }
+      }
+
       dispatch(
         addToast({
           show: true,
@@ -1159,7 +1278,6 @@ const CheckoutPage = ({ restaurantDetails }) => {
         setPopupRef(popup);
       }, 500);
     } catch (error) {
-      console.error("Error retrying payment:", error);
       setProcessing(false);
       setPaymentPopupOpen(false);
 
@@ -1735,68 +1853,79 @@ const CheckoutPage = ({ restaurantDetails }) => {
                             )}
 
                             {/* Contact Information */}
-                            <div className="mb-3">
-                              <label className="d-flex align-items-center">
-                                First Name
-                              </label>
-                              <Field
-                                name="firstName"
-                                type="text"
-                                className={`form-control`}
-                                placeholder="First Name"
-                                disabled={processing}
-                                style={{
-                                  backgroundColor: "white",
-                                  cursor: "text",
-                                }}
-                              />
-                              <ErrorMessage
-                                name="firstName"
-                                component="div"
-                                className="text-danger"
-                              />
-                            </div>
-                            <div className="mb-3">
-                              <label className="d-flex align-items-center">
-                                Last Name
-                              </label>
-                              <Field
-                                name="lastName"
-                                type="text"
-                                className={`form-control`}
-                                placeholder="Last Name"
-                                disabled={processing}
-                                style={{
-                                  backgroundColor: "white",
-                                  cursor: "text",
-                                }}
-                              />
-                              <ErrorMessage
-                                name="lastName"
-                                component="div"
-                                className="text-danger"
-                              />
-                            </div>
-                            <div className="mb-3">
-                              <label className="d-flex align-items-center">
-                                Phone Number
-                              </label>
-                              <Field
-                                name="phoneNumber"
-                                type="text"
-                                className={`form-control`}
-                                placeholder="Phone Number"
-                                disabled={processing}
-                                style={{
-                                  backgroundColor: "white",
-                                  cursor: "text",
-                                }}
-                              />
-                              <ErrorMessage
-                                name="phoneNumber"
-                                component="div"
-                                className="text-danger"
-                              />
+                            <div className="row mb-3">
+                              <div className="col-xl-4">
+                                <div className="mb-3">
+                                  <label className="d-flex align-items-center">
+                                    First Name
+                                  </label>
+                                  <Field
+                                    name="firstName"
+                                    type="text"
+                                    className={`form-control`}
+                                    placeholder="First Name"
+                                    disabled={processing}
+                                    style={{
+                                      backgroundColor: "white",
+                                      cursor: "text",
+                                    }}
+                                  />
+                                  <ErrorMessage
+                                    name="firstName"
+                                    component="div"
+                                    className="text-danger"
+                                  />
+                                </div>
+                              </div>
+                              <div className="col-xl-4">
+                                <div className="mb-3">
+                                  <label className="d-flex align-items-center">
+                                    Last Name
+                                  </label>
+                                  <Field
+                                    name="lastName"
+                                    type="text"
+                                    className={`form-control`}
+                                    placeholder="Last Name"
+                                    disabled={processing}
+                                    style={{
+                                      backgroundColor: "white",
+                                      cursor: "text",
+                                    }}
+                                  />
+                                  <ErrorMessage
+                                    name="lastName"
+                                    component="div"
+                                    className="text-danger"
+                                  />
+                                </div>
+                              </div>
+                              <div className="col-xl-4">
+                                <PhoneInput
+                                  value={values.phoneNumber}
+                                  onChange={(e) => {
+                                    handleChange(e);
+                                    setFieldValue(
+                                      "phoneNumber",
+                                      e.target.value
+                                    );
+                                  }}
+                                  onValidationChange={setPhoneValidation}
+                                  placeholder="Phone Number"
+                                  label="Phone Number"
+                                  required={true}
+                                  disabled={processing}
+                                  showValidation={true}
+                                  showCountryFlag={true}
+                                  id="phoneNumber"
+                                  name="phoneNumber"
+                                />
+                                <ErrorMessage
+                                  name="phoneNumber"
+                                  component="div"
+                                  className="text-danger"
+                                />
+                              </div>
                             </div>
                             {/* Delivery Options */}
                             <DeliveryOptions
@@ -1805,6 +1934,18 @@ const CheckoutPage = ({ restaurantDetails }) => {
                               setFormData={setFieldValue}
                               restaurantDetails={restaurantDetails}
                               disabled={processing}
+                              addressList={addressList}
+                              onAddressTypeChange={(type) => {
+                                const addressOfType = addressList.find(
+                                  (addr) =>
+                                    addr.address_type.toLowerCase() ===
+                                    type.toLowerCase()
+                                );
+
+                                if (addressOfType) {
+                                  handleFormAddressSelection(addressOfType);
+                                }
+                              }}
                             />
                             {/* Address Section */}
                             <AddressSection
@@ -2046,6 +2187,7 @@ const CheckoutPage = ({ restaurantDetails }) => {
         handleAddressTypeSelect={handleAddressTypeSelect}
         handleAddNewAddress={handleAddNewAddress}
         user={user}
+        addressList={addressList}
       />
     </>
   );

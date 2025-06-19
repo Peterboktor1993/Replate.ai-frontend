@@ -219,8 +219,22 @@ const OrdersPage = () => {
     }
   };
 
-  const handleViewDetails = (orderId) => {
-    router.push(`/orders/${orderId}`);
+  const handleViewDetails = (orderId, orderData = null) => {
+    let url = `/orders/${orderId}`;
+
+    if (orderData) {
+      const params = new URLSearchParams({
+        status: orderData.order_status || "",
+        payment_status: orderData.payment_status || "",
+        payment_method: orderData.payment_method || "",
+        order_amount: orderData.order_amount || "",
+        created_at: orderData.created_at || "",
+        order_type: orderData.order_type || "",
+      });
+      url += `?${params.toString()}`;
+    }
+
+    router.push(url);
   };
 
   const handlePayNow = async (order) => {
@@ -420,7 +434,7 @@ const OrdersPage = () => {
               return (
                 <tr
                   key={order.id}
-                  onClick={() => handleViewDetails(order.id)}
+                  onClick={() => handleViewDetails(order.id, order)}
                   style={{ cursor: "pointer" }}
                 >
                   <td>
@@ -493,7 +507,7 @@ const OrdersPage = () => {
                         className="btn btn-sm btn-primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleViewDetails(order.id);
+                          handleViewDetails(order.id, order);
                         }}
                       >
                         <i

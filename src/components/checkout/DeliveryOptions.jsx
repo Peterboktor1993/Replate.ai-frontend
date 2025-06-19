@@ -9,6 +9,8 @@ const DeliveryOptions = ({
   setFormData,
   restaurantDetails,
   disabled,
+  addressList = [],
+  onAddressTypeChange,
 }) => {
   const { setFieldValue, values } = useFormikContext();
 
@@ -144,19 +146,39 @@ const DeliveryOptions = ({
                 {formData.orderType === "delivery" && (
                   <div className="address-type-container">
                     <div className="btn-group address-type-group" role="group">
-                      {["Home", "Office", "Other"].map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          className={`btn-sm address-type-btn ${
-                            formData.addressType === type ? "active" : ""
-                          }`}
-                          onClick={() => setFieldValue("addressType", type)}
-                          disabled={disabled}
-                        >
-                          {type}
-                        </button>
-                      ))}
+                      {["Home", "Office", "Other"].map((type) => {
+                        const hasAddressOfType = addressList.some(
+                          (addr) =>
+                            addr.address_type.toLowerCase() ===
+                            type.toLowerCase()
+                        );
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            className={`btn-sm address-type-btn ${
+                              formData.addressType === type ? "active" : ""
+                            } ${hasAddressOfType ? "has-address" : ""}`}
+                            onClick={() => {
+                              setFieldValue("addressType", type);
+                              if (onAddressTypeChange) {
+                                onAddressTypeChange(type);
+                              }
+                            }}
+                            disabled={disabled}
+                            title={
+                              hasAddressOfType
+                                ? `Switch to saved ${type} address`
+                                : `Select ${type} address type`
+                            }
+                          >
+                            {hasAddressOfType && (
+                              <i className="fas fa-map-marker-alt me-1"></i>
+                            )}
+                            {type}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -310,6 +332,33 @@ const DeliveryOptions = ({
         .address-type-btn:disabled {
           opacity: 0.6;
           cursor: not-allowed;
+        }
+        .address-type-btn.has-address {
+          background: #e8f5e9;
+          color: #2e7d32;
+          border-color: #4caf50;
+          position: relative;
+        }
+        .address-type-btn.has-address:hover:not(:disabled) {
+          background: #4caf50;
+          color: #fff;
+        }
+        .address-type-btn.has-address.active {
+          background: var(--primary-color);
+          color: #fff;
+          border-color: var(--primary-color);
+        }
+        .address-type-btn.has-address:after {
+          content: "";
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          width: 8px;
+          height: 8px;
+          background: #4caf50;
+          border: 2px solid #fff;
+          border-radius: 50%;
+          font-size: 8px;
         }
         .schedule-date-picker {
           padding-left: 0;

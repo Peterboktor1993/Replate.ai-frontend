@@ -376,5 +376,5 @@ input:-webkit-autofill:active {
   justify-content: space-between;
 }
 .modal {
-  z-index: 9999999999 !important;
+  z-index: 9999 !important;
 }
