@@ -1,4 +1,4 @@
-export const BASE_URL = "https://diggitsy.com/replate";
+export const BASE_URL = "https://cravio.ai";
 export const API_URL = `${BASE_URL}/api/v1`;
 export const RESTURANT_ID = 3;
 export const ZONE_ID = 2;

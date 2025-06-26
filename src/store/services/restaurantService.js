@@ -1,12 +1,12 @@
+import { BASE_URL } from "@/utils/CONSTANTS";
+
 //===============================================
 // Get restaurant details (server)
 //===============================================
 export const getRestaurantDetailsServer = async (restaurantId) => {
   const id = restaurantId || 2;
 
-  const response = await fetch(
-    `https://diggitsy.com/replate/api/v1/restaurants/details/${id}`
-  );
+  const response = await fetch(`${BASE_URL}/api/v1/restaurants/details/${id}`);
 
   if (!response.ok) {
     return null;

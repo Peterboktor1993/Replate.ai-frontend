@@ -125,7 +125,7 @@ export const fetchCartItems =
       dispatch(setCartLoading(true));
 
       const { guestId } = getState().cart;
-      let url = `${CART_URL}/list?${new URLSearchParams(params).toString()}`;
+      let url = `${CART_URL}/list`;
 
       const config = {
         headers: token ? { Authorization: `Bearer ${token}` } : {},

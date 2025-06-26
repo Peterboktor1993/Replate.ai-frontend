@@ -1,20 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["localhost", "diggitsy.com"],
+    domains: ["localhost", "cravio.ai"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "diggitsy.com",
+        hostname: "cravio.ai",
         pathname: "/replate/storage/app/public/**",
       },
     ],
   },
-  // Improve error handling and hydration
   reactStrictMode: true,
   swcMinify: true,
 
-  // Optimize for production
   experimental: {
     optimizePackageImports: [
       "react-bootstrap",
@@ -22,20 +20,16 @@ const nextConfig = {
     ],
   },
 
-  // Better error handling in production
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
   },
 
-  // Webpack configuration for better error handling
   webpack: (config, { dev, isServer }) => {
-    // Improve error messages in development
     if (dev) {
       config.devtool = "eval-source-map";
     }
 
-    // Ensure proper module resolution
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,

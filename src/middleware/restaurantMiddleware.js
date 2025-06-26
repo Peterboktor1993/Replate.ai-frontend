@@ -4,13 +4,14 @@ import {
   setRestaurantLoading,
   setRestaurantError,
 } from "@/store/slices/restaurantSlice";
+import { BASE_URL } from "@/utils/CONSTANTS";
 import axios from "axios";
 
 const fetchRestaurantDetails = async (restaurantId, dispatch) => {
   try {
     dispatch(setRestaurantLoading());
     const response = await axios.get(
-      `https://diggitsy.com/replate/api/v1/restaurants/details/${restaurantId}`
+      `${BASE_URL}/api/v1/restaurants/details/${restaurantId}`
     );
 
     if (response.data) {

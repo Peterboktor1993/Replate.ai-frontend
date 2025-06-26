@@ -1,7 +1,7 @@
 import { addToast } from "../slices/toastSlice";
 import { clearCart } from "../slices/cartSlice";
 import axiosInstance from "@/config/axios";
-import { ORDER_URL } from "@/utils/CONSTANTS";
+import { BASE_URL, ORDER_URL } from "@/utils/CONSTANTS";
 import { handleErrorMessage } from "./cartService";
 
 //===============================================
@@ -234,7 +234,7 @@ export const getRunningOrders =
 export const getStripePaymentUrl =
   (orderId, customerId, redirectUrl) => async (dispatch) => {
     try {
-      const paymentUrl = `https://diggitsy.com/replate/payment-mobile?order_id=${orderId}&customer_id=${customerId}&payment_method=stripe&payment_platform=stripe&callback=${encodeURIComponent(
+      const paymentUrl = `${BASE_URL}/payment-mobile?order_id=${orderId}&customer_id=${customerId}&payment_method=stripe&payment_platform=stripe&callback=${encodeURIComponent(
         redirectUrl
       )}`;
 

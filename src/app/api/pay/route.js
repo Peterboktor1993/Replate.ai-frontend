@@ -1,3 +1,4 @@
+import { BASE_URL } from "@/utils/CONSTANTS";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -15,7 +16,7 @@ export async function GET(request) {
   }
 
   try {
-    const stripePaymentUrl = `https://diggitsy.com/replate/payment-mobile?order_id=${orderId}&customer_id=${
+    const stripePaymentUrl = `${BASE_URL}/payment-mobile?order_id=${orderId}&customer_id=${
       customerId || ""
     }&payment_method=stripe&payment_platform=stripe&callback=${encodeURIComponent(
       callbackUrl

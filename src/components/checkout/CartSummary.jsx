@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import TipSection from "./TipSection";
 import CouponSection from "./CouponSection";
 import { calculateCouponDiscount } from "@/store/services/couponService";
+import { BASE_URL } from "@/utils/CONSTANTS";
 
 const CartSummary = ({
   cartItems,
@@ -40,7 +41,7 @@ const CartSummary = ({
     const fetchConfig = async () => {
       try {
         const response = await fetch(
-          "https://diggitsy.com/replate/api/v1/config"
+          `${BASE_URL}/api/v1/config`
         );
         const data = await response.json();
         setConfigData(data);
