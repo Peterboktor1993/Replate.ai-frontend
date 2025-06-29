@@ -301,14 +301,12 @@ const PopularDishesSlider = ({
                     />
                   )}
                 </div>
-                <div className="card-footer border-0 p-3 bg-transparent mt-auto">
-                  <StarRating
+                <div className="card-footer border-0 px-3 bg-transparent mt-auto">
+                  {/* <StarRating
                     rating={product.rating_count || 0}
                     showRating={true}
-                  />
-                  <h5 className="product-name text-truncate mb-1">
-                    {product.name}
-                  </h5>
+                  /> */}
+                  <h5 className="product-name mb-1">{product.name}</h5>
                   <div className="d-flex align-items-center justify-content-between mt-2">
                     <div className="price fw-bold text-primary">
                       ${parseFloat(product.price).toFixed(2)}
@@ -449,8 +447,12 @@ const PopularDishesSlider = ({
         }
 
         .product-name {
-          font-size: 16px;
-          height: 20px;
+          font-size: 15px;
+          line-height: 1.2;
+          min-height: 36px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
         }
 

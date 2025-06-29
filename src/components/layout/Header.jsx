@@ -127,27 +127,7 @@ const Header = ({ details }) => {
 
               {/* Restaurant Status */}
               {details && (
-                <div className="d-flex flex-column ms-2">
-                  {details.status === 1 && details.active !== false ? (
-                    <div className="restaurant-status-open d-flex align-items-center">
-                      <span className="status-dot-open me-1"></span>
-                      <span className="status-text">Online and Opened</span>
-                    </div>
-                  ) : (
-                    <div className="restaurant-status-closed d-flex align-items-center">
-                      <span className="status-dot-closed me-1"></span>
-                      <div className="d-flex flex-column">
-                        <span className="status-text">Closed</span>
-                        {details.opening_time &&
-                          details.opening_time !== null && (
-                            <span className="opening-time-text">
-                              Opens at {details.opening_time.slice(0, 5)}
-                            </span>
-                          )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <RestaurantStatus restaurant={details} className="ms-2" />
               )}
             </div>
 
@@ -182,18 +162,7 @@ const Header = ({ details }) => {
                   >
                     <i className="fas fa-user-circle me-1 me-sm-2"></i>
                     <span className="user-name d-none d-sm-inline">
-                      {isLoadingProfile ? (
-                        <span className="d-inline-flex align-items-center">
-                          <span
-                            className="spinner-border spinner-border-sm me-1"
-                            role="status"
-                            aria-hidden="true"
-                          ></span>
-                          Loading...
-                        </span>
-                      ) : (
-                        user?.f_name || "User"
-                      )}
+                      {user?.f_name || user?.email || "Account"}
                     </span>
                   </button>
                   <ul
@@ -223,36 +192,14 @@ const Header = ({ details }) => {
                               objectFit: "cover",
                             }}
                           />
-                        ) : isLoadingProfile ? (
-                          <div
-                            className="spinner-border spinner-border-sm text-white"
-                            role="status"
-                          >
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
                         ) : (
                           <i className="fas fa-user"></i>
                         )}
                       </div>
                       <div className="user-details">
-                        <h6 className="mb-0">
-                          {isLoadingProfile ? (
-                            <span className="d-inline-flex align-items-center">
-                              <span
-                                className="spinner-border spinner-border-sm me-1"
-                                role="status"
-                                aria-hidden="true"
-                              ></span>
-                              Loading...
-                            </span>
-                          ) : (
-                            user?.f_name || "User"
-                          )}
-                        </h6>
+                        <h6 className="mb-0">{user?.f_name || "User"}</h6>
                         <small className="text-muted user-contact">
-                          {isLoadingProfile
-                            ? "Loading contact..."
-                            : user?.email || user?.phone || ""}
+                          {user?.email || user?.phone || ""}
                         </small>
                       </div>
                     </li>

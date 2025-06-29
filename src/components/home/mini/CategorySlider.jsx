@@ -113,19 +113,19 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
             },
             768: {
               slidesPerView: 4,
-              spaceBetween: 20,
+              spaceBetween: 10,
             },
             992: {
               slidesPerView: 4,
-              spaceBetween: 20,
+              spaceBetween: 10,
             },
             1200: {
-              slidesPerView: 5,
-              spaceBetween: 20,
+              slidesPerView: 6,
+              spaceBetween: 10,
             },
             1600: {
               slidesPerView: 6,
-              spaceBetween: 20,
+              spaceBetween: 10,
             },
           }}
         >
@@ -140,15 +140,6 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
                 className="category-card-content"
                 onClick={(e) => handleCategoryClick(category, e)}
               >
-                <div className="category-image-container">
-                  <SafeImage
-                    src={`${category.image_full_url}`}
-                    alt={category.name}
-                    width={100}
-                    height={100}
-                    className="category-image"
-                  />
-                </div>
                 <div className="category-text-content">
                   <h6 className="mb-0 text-center">{category.name}</h6>
                 </div>
@@ -167,13 +158,23 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           transition: all 0.3s ease;
           cursor: pointer;
           height: auto;
+          border: none !important;
+          background: transparent;
+          padding: 0.25rem;
         }
 
+        /* Pill-style category card */
         .category-card-content {
-          display: flex;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           flex-direction: column;
-          height: 100%;
-          padding: 0;
+          padding: 0.45rem 1rem;
+          border: 1px solid var(--border-color, #dee2e6);
+          border-radius: 9999px; /* full pill */
+          background-color: var(--bs-light, #f8f9fa);
+          transition: all 0.3s ease;
+          width: 100%;
         }
 
         .category-image-container {
@@ -194,9 +195,9 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
         }
 
         .category-text-content {
-          padding: 0.75rem 0.5rem;
+          padding: 0; /* padding handled by .category-card-content */
           text-align: center;
-          background: white;
+          background: transparent;
         }
 
         .category-text-content h6 {
@@ -207,29 +208,21 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           margin: 0;
         }
 
-        .category-slide:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .category-slide:hover .category-image {
-          transform: scale(1.05);
-        }
-
-        .category-slide:hover .category-text-content h6 {
-          color: var(--primary-color);
+        .category-slide:hover .category-card-content {
+          border-color: var(--primary-color);
+          background-color: rgba(0, 0, 0, 0.02);
         }
 
         /* Active category styles */
-        .active-category {
+        .active-category .category-card-content {
+          background-color: var(--primary-color) !important;
           border-color: var(--primary-color) !important;
-          transform: scale(1.02);
-          border-width: 2px !important;
-          box-shadow: 0 4px 12px rgba(var(--primary-color), 0.25);
+          transform: scale(1.03);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .active-category .category-text-content h6 {
-          color: var(--primary-color) !important;
+          color: #fff !important;
           font-weight: 600;
         }
 

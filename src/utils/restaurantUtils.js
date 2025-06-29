@@ -31,12 +31,24 @@ export const getRestaurantStatus = (restaurant) => {
     };
   }
 
-  if (restaurant.status !== 1 || restaurant.active === false) {
+  const isActiveFlag = !(
+    restaurant?.active === false ||
+    restaurant?.active === "false" ||
+    restaurant?.active === 0 ||
+    restaurant?.active === "0"
+  );
+
+  if (!isActiveFlag) {
+    const nextOpenInfo = getNextOpeningTime(
+      restaurant.schedules || [],
+      new Date()
+    );
     return {
       isOpen: false,
       status: "Closed",
       message: "Restaurant is temporarily closed",
       statusClass: "text-danger",
+      nextOpenTime: nextOpenInfo.nextOpenTime,
     };
   }
 
@@ -169,7 +181,7 @@ export const useRestaurantStatus = (restaurant) => {
       };
 
       updateStatus();
-      const interval = setInterval(updateStatus, 60000); // Update every minute
+      const interval = setInterval(updateStatus, 60000);
 
       return () => clearInterval(interval);
     }

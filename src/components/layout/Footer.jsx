@@ -18,7 +18,7 @@ const Footer = ({ details }) => {
             >
               Cravio.ai
             </a>{" "}
-            - Online Ordering with {details?.name || "Cravio"}
+            - Online ordering with brains 🧠
           </p>
         </div>
       </div>

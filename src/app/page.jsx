@@ -2,12 +2,32 @@ import Home from "@/components/home/Home";
 import { getAllCategoriesServer } from "@/store/services/categoriesService";
 import { getAllProductsServer } from "@/store/services/productService";
 import { getRestaurantDetailsServer } from "@/store/services/restaurantService";
+import NotFoundRestaurantModal from "@/components/common/NotFoundRestaurantModal";
 
 export default async function HomePage({ searchParams }) {
-  const restaurantId = (await searchParams)?.restaurant || "2";
+  const restaurantParam = (await searchParams)?.restaurant;
+
+  if (!restaurantParam) {
+    return (
+      <>
+        <NotFoundRestaurantModal />
+      </>
+    );
+  }
+
+  const restaurantId = restaurantParam;
 
   const restaurantData = await getRestaurantDetailsServer(restaurantId);
-  const zoneId = restaurantData?.zone_id || 3;
+
+  if (!restaurantData) {
+    return (
+      <>
+        <NotFoundRestaurantModal />
+      </>
+    );
+  }
+
+  const zoneId = restaurantData?.zone_id || 2;
 
   const [productsData, categoriesData] = await Promise.all([
     getAllProductsServer(restaurantId, 200, 0, zoneId),

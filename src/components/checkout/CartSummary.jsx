@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import TipSection from "./TipSection";
 import CouponSection from "./CouponSection";
 import { calculateCouponDiscount } from "@/store/services/couponService";
@@ -12,8 +13,6 @@ const CartSummary = ({
   calculateSubtotal,
   calculateTotalTax,
   calculateTotalDiscount,
-  calculateTip,
-  calculateTotal,
   currency,
   tipPercentage,
   customTip,
@@ -24,9 +23,8 @@ const CartSummary = ({
   enableCustomTip,
   handleCustomTipChange,
   paymentMethod = "cash_on_delivery",
-  restaurantDetails,
+  restaurantDetails: restaurantDetailsProp,
   hasValidCartItems = null,
-  // New props for coupon functionality
   token = null,
   user = null,
   restaurantId = null,
@@ -37,12 +35,16 @@ const CartSummary = ({
   const [configData, setConfigData] = useState(null);
   const [configLoading, setConfigLoading] = useState(true);
 
+  const globalRestaurantDetails = useSelector(
+    (state) => state.restaurant?.currentRestaurant?.details
+  );
+
+  const restaurantDetails = restaurantDetailsProp || globalRestaurantDetails;
+
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/api/v1/config`
-        );
+        const response = await fetch(`${BASE_URL}/api/v1/config`);
         const data = await response.json();
         setConfigData(data);
       } catch (error) {
@@ -56,14 +58,8 @@ const CartSummary = ({
     fetchConfig();
   }, []);
 
-  // Helper function to safely get additional charge
   const getAdditionalCharge = () => {
     return configData?.additional_charge || 0;
-  };
-
-  // Helper function to check if additional charge should be shown
-  const shouldShowAdditionalCharge = () => {
-    return configData?.additional_charge_status === 1;
   };
 
   const calculateDeliveryFee = () => {
@@ -75,12 +71,22 @@ const CartSummary = ({
 
   const calculateRestaurantTax = () => {
     if (!restaurantDetails?.tax) return 0;
-    return parseFloat(restaurantDetails.tax) || 0;
+
+    const rate = parseFloat(restaurantDetails.tax);
+    if (isNaN(rate) || rate === 0) return 0;
+
+    const subtotal = calculateSubtotal();
+    return (subtotal * rate) / 100;
   };
 
   const calculateServiceFees = () => {
     if (!restaurantDetails?.comission) return 0;
-    return parseFloat(restaurantDetails.comission) || 0;
+
+    const rate = parseFloat(restaurantDetails.comission);
+    if (isNaN(rate) || rate === 0) return 0;
+
+    const subtotal = calculateSubtotal();
+    return (subtotal * rate) / 100;
   };
 
   const calculateTipAmount = () => {

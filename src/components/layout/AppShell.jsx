@@ -11,19 +11,7 @@ import RouterListener from "../RouterListener";
 
 const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
-  loading: () => (
-    <div
-      style={{ height: "80px" }}
-      className="d-flex align-items-center justify-content-center"
-    >
-      <div
-        className="spinner-border spinner-border-sm text-primary"
-        role="status"
-      >
-        <span className="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  ),
+  loading: () => <div style={{ height: "80px" }} />,
 });
 
 const Footer = dynamic(() => import("@/components/layout/Footer"), {
@@ -54,13 +42,11 @@ const AppShell = ({ children, details }) => {
     }
   }, [details]);
 
-  // Enhanced children validation and rendering
   const renderChildren = () => {
     if (!children) {
       return null;
     }
 
-    // Check if children is a valid React element
     if (React.isValidElement(children)) {
       try {
         return React.cloneElement(children, { restaurantDetails: details });
@@ -73,7 +59,6 @@ const AppShell = ({ children, details }) => {
       }
     }
 
-    // If children is not a React element, render it directly
     return children;
   };
 

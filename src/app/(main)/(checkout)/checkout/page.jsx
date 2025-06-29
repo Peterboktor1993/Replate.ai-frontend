@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { addToast } from "@/store/slices/toastSlice";
 import { placeOrder } from "@/store/services/orderService";
 import PhoneInput from "@/components/ui/PhoneInput";
+import { getRestaurantStatus } from "@/utils/restaurantUtils";
 
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -111,7 +112,7 @@ const tipPresets = [
   { value: 20, label: "20%" },
 ];
 
-const CheckoutPage = ({ restaurantDetails }) => {
+const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
   const router = useRouter();
   const dispatch = useDispatch();
   const {
@@ -143,7 +144,10 @@ const CheckoutPage = ({ restaurantDetails }) => {
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [reorderInfoLoaded, setReorderInfoLoaded] = useState(false);
-
+  const globalRestaurantDetails = useSelector(
+    (state) => state.restaurant?.currentRestaurant?.details
+  );
+  const restaurantDetails = restaurantDetailsProp || globalRestaurantDetails;
   const [newAddress, setNewAddress] = useState({
     contact_person_name: "",
     contact_person_number: "",
@@ -1329,6 +1333,27 @@ const CheckoutPage = ({ restaurantDetails }) => {
     router,
     successOrderData?.restaurantId,
   ]);
+
+  useEffect(() => {
+    console.log(restaurantDetails);
+    if (!restaurantDetails) return;
+
+    const status = getRestaurantStatus(restaurantDetails);
+    if (!status.isOpen) {
+      dispatch(
+        addToast({
+          show: true,
+          title: "Restaurant Closed",
+          message:
+            status.message ||
+            "The restaurant is currently closed. Checkout is disabled.",
+          type: "error",
+        })
+      );
+
+      router.push(`/?restaurant=${restaurantDetails?.id || 2}`);
+    }
+  }, [restaurantDetails?.id]);
 
   return (
     <>

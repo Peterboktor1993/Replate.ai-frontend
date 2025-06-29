@@ -100,16 +100,18 @@ const RestaurantClosedTip = ({
                   "The restaurant is not accepting orders right now."}
               </p>
 
-              {restaurantStatus?.nextOpeningTime && (
+              {(restaurantStatus?.nextOpenTime ||
+                restaurantStatus?.nextOpeningTime) && (
                 <div className="alert alert-info border-0 bg-light">
                   <div className="d-flex align-items-center">
-                    <i className="fas fa-clock text-info me-2"></i>
+                    <i className="fas fa-clock text-warning me-2"></i>
                     <div>
                       <small className="text-muted d-block">
                         We'll be back
                       </small>
-                      <strong className="text-info">
-                        {restaurantStatus.nextOpeningTime}
+                      <strong className="text-warning">
+                        {restaurantStatus.nextOpenTime ||
+                          restaurantStatus.nextOpeningTime}
                       </strong>
                     </div>
                   </div>
