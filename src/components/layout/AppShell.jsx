@@ -78,23 +78,11 @@ const AppShell = ({ children, details }) => {
             <RouterListener />
           </Suspense>
 
-          <Suspense
-            fallback={
-              <div
-                style={{ height: "80px" }}
-                className="d-flex align-items-center justify-content-center"
-              >
-                <div
-                  className="spinner-border spinner-border-sm text-primary"
-                  role="status"
-                >
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            }
-          >
-            <Header details={details} />
-          </Suspense>
+          {details && (
+            <Suspense fallback={<div style={{ height: "80px" }} />}>
+              <Header details={details} />
+            </Suspense>
+          )}
 
           <main className="flex-grow-1 py-4">
             <div className="container-fluid px-4 px-md-2 px-lg-3">
@@ -102,9 +90,11 @@ const AppShell = ({ children, details }) => {
             </div>
           </main>
 
-          <Suspense fallback={<div style={{ height: "60px" }} />}>
-            <Footer details={details} />
-          </Suspense>
+          {details && (
+            <Suspense fallback={<div style={{ height: "60px" }} />}>
+              <Footer details={details} />
+            </Suspense>
+          )}
         </div>
         <Toast />
       </Provider>

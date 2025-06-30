@@ -30,9 +30,12 @@ export default async function RootLayout({ children }) {
     }
   }
 
-  const restaurantId = searchParams?.restaurant || "2";
+  const restaurantId = searchParams?.restaurant;
 
-  const restaurant = await getRestaurantDetailsServer(restaurantId);
+  let restaurant = null;
+  if (restaurantId) {
+    restaurant = await getRestaurantDetailsServer(restaurantId);
+  }
 
   return (
     <html lang="en">

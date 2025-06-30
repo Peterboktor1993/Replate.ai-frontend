@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import tzLookup from "tz-lookup";
 
 export const getCurrentRestaurantId = (state) => {
   return state?.restaurant?.currentRestaurant?.id;
@@ -52,7 +53,7 @@ export const getRestaurantStatus = (restaurant) => {
     };
   }
 
-  const now = new Date();
+  const now = getNowInRestaurantTz(restaurant);
   const currentDay = now.getDay();
   const currentTime = now.getHours() * 60 + now.getMinutes();
 
@@ -168,6 +169,23 @@ const getNextOpeningTime = (schedules, currentDate) => {
     message: "Opening hours not available",
     nextOpenTime: null,
   };
+};
+
+const getNowInRestaurantTz = (restaurant) => {
+  try {
+    if (restaurant?.latitude && restaurant?.longitude) {
+      const lat = parseFloat(restaurant.latitude);
+      const lon = parseFloat(restaurant.longitude);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        const tz = tzLookup(lat, lon);
+        const nowStr = new Date().toLocaleString("en-US", { timeZone: tz });
+        return new Date(nowStr);
+      }
+    }
+  } catch (err) {
+    // fallback
+  }
+  return new Date();
 };
 
 export const useRestaurantStatus = (restaurant) => {

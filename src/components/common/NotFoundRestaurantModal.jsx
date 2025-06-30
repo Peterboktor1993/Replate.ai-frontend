@@ -1,10 +1,7 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
 
 const NotFoundRestaurantModal = () => {
-  const router = useRouter();
-
   return (
     <div
       className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
@@ -19,6 +16,26 @@ const NotFoundRestaurantModal = () => {
           We couldn't find the restaurant you're looking for, please check the
           URL is correct and try again.
         </p>
+        <style jsx>{`
+          @media (max-width: 576px) {
+            .card {
+              width: 90% !important;
+              padding: 1.5rem !important;
+            }
+
+            h4 {
+              font-size: 1.15rem !important;
+            }
+
+            p {
+              font-size: 0.85rem !important;
+            }
+
+            i.fa-store-slash {
+              font-size: 2.5rem !important;
+            }
+          }
+        `}</style>
       </div>
     </div>
   );

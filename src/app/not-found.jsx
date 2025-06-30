@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 
 export default function NotFound() {
   return (
@@ -14,11 +13,6 @@ export default function NotFound() {
             <p className="text-muted mb-4">
               The page you are looking for doesn't exist or has been moved.
             </p>
-            <div className="d-flex justify-content-center">
-              <Link href="/" className="btn btn-primary">
-                Go Home
-              </Link>
-            </div>
           </div>
         </div>
       </div>
