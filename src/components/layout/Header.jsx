@@ -27,7 +27,7 @@ const Header = ({ details }) => {
         setIsLoadingProfile(true);
         const { getUserProfile } = await import("@/store/services/authService");
         try {
-          await dispatch(getUserProfile(token));
+          await dispatch(getUserProfile(token, details?.id));
         } catch (error) {
           // do nothing
         } finally {

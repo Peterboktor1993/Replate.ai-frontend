@@ -250,7 +250,7 @@ const CartSidebar = ({
                       </div>
                       <div className="d-flex align-items-baseline">
                         <h2 className="display-4 fw-bold me-2 text-white">
-                          {user?.points || 0}
+                          {user?.loyalty_point || 0}
                         </h2>
                         <span className="badge bg-primary rounded-pill px-3 py-2">
                           Points

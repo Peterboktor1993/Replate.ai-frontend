@@ -587,13 +587,18 @@ export const resetPassword = (resetData) => async (dispatch) => {
 //===============================================
 // Get User Profile
 //===============================================
-export const getUserProfile = (token) => async (dispatch) => {
+export const getUserProfile = (token, restaurantId) => async (dispatch) => {
   try {
+    const params = {};
+    if (restaurantId) {
+      params.restaurant_id = restaurantId;
+    }
     const response = await axiosInstance.get(`${API_URL}/customer/info`, {
       headers: {
         "X-localization": "en",
         Authorization: `Bearer ${token}`,
       },
+      params,
     });
     if (response.status == 200) {
       dispatch(updateUser(response.data));
@@ -952,3 +957,117 @@ export const removeUserAccount = (token) => async (dispatch) => {
     };
   }
 };
+
+//===============================================
+// Get Loyalty Point Transactions
+//===============================================
+export const getLoyaltyPointTransactions =
+  (token, restaurantId, limit = 10, offset = 1) =>
+  async (dispatch) => {
+    try {
+      const response = await axiosInstance.get(
+        `${API_URL}/customer/loyalty-point/transactions`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            restaurant_id: restaurantId,
+            limit,
+            offset,
+          },
+        }
+      );
+      if (response.status === 200) {
+        return { success: true, data: response.data };
+      } else {
+        return {
+          success: false,
+          error:
+            response.data?.message ||
+            "Failed to fetch loyalty point transactions",
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.message ||
+          "Failed to fetch loyalty point transactions",
+      };
+    }
+  };
+
+//===============================================
+// Get Wallet Transactions
+//===============================================
+export const getWalletTransactions =
+  (token, restaurantId, limit = 10, offset = 1) =>
+  async (dispatch) => {
+    try {
+      const response = await axiosInstance.get(
+        `${API_URL}/customer/wallet/transactions`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            restaurant_id: restaurantId,
+            limit,
+            offset,
+          },
+        }
+      );
+      if (response.status === 200) {
+        return { success: true, data: response.data };
+      } else {
+        return {
+          success: false,
+          error:
+            response.data?.message || "Failed to fetch wallet transactions",
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.message ||
+          "Failed to fetch wallet transactions",
+      };
+    }
+  };
+
+//===============================================
+// Loyalty Point Transfer
+//===============================================
+export const transferLoyaltyPoints =
+  (token, point, restaurantId) => async (dispatch) => {
+    try {
+      const response = await axiosInstance.post(
+        `${API_URL}/customer/loyalty-point/point-transfer`,
+        {
+          point,
+          restaurant_id: restaurantId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.status === 200) {
+        return { success: true, data: response.data };
+      } else {
+        return {
+          success: false,
+          error: response.data?.message || "Failed to transfer loyalty points",
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.message || "Failed to transfer loyalty points",
+      };
+    }
+  };

@@ -96,7 +96,7 @@ export const useProfile = (router = null, restaurantId = null) => {
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, restaurantId]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -114,7 +114,7 @@ export const useProfile = (router = null, restaurantId = null) => {
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      const result = await dispatch(getUserProfile(token));
+      const result = await dispatch(getUserProfile(token, restaurantId));
 
       if (result.success && result.data) {
         const userData = result.data;

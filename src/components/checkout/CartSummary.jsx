@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import TipSection from "./TipSection";
 import CouponSection from "./CouponSection";
 import { calculateCouponDiscount } from "@/store/services/couponService";
 import { BASE_URL } from "@/utils/CONSTANTS";
+import {
+  transferLoyaltyPoints,
+  getUserProfile,
+} from "@/store/services/authService";
+import { addToast } from "@/store/slices/toastSlice";
 
 const CartSummary = ({
   cartItems,
@@ -32,6 +37,9 @@ const CartSummary = ({
   onCouponApplied = null,
   onCouponRemoved = null,
 }) => {
+  const dispatch = useDispatch();
+  const [redeemPoints, setRedeemPoints] = useState(0);
+  const [redeemLoading, setRedeemLoading] = useState(false);
   const [configData, setConfigData] = useState(null);
   const [configLoading, setConfigLoading] = useState(true);
 
@@ -57,6 +65,61 @@ const CartSummary = ({
 
     fetchConfig();
   }, []);
+
+  useEffect(() => {
+    if (user?.loyalty_point > 0) {
+      setRedeemPoints(user.loyalty_point);
+    }
+  }, [user?.loyalty_point]);
+
+  const handleRedeemPoints = async () => {
+    if (
+      !token ||
+      !user ||
+      redeemPoints <= 0 ||
+      redeemPoints > user.loyalty_point
+    ) {
+      return;
+    }
+
+    setRedeemLoading(true);
+    try {
+      const result = await dispatch(
+        transferLoyaltyPoints(token, redeemPoints, restaurantId)
+      );
+      if (result.success) {
+        dispatch(
+          addToast({
+            type: "success",
+            title: "Success",
+            message: `Successfully redeemed ${redeemPoints} points!`,
+          })
+        );
+        await dispatch(getUserProfile(token, restaurantId));
+      } else {
+        dispatch(
+          addToast({
+            type: "error",
+            title: "Error",
+            message: result.error || "Failed to redeem points",
+          })
+        );
+      }
+    } catch (error) {
+      dispatch(
+        addToast({
+          type: "error",
+          title: "Error",
+          message: "Failed to redeem points",
+        })
+      );
+    } finally {
+      setRedeemLoading(false);
+    }
+  };
+
+  const canRedeemPoints =
+    token && user && user.loyalty_point > 0 && !processing;
 
   const getAdditionalCharge = () => {
     return configData?.additional_charge || 0;
@@ -288,14 +351,57 @@ const CartSummary = ({
             <div className="redeem-points-section mb-4">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="checkout-title font-bold">Redeem Points</span>
+                {user?.loyalty_point > 0 && (
+                  <small className="text-muted">
+                    Available: {user.loyalty_point} points
+                  </small>
+                )}
               </div>
-              <button
-                className="btn btn-outline-primary btn-sm w-100"
-                disabled={true}
-              >
-                <i className="fas fa-gift me-2"></i>
-                Redeem Points (Coming Soon)
-              </button>
+              {canRedeemPoints ? (
+                <div className="d-flex gap-2">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Points to redeem"
+                    value={redeemPoints}
+                    onChange={(e) =>
+                      setRedeemPoints(
+                        Math.min(
+                          parseInt(e.target.value) || 0,
+                          user.loyalty_point
+                        )
+                      )
+                    }
+                    min="1"
+                    max={user.loyalty_point}
+                    disabled={redeemLoading}
+                  />
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={handleRedeemPoints}
+                    disabled={redeemLoading || redeemPoints <= 0}
+                  >
+                    {redeemLoading ? (
+                      <i className="fas fa-spinner fa-spin"></i>
+                    ) : (
+                      <i className="fas fa-gift me-1"></i>
+                    )}
+                    Redeem
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="btn btn-outline-secondary btn-sm w-100"
+                  disabled={true}
+                >
+                  <i className="fas fa-gift me-2"></i>
+                  {!token
+                    ? "Login to redeem points"
+                    : user?.loyalty_point === 0
+                    ? "No points available"
+                    : "Redeem Points"}
+                </button>
+              )}
             </div>
 
             {/* Use Coupon Section */}
@@ -377,6 +483,39 @@ const CartSummary = ({
                   </span>
                 </div>
               )}
+
+              {/* Wallet Payment Details */}
+              {paymentMethod === "wallet" && user?.wallet_balance > 0 && (
+                <>
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <span>
+                      <i className="fas fa-wallet me-1 text-success"></i>
+                      Wallet Payment
+                    </span>
+                    <span className="text-success">
+                      -{currency}{" "}
+                      {Math.min(
+                        user.wallet_balance,
+                        calculateGrandTotal()
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  {user.wallet_balance < calculateGrandTotal() && (
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <span>
+                        <i className="fas fa-credit-card me-1 text-warning"></i>
+                        Remaining (Card)
+                      </span>
+                      <span className="text-warning">
+                        {currency}{" "}
+                        {(calculateGrandTotal() - user.wallet_balance).toFixed(
+                          2
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="d-flex align-items-center justify-content-between my-3">
@@ -391,17 +530,35 @@ const CartSummary = ({
               <div className="d-flex align-items-center">
                 <i
                   className={`me-2 ${
-                    paymentMethod === "Stripe"
+                    paymentMethod === "wallet"
+                      ? "fa-solid fa-wallet"
+                      : paymentMethod === "Stripe"
                       ? "fa-regular fa-credit-card"
                       : "fa-solid fa-money-bill-wave"
                   }`}
                 ></i>
                 <span>
-                  {paymentMethod === "Stripe"
+                  {paymentMethod === "wallet"
+                    ? `Payment: Wallet (${currency} ${Math.min(
+                        user?.wallet_balance || 0,
+                        calculateGrandTotal()
+                      ).toFixed(2)})`
+                    : paymentMethod === "Stripe"
                     ? "Payment: Credit/Debit Card"
                     : "Payment: Cash on Delivery"}
                 </span>
               </div>
+              {paymentMethod === "wallet" &&
+                user?.wallet_balance < calculateGrandTotal() && (
+                  <div className="d-flex align-items-center mt-1">
+                    <i className="fa-regular fa-credit-card me-2 text-warning"></i>
+                    <small className="text-warning">
+                      Remaining {currency}{" "}
+                      {(calculateGrandTotal() - user.wallet_balance).toFixed(2)}{" "}
+                      via card
+                    </small>
+                  </div>
+                )}
             </div>
 
             <button

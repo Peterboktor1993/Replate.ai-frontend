@@ -4,10 +4,12 @@ import React, { useEffect, Suspense } from "react";
 import ClientOnly from "@/components/ClientOnly";
 import LoadingWrapper from "@/components/LoadingWrapper";
 import dynamic from "next/dynamic";
-import { Provider } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "@/store/store";
 import Toast from "../common/Toast";
 import RouterListener from "../RouterListener";
+import { getUserProfile } from "@/store/services/authService";
+import ProfileSync from "@/components/ProfileSync";
 
 const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
@@ -73,6 +75,7 @@ const AppShell = ({ children, details }) => {
       }
     >
       <Provider store={store}>
+        <ProfileSync details={details} />
         <div className="d-flex flex-column min-vh-100">
           <Suspense fallback={<div style={{ height: "80px" }} />}>
             <RouterListener />

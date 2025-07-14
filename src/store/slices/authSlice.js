@@ -1,11 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import {
-  loginUser,
-  registerUser,
-  logoutUser,
-} from "@/store/services/authService";
 
-// Get initial state from localStorage if available
 const getInitialState = () => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");

@@ -23,7 +23,18 @@ import TermsAgreement from "@/components/checkout/TermsAgreement";
 import IncompletePaymentHandler from "@/components/checkout/IncompletePaymentHandler";
 import { calculateCouponDiscount } from "@/store/services/couponService";
 
-const PaymentMethodSelector = ({ value, onChange, disabled }) => {
+const PaymentMethodSelector = ({
+  value,
+  onChange,
+  disabled,
+  user,
+  grandTotal,
+}) => {
+  const walletBalance = user?.wallet_balance || 0;
+  const canUseWallet = walletBalance > 0;
+  const walletCoversTotal = walletBalance >= grandTotal;
+  const walletInsufficient = canUseWallet && !walletCoversTotal;
+
   return (
     <div className="payment-method-selection mb-4">
       <h5 className="mb-3">Payment Method</h5>
@@ -100,7 +111,60 @@ const PaymentMethodSelector = ({ value, onChange, disabled }) => {
             </div>
           </div>
         </div>
+        {canUseWallet && (
+          <div className="col-md-6 mb-3">
+            <div
+              className={`card payment-option ${
+                value === "wallet" ? "border-primary" : "border"
+              } ${disabled ? "disabled" : ""}`}
+              onClick={() => !disabled && onChange("wallet")}
+              style={{
+                cursor: disabled ? "not-allowed" : "pointer",
+                opacity: disabled ? 0.6 : 1,
+              }}
+            >
+              <div className="card-body d-flex align-items-center p-3">
+                <div
+                  className={`payment-radio me-3 ${
+                    value === "wallet" ? "text-primary" : "text-muted"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    checked={value === "wallet"}
+                    onChange={() => {}}
+                    className="form-check-input"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="payment-icon me-3">
+                  <i className="fa-solid fa-wallet fs-4"></i>
+                </div>
+                <div className="payment-text">
+                  <h6 className="mb-0">Wallet</h6>
+                  <small className="text-muted">
+                    Balance: ${walletBalance.toFixed(2)}
+                    {walletInsufficient && (
+                      <span className="badge bg-warning ms-1">
+                        Partial Payment
+                      </span>
+                    )}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      {value === "wallet" && walletInsufficient && (
+        <div className="alert alert-info mt-3">
+          <i className="fas fa-info-circle me-2"></i>
+          <strong>Partial Payment:</strong> Your wallet balance ($
+          {walletBalance.toFixed(2)}) is less than the total amount. The
+          remaining ${(grandTotal - walletBalance).toFixed(2)} will be charged
+          to your card.
+        </div>
+      )}
     </div>
   );
 };
@@ -1020,16 +1084,27 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
 
       const orderAmount = calculateOrderAmount().toFixed(2);
       const totalAmountWithTips = calculateTotal().toFixed(2);
+      const walletBalance = user?.wallet_balance || 0;
+      const walletCoversTotal =
+        walletBalance >= parseFloat(totalAmountWithTips);
 
       setPreservedOrderAmount(parseFloat(totalAmountWithTips));
+
+      let paymentMethodForOrder = values.paymentMethod;
+      let partialPaymentFlag = false;
+      if (values.paymentMethod === "wallet") {
+        if (walletCoversTotal) {
+          paymentMethodForOrder = "wallet";
+        } else {
+          paymentMethodForOrder = "digital_payment";
+          partialPaymentFlag = true;
+        }
+      }
 
       const orderData = {
         order_type: values.orderType,
         restaurant_id: Number(restaurant),
-        payment_method:
-          values.paymentMethod === "Stripe"
-            ? "digital_payment"
-            : "cash_on_delivery",
+        payment_method: paymentMethodForOrder,
         distance: 3,
         schedule_at: values.scheduleOrder
           ? formatDate(values.scheduleTime)
@@ -1058,6 +1133,10 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
         order_note: values.orderNote,
       };
 
+      if (partialPaymentFlag) {
+        orderData.partial_payment = true;
+      }
+
       if (!token && guestId) {
         orderData.guest_id = guestId;
       }
@@ -1076,7 +1155,10 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
 
       const userId = user?.id || guestId || generateGuestId();
 
-      if (values.paymentMethod === "Stripe") {
+      if (
+        values.paymentMethod === "Stripe" ||
+        (values.paymentMethod === "wallet" && !walletCoversTotal)
+      ) {
         let orderId;
         try {
           const orderResult = await dispatch(placeOrder(orderData, token));
@@ -1164,11 +1246,14 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
         const result = await dispatch(placeOrder(orderData, token));
 
         if (result.success) {
+          const paymentMethodDisplay =
+            values.paymentMethod === "wallet" ? "Wallet" : "Cash on Delivery";
+
           setSuccessOrderData({
             orderId: result.data?.order_id || "N/A",
             orderAmount: totalAmountWithTips,
             currency: currency,
-            paymentMethod: "Cash on Delivery",
+            paymentMethod: paymentMethodDisplay,
             restaurantId: restaurant,
           });
 
@@ -2004,6 +2089,8 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
                                 }
                               }}
                               disabled={processing}
+                              user={user}
+                              grandTotal={getCurrentTotal()}
                             />
 
                             {/* Terms Agreement */}
@@ -2146,6 +2233,8 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
                             successOrderData.paymentMethod ===
                             "Cash on Delivery"
                               ? "bg-warning text-dark"
+                              : successOrderData.paymentMethod === "Wallet"
+                              ? "bg-info text-white"
                               : "bg-success text-white"
                           }`}
                         >
@@ -2154,6 +2243,8 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
                               successOrderData.paymentMethod ===
                               "Cash on Delivery"
                                 ? "fas fa-money-bill-wave"
+                                : successOrderData.paymentMethod === "Wallet"
+                                ? "fas fa-wallet"
                                 : "fas fa-credit-card"
                             } me-1`}
                           ></i>
@@ -2172,6 +2263,14 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
                     Please have the exact amount ready for when your order
                     arrives. Our delivery partner will collect the payment at
                     your doorstep.
+                  </div>
+                ) : successOrderData.paymentMethod === "Wallet" ? (
+                  <div className="alert alert-success">
+                    <i className="fas fa-check-circle me-2"></i>
+                    <strong>Payment Confirmed:</strong>
+                    <br />
+                    Your order has been paid using your wallet balance. No
+                    additional payment is required upon delivery.
                   </div>
                 ) : (
                   <div className="alert alert-success">
