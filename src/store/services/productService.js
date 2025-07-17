@@ -10,7 +10,7 @@ import axios from "axios";
 export const getAllProducts = createAsyncThunk(
   "products/getAllProducts",
   async (
-    { limit = 200, offset = 0, restaurantId = 3, zoneId = 3 },
+    { limit = 2000, offset = 0, restaurantId = 3, zoneId = 3 },
     { rejectWithValue }
   ) => {
     try {
@@ -55,7 +55,7 @@ export const getAllProducts = createAsyncThunk(
 
 export async function getAllProductsServer(
   restaurantId = 3,
-  limit = 200,
+  limit = 2000,
   offset = 0,
   zoneId = 3
 ) {

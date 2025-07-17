@@ -1,14 +1,26 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
-import SafeImage from "@/components/common/SafeImage";
 
 const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
   const [swiperInstance, setSwiperInstance] = useState(null);
+
+  useEffect(() => {
+    if (selectedCategory && swiperInstance && categories) {
+      const categoryIndex = categories.findIndex(
+        (cat) => cat.id === selectedCategory
+      );
+      if (categoryIndex !== -1) {
+        setTimeout(() => {
+          swiperInstance.slideTo(categoryIndex);
+        }, 100);
+      }
+    }
+  }, [selectedCategory, swiperInstance, categories]);
 
   const handleCategoryClick = (category, e) => {
     e.stopPropagation();

@@ -177,7 +177,6 @@ const CartSummary = ({
 
     return (
       subtotal +
-      itemTax -
       discount +
       deliveryFee +
       restaurantTax +
@@ -211,7 +210,7 @@ const CartSummary = ({
 
     const baseAmount = calculateGrandTotal().toFixed(2);
 
-    if (paymentMethod === "Stripe") {
+    if (paymentMethod === "digital_payment") {
       return `Place Order & Pay with Card (${currency} ${baseAmount})`;
     }
 
@@ -521,7 +520,13 @@ const CartSummary = ({
             <div className="d-flex align-items-center justify-content-between my-3">
               <span className="fw-bold">TOTAL</span>
               <span className="fw-bold text-primary">
-                {currency} {calculateGrandTotal().toFixed(2)}
+                {currency}{" "}
+                {paymentMethod === "wallet"
+                  ? (
+                      calculateGrandTotal() -
+                      Math.min(user?.wallet_balance || 0, calculateGrandTotal())
+                    ).toFixed(2)
+                  : calculateGrandTotal().toFixed(2)}
               </span>
             </div>
 
@@ -532,7 +537,7 @@ const CartSummary = ({
                   className={`me-2 ${
                     paymentMethod === "wallet"
                       ? "fa-solid fa-wallet"
-                      : paymentMethod === "Stripe"
+                      : paymentMethod === "digital_payment"
                       ? "fa-regular fa-credit-card"
                       : "fa-solid fa-money-bill-wave"
                   }`}
@@ -543,7 +548,7 @@ const CartSummary = ({
                         user?.wallet_balance || 0,
                         calculateGrandTotal()
                       ).toFixed(2)})`
-                    : paymentMethod === "Stripe"
+                    : paymentMethod === "digital_payment"
                     ? "Payment: Credit/Debit Card"
                     : "Payment: Cash on Delivery"}
                 </span>
@@ -565,7 +570,9 @@ const CartSummary = ({
               type="submit"
               form="checkout-form"
               className={`btn btn-lg w-100 mt-3 ${
-                paymentMethod === "Stripe" ? "btn-primary" : "btn-primary"
+                paymentMethod === "digital_payment"
+                  ? "btn-primary"
+                  : "btn-primary"
               }`}
               disabled={isButtonDisabled()}
               style={{

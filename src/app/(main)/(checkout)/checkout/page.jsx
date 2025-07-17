@@ -39,7 +39,7 @@ const PaymentMethodSelector = ({
     <div className="payment-method-selection mb-4">
       <h5 className="mb-3">Payment Method</h5>
       <div className="row">
-        <div className="col-md-6 mb-3">
+        <div className={`mb-3 ${canUseWallet ? "col-md-4" : "col-md-6"}`}>
           <div
             className={`card payment-option ${
               value === "cash_on_delivery" ? "border-primary" : "border"
@@ -76,12 +76,12 @@ const PaymentMethodSelector = ({
             </div>
           </div>
         </div>
-        <div className="col-md-6 mb-3">
+        <div className={`mb-3 ${canUseWallet ? "col-md-4" : "col-md-6"}`}>
           <div
             className={`card payment-option ${
-              value === "Stripe" ? "border-primary" : "border"
+              value === "digital_payment" ? "border-primary" : "border"
             } ${disabled ? "disabled" : ""}`}
-            onClick={() => !disabled && onChange("Stripe")}
+            onClick={() => !disabled && onChange("digital_payment")}
             style={{
               cursor: disabled ? "not-allowed" : "pointer",
               opacity: disabled ? 0.6 : 1,
@@ -90,12 +90,12 @@ const PaymentMethodSelector = ({
             <div className="card-body d-flex align-items-center p-3">
               <div
                 className={`payment-radio me-3 ${
-                  value === "Stripe" ? "text-primary" : "text-muted"
+                  value === "digital_payment" ? "text-primary" : "text-muted"
                 }`}
               >
                 <input
                   type="radio"
-                  checked={value === "Stripe"}
+                  checked={value === "digital_payment"}
                   onChange={() => {}}
                   className="form-check-input"
                   disabled={disabled}
@@ -112,7 +112,7 @@ const PaymentMethodSelector = ({
           </div>
         </div>
         {canUseWallet && (
-          <div className="col-md-6 mb-3">
+          <div className="mb-3 col-md-4">
             <div
               className={`card payment-option ${
                 value === "wallet" ? "border-primary" : "border"
@@ -192,7 +192,7 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
   const [customTip, setCustomTip] = useState(false);
   const [customTipAmount, setCustomTipAmount] = useState(0);
   const [currency] = useState("USD");
-  const [paymentMethod, setPaymentMethod] = useState("Stripe");
+  const [paymentMethod, setPaymentMethod] = useState("digital_payment");
 
   const [processing, setProcessing] = useState(false);
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false);
@@ -843,7 +843,7 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
     const requiredFields = {
       contact_person_name: newAddress.contact_person_name?.trim(),
       contact_person_number: newAddress.contact_person_number?.trim(),
-      address: newAddress.address?.trim(),
+      address: `${newAddress.street_address?.trim()} ${newAddress.apartment?.trim()} ${newAddress.city?.trim()} ${newAddress.state?.trim()} ${newAddress.zip_code?.trim()}`,
       address_type: newAddress.address_type,
     };
 
@@ -1156,7 +1156,7 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
       const userId = user?.id || guestId || generateGuestId();
 
       if (
-        values.paymentMethod === "Stripe" ||
+        values.paymentMethod === "digital_payment" ||
         (values.paymentMethod === "wallet" && !walletCoversTotal)
       ) {
         let orderId;
@@ -1291,7 +1291,7 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
         })
       );
     } finally {
-      if (values.paymentMethod !== "Stripe") {
+      if (values.paymentMethod !== "digital_payment") {
         setProcessing(false);
       }
       setSubmitting(false);
@@ -1420,7 +1420,6 @@ const CheckoutPage = ({ restaurantDetails: restaurantDetailsProp }) => {
   ]);
 
   useEffect(() => {
-    console.log(restaurantDetails);
     if (!restaurantDetails) return;
 
     const status = getRestaurantStatus(restaurantDetails);

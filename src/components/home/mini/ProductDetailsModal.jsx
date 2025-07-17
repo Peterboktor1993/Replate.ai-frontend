@@ -43,20 +43,32 @@ const ProductDetailsModal = ({
 
   if (!product) return null;
 
-  const handleVariationSelect = (variation, option) => {
-    setSelectedVariations((prev) => ({
-      ...prev,
-      [variation.variation_id]: {
-        ...variation,
-        selectedLabel: option.label,
-        selectedOptionId: option.option_id,
-        selectedOption: option,
-      },
-    }));
+  const handleVariationSelect = (
+    variation,
+    option,
+    variationIndex,
+    optionIndex
+  ) => {
+    const variationId = variation.name;
+    const optionId = option.label;
+
+    setSelectedVariations((prev) => {
+      const newVariations = {
+        ...prev,
+        [variationId]: {
+          ...variation,
+          selectedLabel: option.label,
+          selectedOptionId: optionId,
+          selectedOption: option,
+        },
+      };
+
+      return newVariations;
+    });
 
     setValidationErrors((prev) => {
       const newErrors = { ...prev };
-      delete newErrors[variation.variation_id];
+      delete newErrors[variationId];
       return newErrors;
     });
   };
@@ -104,8 +116,9 @@ const ProductDetailsModal = ({
     if (product.variations && product.variations.length > 0) {
       product.variations.forEach((variation) => {
         if (variation.required === "on" || variation.required === true) {
-          if (!selectedVariations[variation.variation_id]) {
-            errors[variation.variation_id] = `Please select ${variation.name}`;
+          const variationId = variation.name;
+          if (!selectedVariations[variationId]) {
+            errors[variationId] = `Please select ${variation.name}`;
             isValid = false;
           }
         }
@@ -682,18 +695,18 @@ const ProductDetailsModal = ({
                   {product.variations && product.variations.length > 0 && (
                     <Tab.Pane eventKey="variations">
                       <div className="variations-list">
-                        {product.variations.map((variation, index) => {
+                        {product.variations.map((variation, variationIndex) => {
+                          const variationId = variation.name;
                           const currentSelectionForGroup =
-                            selectedVariations[variation.variation_id];
+                            selectedVariations[variationId];
                           const selectedOptionIdForGroup =
                             currentSelectionForGroup
                               ? currentSelectionForGroup.selectedOptionId
                               : null;
-                          const hasError =
-                            validationErrors[variation.variation_id];
+                          const hasError = validationErrors[variationId];
 
                           return (
-                            <div key={`${variation.variation_id}-${index}`}>
+                            <div key={`${variationId}-${variationIndex}`}>
                               <h6 className="variation-name mb-2">
                                 {variation.name}
                                 {(variation.required === "on" ||
@@ -709,53 +722,65 @@ const ProductDetailsModal = ({
                               <div className="variation-options">
                                 {variation.values &&
                                   variation.values.map(
-                                    (option, optionIndex) => (
-                                      <div
-                                        key={`${option.option_id}-${optionIndex}`}
-                                        className={`variation-item p-3 mb-2 border rounded ${
-                                          selectedOptionIdForGroup ===
-                                          option.option_id
-                                            ? "selected-variation"
-                                            : ""
-                                        } ${hasError ? "border-danger" : ""}`}
-                                        onClick={() =>
-                                          handleVariationSelect(
-                                            variation,
-                                            option
-                                          )
-                                        }
-                                      >
-                                        <div className="d-flex justify-content-between align-items-center">
-                                          <div>
-                                            <h6 className="mb-0">
-                                              {option.label}
-                                            </h6>
-                                            {option.optionPrice > 0 && (
-                                              <small className="text-primary">
-                                                +$
-                                                {parseFloat(
-                                                  option.optionPrice
-                                                ).toFixed(2)}
-                                              </small>
-                                            )}
-                                          </div>
-                                          <div className="d-flex align-items-center">
-                                            <div className="form-check">
-                                              <input
-                                                className="form-check-input"
-                                                type="radio"
-                                                name={`variation-${variation.variation_id}`}
-                                                checked={
-                                                  selectedOptionIdForGroup ===
-                                                  option.option_id
-                                                }
-                                                readOnly
-                                              />
+                                    (option, optionIndex) => {
+                                      const optionId = option.label;
+                                      return (
+                                        <div
+                                          key={`${optionId}-${optionIndex}`}
+                                          className={`variation-item p-3 mb-2 border rounded ${
+                                            selectedOptionIdForGroup ===
+                                            optionId
+                                              ? "selected-variation"
+                                              : ""
+                                          } ${hasError ? "border-danger" : ""}`}
+                                          onClick={() =>
+                                            handleVariationSelect(
+                                              variation,
+                                              option,
+                                              variationIndex,
+                                              optionIndex
+                                            )
+                                          }
+                                        >
+                                          <div className="d-flex justify-content-between align-items-center">
+                                            <div>
+                                              <h6 className="mb-0">
+                                                {option.label || option.name}
+                                              </h6>
+                                              {option.optionPrice > 0 && (
+                                                <small className="text-primary">
+                                                  +$
+                                                  {parseFloat(
+                                                    option.optionPrice
+                                                  ).toFixed(2)}
+                                                </small>
+                                              )}
+                                            </div>
+                                            <div className="d-flex align-items-center">
+                                              <div className="form-check">
+                                                <input
+                                                  className="form-check-input"
+                                                  type="radio"
+                                                  name={`variation-${variationId}`}
+                                                  checked={
+                                                    selectedOptionIdForGroup ===
+                                                    optionId
+                                                  }
+                                                  onChange={() =>
+                                                    handleVariationSelect(
+                                                      variation,
+                                                      option,
+                                                      variationIndex,
+                                                      optionIndex
+                                                    )
+                                                  }
+                                                />
+                                              </div>
                                             </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    )
+                                      );
+                                    }
                                   )}
                               </div>
                             </div>

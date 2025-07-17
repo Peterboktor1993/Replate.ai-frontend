@@ -89,17 +89,8 @@ const Home = ({
     dispatch(setCategories(initialCategories));
     dispatch(setFilteredCategories(initialCategories));
 
-    if (
-      initialCategories &&
-      initialCategories.length > 0 &&
-      selectedCategory === null
-    ) {
-      const firstCategory = initialCategories[0];
-      filterProductsByCategory(firstCategory.id);
-    } else if (selectedCategory === null) {
-      setFilteredProducts(initialProducts);
-      setCurrentProductCount(initialProducts?.length || 0);
-    }
+    setFilteredProducts(initialProducts);
+    setCurrentProductCount(initialProducts?.length || 0);
   }, [initialProducts, initialCategories, dispatch]);
 
   const filterProductsByCategory = (categoryId) => {
@@ -130,11 +121,8 @@ const Home = ({
   };
 
   const handleCategorySelect = (category) => {
-    if (selectedCategory === category.id) {
-      filterProductsByCategory(null);
-    } else {
-      filterProductsByCategory(category.id);
-    }
+    // Always filter by the selected category, regardless of current state
+    filterProductsByCategory(category.id);
   };
 
   const handleProductCountUpdate = (newCount, newTotal) => {

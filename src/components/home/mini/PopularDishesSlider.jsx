@@ -15,7 +15,7 @@ const PopularDishesSlider = ({
   zoneId = 3,
   isFiltered = false,
   initialOffset = 1,
-  initialLimit = 200,
+  initialLimit = 2000,
   totalProducts = 0,
   onProductCountUpdate,
   restaurantDetails,

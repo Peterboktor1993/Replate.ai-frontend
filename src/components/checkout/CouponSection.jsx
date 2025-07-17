@@ -20,9 +20,7 @@ const CouponSection = ({
   const dispatch = useDispatch();
   const [couponCode, setCouponCode] = useState("");
   const [isApplying, setIsApplying] = useState(false);
-  const [showCouponInput, setShowCouponInput] = useState(false);
 
-  // Check if user is authenticated
   const isAuthenticated = !!(token && user);
 
   const handleApplyCoupon = async () => {
@@ -43,7 +41,6 @@ const CouponSection = ({
 
       if (result.success && result.coupon) {
         setCouponCode("");
-        setShowCouponInput(false);
         if (onCouponApplied) {
           onCouponApplied(result.coupon);
         }
@@ -82,7 +79,6 @@ const CouponSection = ({
 
   const couponDiscount = getCouponDiscount();
 
-  // Don't show coupon section for guests
   if (!isAuthenticated) {
     return (
       <div className="coupon-section mb-4">
@@ -117,7 +113,6 @@ const CouponSection = ({
       </div>
 
       {appliedCoupon ? (
-        // Show applied coupon
         <div className="applied-coupon-card">
           <div className="card border-success">
             <div className="card-body py-3">
@@ -156,66 +151,53 @@ const CouponSection = ({
           </div>
         </div>
       ) : (
-        // Show coupon input
         <div className="coupon-input-section">
-          {!showCouponInput ? (
-            <button
-              className="btn btn-outline-primary btn-sm w-100"
-              onClick={() => setShowCouponInput(true)}
-              disabled={disabled}
-            >
-              <i className="fas fa-ticket-alt me-2"></i>
-              Apply Coupon Code
-            </button>
-          ) : (
-            <div className="coupon-input-form">
-              <div className="input-group mb-2">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter coupon code (e.g., SAVE20)"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  onKeyPress={handleKeyPress}
-                  disabled={disabled || isApplying}
-                  maxLength={20}
-                />
-                <button
-                  className="btn btn-primary"
-                  onClick={handleApplyCoupon}
-                  disabled={disabled || isApplying || !couponCode.trim()}
-                >
-                  {isApplying ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-1"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Applying...
-                    </>
-                  ) : (
-                    "Apply"
-                  )}
-                </button>
-              </div>
-              <div className="d-flex justify-content-between">
-                <button
-                  className="btn btn-link btn-sm text-muted p-0"
-                  onClick={() => {
-                    setShowCouponInput(false);
-                    setCouponCode("");
-                  }}
-                  disabled={disabled || isApplying}
-                >
-                  Cancel
-                </button>
-                <small className="text-muted">
-                  Enter your coupon code to get discount
-                </small>
-              </div>
+          <div className="coupon-input-form">
+            <div className="input-group mb-2">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter coupon code (e.g., SAVE20)"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                onKeyPress={handleKeyPress}
+                disabled={disabled || isApplying}
+                maxLength={20}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={handleApplyCoupon}
+                disabled={disabled || isApplying || !couponCode.trim()}
+              >
+                {isApplying ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-1"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Applying...
+                  </>
+                ) : (
+                  "Apply"
+                )}
+              </button>
             </div>
-          )}
+            <div className="d-flex justify-content-between">
+              <button
+                className="btn btn-link btn-sm text-muted p-0"
+                onClick={() => {
+                  setCouponCode("");
+                }}
+                disabled={disabled || isApplying}
+              >
+                Cancel
+              </button>
+              <small className="text-muted">
+                Enter your coupon code to get discount
+              </small>
+            </div>
+          </div>
         </div>
       )}
 
