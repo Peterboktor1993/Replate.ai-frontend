@@ -1,5 +1,5 @@
-import { useState } from "react";
 import Image from "next/image";
+import { useState } from "react";
 
 const SafeImage = ({
   src,
@@ -17,8 +17,14 @@ const SafeImage = ({
     setImgError(true);
   };
 
-  const isValidSrc = src && typeof src === "string" && src.trim() !== "";
-  const finalSrc = imgError ? fallbackSrc : isValidSrc ? src : fallbackSrc;
+  const isValidSrc =
+    typeof src === "string" &&
+    src.trim() !== "" &&
+    (src.startsWith("http://") ||
+      src.startsWith("https://") ||
+      src.startsWith("/"));
+  const encodedSrc = isValidSrc ? encodeURI(src) : fallbackSrc;
+  const finalSrc = imgError ? fallbackSrc : encodedSrc;
 
   if (!finalSrc || typeof finalSrc !== "string" || finalSrc.trim() === "") {
     return null;
@@ -35,9 +41,8 @@ const SafeImage = ({
       />
     );
   }
-
   return (
-    <img
+    <Image
       src={finalSrc}
       alt={alt}
       width={width}

@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import StarRating from "@/components/common/StarRating";
 import ProductDetailsModal from "./ProductDetailsModal";
 import RestaurantClosedTip from "@/components/common/RestaurantClosedTip";
 import { useDispatch, useSelector } from "react-redux";
@@ -291,14 +290,14 @@ const PopularDishesSlider = ({
               <div className="card product-card border rounded shadow-sm h-100">
                 <div className="text-center p-3">
                   {product.image_full_url && (
-                    <SafeImage
-                      src={product.image_full_url}
-                      alt={product.name}
-                      width={130}
-                      height={130}
-                      className="rounded-2"
-                      style={{ objectFit: "cover" }}
-                    />
+                      <SafeImage
+                        src={product.image_full_url}
+                        alt={product.name}
+                        width={130}
+                        height={130}
+                        className="rounded-2"
+                        style={{ objectFit: "cover" }}
+                      />
                   )}
                 </div>
                 <div className="card-footer border-0 px-3 bg-transparent mt-auto">

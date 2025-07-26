@@ -28,7 +28,7 @@ const RestaurantStatus = ({ restaurant, className = "" }) => {
   return (
     <>
       <div
-        className={`restaurant-status ${statusType} d-flex align-items-center ${className}`}
+        className={`restaurant-status ${statusType} d-flex align-items-center justify-content-center ${className}`}
       >
         <span className="status-dot me-2"></span>
         <div className="status-text">
@@ -124,7 +124,55 @@ const RestaurantStatus = ({ restaurant, className = "" }) => {
           font-size: 0.7rem;
         }
 
-        /* Hide next-open line on very small screens to keep pill compact */
+        /* Mobile Responsive Styles */
+        @media (max-width: 575.98px) {
+          .restaurant-status {
+            width: 100%;
+            border-radius: 0;
+            border: none !important;
+            padding: 6px 0;
+            font-size: 0.75rem;
+            display: flex !important;
+            justify-content: center;
+          }
+
+          .status-dot {
+            width: 6px;
+            height: 6px;
+          }
+
+          .status-text {
+            font-size: 0.75rem;
+          }
+        }
+
+        @media (max-width: 479.98px) {
+          .restaurant-status {
+            padding: 5px 0;
+            font-size: 0.7rem;
+          }
+
+          .status-dot {
+            width: 5px;
+            height: 5px;
+          }
+
+          .status-text {
+            font-size: 0.7rem;
+          }
+        }
+
+        @media (max-width: 359.98px) {
+          .restaurant-status {
+            padding: 4px 0;
+            font-size: 0.65rem;
+          }
+
+          .status-text {
+            font-size: 0.65rem;
+          }
+        }
+
         @media (max-width: 400px) {
           .status-next-open {
             display: none;

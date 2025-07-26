@@ -93,8 +93,8 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
         <Swiper
           className="mySwiper-2"
           speed={600}
-          slidesPerView={1.5}
-          spaceBetween={10}
+          slidesPerView={3}
+          spaceBetween={8}
           allowTouchMove={true}
           loop={false}
           navigation={false}
@@ -104,40 +104,44 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           modules={[Navigation]}
           breakpoints={{
             280: {
-              slidesPerView: 1.2,
+              slidesPerView: 3,
+              spaceBetween: 6,
+            },
+            320: {
+              slidesPerView: 3.2,
               spaceBetween: 8,
             },
-            300: {
-              slidesPerView: 1.5,
-              spaceBetween: 10,
-            },
             360: {
-              slidesPerView: 2,
-              spaceBetween: 12,
+              slidesPerView: 3.5,
+              spaceBetween: 8,
+            },
+            400: {
+              slidesPerView: 4,
+              spaceBetween: 10,
             },
             480: {
-              slidesPerView: 2.5,
-              spaceBetween: 15,
+              slidesPerView: 4.5,
+              spaceBetween: 10,
             },
-            600: {
-              slidesPerView: 3,
-              spaceBetween: 15,
+            576: {
+              slidesPerView: 5,
+              spaceBetween: 12,
             },
             768: {
-              slidesPerView: 4,
-              spaceBetween: 10,
+              slidesPerView: 5,
+              spaceBetween: 12,
             },
             992: {
-              slidesPerView: 4,
-              spaceBetween: 10,
+              slidesPerView: 6,
+              spaceBetween: 15,
             },
             1200: {
-              slidesPerView: 6,
-              spaceBetween: 10,
+              slidesPerView: 7,
+              spaceBetween: 15,
             },
             1600: {
-              slidesPerView: 6,
-              spaceBetween: 10,
+              slidesPerView: 8,
+              spaceBetween: 15,
             },
           }}
         >
@@ -181,12 +185,13 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           align-items: center;
           justify-content: center;
           flex-direction: column;
-          padding: 0.45rem 1rem;
+          padding: 0.5rem 0.75rem;
           border: 1px solid var(--border-color, #dee2e6);
           border-radius: 9999px; /* full pill */
           background-color: var(--bs-light, #f8f9fa);
           transition: all 0.3s ease;
           width: 100%;
+          min-height: 36px;
         }
 
         .category-image-container {
@@ -213,11 +218,14 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
         }
 
         .category-text-content h6 {
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           font-weight: 500;
           color: #333;
           line-height: 1.2;
           margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .category-slide:hover .category-card-content {
@@ -283,90 +291,41 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           display: none !important;
         }
 
-        @media (max-width: 767px) {
+        /* Mobile optimizations */
+        @media (max-width: 575px) {
+          .category-card-content {
+            padding: 0.4rem 0.6rem;
+            min-height: 32px;
+          }
+
+          .category-text-content h6 {
+            font-size: 0.75rem;
+            line-height: 1.1;
+          }
+
           .nav-button {
             width: 32px;
             height: 32px;
             font-size: 10px;
           }
-
-          .category-text-content h6 {
-            font-size: 0.8rem;
-          }
-
-          .category-text-content {
-            padding: 0.5rem 0.25rem;
-          }
         }
 
-        /* Extra small screens (300px and below) */
-        @media (max-width: 360px) {
-          .category-slider-container {
-            padding: 0 0.5rem;
-          }
-
-          .mySwiper-2 {
-            overflow: visible !important;
-          }
-
-          .mySwiper-2 .swiper-wrapper {
-            transition-timing-function: linear !important;
-          }
-
-          .mySwiper-2 .swiper-slide {
-            width: auto !important;
-            min-width: 45% !important;
-            max-width: 50% !important;
-            margin-right: 10px !important;
-          }
-
-          .category-image-container {
-            height: 80px;
+        /* Small mobile screens */
+        @media (max-width: 400px) {
+          .category-card-content {
+            padding: 0.35rem 0.5rem;
+            min-height: 30px;
           }
 
           .category-text-content h6 {
             font-size: 0.7rem;
-            line-height: 1.1;
-          }
-
-          .category-text-content {
-            padding: 0.4rem 0.2rem;
-          }
-
-          .nav-button {
-            width: 28px;
-            height: 28px;
-            font-size: 9px;
-          }
-
-          .navigation-buttons {
-            gap: 0.25rem;
-          }
-        }
-
-        /* Ultra small screens (320px and below) */
-        @media (max-width: 320px) {
-          .category-slider-container {
-            padding: 0 0.25rem;
-          }
-
-          .mySwiper-2 .swiper-slide {
-            min-width: 42% !important;
-            max-width: 48% !important;
-            margin-right: 8px !important;
-          }
-
-          .category-image-container {
-            height: 70px;
-          }
-
-          .category-text-content h6 {
-            font-size: 0.65rem;
             line-height: 1;
           }
 
-          .category-text-content {
-            padding: 0.3rem 0.1rem;
+          .nav-button {
+            width: 30px;
+            height: 30px;
+            font-size: 9px;
           }
 
           .cate-title {
@@ -374,28 +333,67 @@ const CategorySlider = ({ categories, selectedCategory, onCategorySelect }) => {
           }
         }
 
-        /* Force mobile breakpoints for very small screens */
-        @media (max-width: 299px) {
-          .mySwiper-2 .swiper-slide {
-            min-width: 40% !important;
-            max-width: 45% !important;
-            margin-right: 6px !important;
+        /* Extra small screens */
+        @media (max-width: 320px) {
+          .category-slider-container {
+            padding: 0 0.25rem;
           }
 
-          .category-image-container {
-            height: 60px;
+          .category-card-content {
+            padding: 0.3rem 0.4rem;
+            min-height: 28px;
+          }
+
+          .category-text-content h6 {
+            font-size: 0.65rem;
+          }
+
+          .nav-button {
+            width: 28px;
+            height: 28px;
+            font-size: 8px;
+          }
+
+          .navigation-buttons {
+            gap: 0.25rem;
+          }
+        }
+
+        /* Ultra small screens */
+        @media (max-width: 280px) {
+          .category-card-content {
+            padding: 0.25rem 0.35rem;
+            min-height: 26px;
           }
 
           .category-text-content h6 {
             font-size: 0.6rem;
           }
 
-          .category-text-content {
-            padding: 0.25rem 0.1rem;
+          .cate-title {
+            font-size: 1rem;
+          }
+        }
+
+        /* Landscape Mobile Optimization */
+        @media (max-height: 500px) and (orientation: landscape) {
+          .category-card-content {
+            padding: 0.3rem 0.6rem;
+            min-height: 28px;
+          }
+
+          .category-text-content h6 {
+            font-size: 0.7rem;
+          }
+
+          .nav-button {
+            width: 28px;
+            height: 28px;
           }
         }
       `}</style>
     </>
   );
 };
+
 export default CategorySlider;
