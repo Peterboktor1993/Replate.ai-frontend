@@ -111,4 +111,11 @@
   .restaurant-status .status-text span {
     font-size: 0.875rem;
   }
+  .mobile-img {
+    height: auto !important;
+  }
+
+  .banner-bx {
+    max-height: auto;
+  }
 }

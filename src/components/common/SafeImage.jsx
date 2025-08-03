@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { useState } from "react";
 
 const SafeImage = ({
@@ -29,7 +28,23 @@ const SafeImage = ({
   if (!finalSrc || typeof finalSrc !== "string" || finalSrc.trim() === "") {
     return null;
   }
-  if (!width || !height) {
+
+  if (props.fill) {
+    return (
+      <div className={className} style={{ position: "relative", ...style }}>
+        <img
+          src={finalSrc}
+          alt={alt}
+          fill
+          onError={handleError}
+          style={{ objectFit: "cover", ...style }}
+          {...props}
+        />
+      </div>
+    );
+  }
+
+  if (!width || !height || (width && !height)) {
     return (
       <img
         src={finalSrc}
@@ -41,8 +56,9 @@ const SafeImage = ({
       />
     );
   }
+
   return (
-    <Image
+    <img
       src={finalSrc}
       alt={alt}
       width={width}

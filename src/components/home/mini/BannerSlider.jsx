@@ -50,11 +50,8 @@ const BannerSlider = ({ restaurantDetails }) => {
               <SafeImage
                 src={data.image}
                 alt="Banner image"
-                width={800}
-                height={400}
-                style={{ width: "100%", height: "220px" }}
-                priority
                 fallbackSrc={banerimg1}
+                className="w-100 h-100 object-fit-cover"
               />
             </div>
           </SwiperSlide>

@@ -405,8 +405,8 @@ const Header = ({ details }) => {
 
         @media (min-width: 576px) and (max-width: 767.98px) {
           .logo-img {
-            width: 50px;
-            height: 50px;
+            width: 70px;
+            height: 70px;
           }
 
           .auth-btn {
@@ -425,90 +425,7 @@ const Header = ({ details }) => {
           }
         }
 
-        @media (max-width: 575.98px) {
-          .container-fluid {
-            padding-left: 12px !important;
-            padding-right: 12px !important;
-          }
-
-          .py-2 {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-          }
-
-          .py-1 {
-            padding-top: 0.25rem !important;
-            padding-bottom: 0.25rem !important;
-          }
-
-          .logo-img {
-            width: 45px;
-            height: 45px;
-          }
-
-          .auth-btn {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            min-height: 36px;
-          }
-
-          .btn-text {
-            font-size: 0.8rem;
-          }
-
-          .user-dropdown-btn {
-            padding: 6px 12px;
-            font-size: 0.85rem;
-            min-height: 36px;
-            max-width: 140px;
-          }
-
-          .user-dropdown {
-            min-width: 280px;
-            max-width: calc(100vw - 24px);
-            right: 0 !important;
-            left: auto !important;
-          }
-
-          .user-avatar {
-            width: 32px;
-            height: 32px;
-            font-size: 0.85rem;
-          }
-
-          .user-details h6 {
-            font-size: 0.9rem;
-          }
-
-          .user-contact {
-            font-size: 0.75rem;
-          }
-
-          .restaurant-status-open,
-          .restaurant-status-closed {
-            padding: 6px 0;
-            font-size: 0.75rem;
-            border-radius: 0 !important;
-            border: none !important;
-            width: 100%;
-            text-align: center;
-          }
-
-          .status-dot-open,
-          .status-dot-closed {
-            width: 6px;
-            height: 6px;
-          }
-
-          .status-text {
-            font-size: 0.75rem;
-          }
-
-          .opening-time-text {
-            font-size: 0.65rem;
-          }
-        }
-
+     
         @media (max-width: 479.98px) {
           .container-fluid {
             padding-left: 8px !important;
@@ -521,14 +438,14 @@ const Header = ({ details }) => {
           }
 
           .logo-img {
-            width: 40px;
-            height: 40px;
+            width: 70px;
+            height: 70px;
           }
 
           .auth-btn {
-            padding: 5px 10px;
+            padding: 4px 8px;
             font-size: 0.75rem;
-            min-height: 34px;
+            min-height: 30px;
           }
 
           .btn-text {
@@ -591,112 +508,8 @@ const Header = ({ details }) => {
           }
         }
 
-        @media (max-width: 359.98px) {
-          .container-fluid {
-            padding-left: 6px !important;
-            padding-right: 6px !important;
-          }
-
-          .py-2 {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-          }
-
-          .logo-img {
-            width: 35px;
-            height: 35px;
-          }
-
-          .auth-btn {
-            padding: 4px 8px;
-            font-size: 0.7rem;
-            min-height: 32px;
-            min-width: 65px;
-          }
-
-          .btn-text {
-            font-size: 0.7rem;
-          }
-
-          .user-dropdown-btn {
-            padding: 4px 8px;
-            max-width: 100px;
-            min-height: 32px;
-          }
-
-          .user-dropdown {
-            min-width: 240px;
-            max-width: calc(100vw - 12px);
-          }
-
-          .user-avatar {
-            width: 28px;
-            height: 28px;
-            font-size: 0.75rem;
-          }
-
-          .user-details h6 {
-            font-size: 0.8rem;
-          }
-
-          .user-contact {
-            font-size: 0.65rem;
-          }
-
-          .dropdown-item {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-          }
-
-          /* Restaurant status for small mobile */
-          .restaurant-status-open,
-          .restaurant-status-closed {
-            padding: 4px 0;
-            font-size: 0.6rem;
-            border-radius: 0 !important;
-            border: none !important;
-            width: 100%;
-            text-align: center;
-          }
-        }
-
-        @media (max-height: 500px) and (orientation: landscape) {
-          .py-2,
-          .py-md-3 {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-          }
-
-          .logo-img {
-            width: 35px;
-            height: 35px;
-          }
-
-          .auth-btn,
-          .user-dropdown-btn {
-            padding: 4px 12px;
-            min-height: 32px;
-          }
-
-          .user-dropdown {
-            max-height: 300px;
-            overflow-y: auto;
-          }
-        }
-
-        @media (hover: none) and (pointer: coarse) {
-          .auth-btn,
-          .user-dropdown-btn {
-            min-height: 44px;
-          }
-
-          .dropdown-item {
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-          }
-        }
-
+      
+     
         /* Fix for text overflow */
         .text-truncate {
           overflow: hidden;
@@ -713,7 +526,6 @@ const Header = ({ details }) => {
           gap: 0.5rem;
         }
 
-        /* Fix dropdown positioning on mobile */
         @media (max-width: 575.98px) {
           .dropdown-menu-end {
             right: 0 !important;
