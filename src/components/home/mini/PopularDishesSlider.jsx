@@ -18,6 +18,7 @@ const PopularDishesSlider = ({
   totalProducts = 0,
   onProductCountUpdate,
   restaurantDetails,
+  onItemAdded,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -265,6 +266,10 @@ const PopularDishesSlider = ({
     };
 
     try {
+      if (typeof onItemAdded === "function") {
+        const added = parseFloat(payload.price) * (payload.quantity || 1);
+        if (!isNaN(added) && added > 0) onItemAdded(added);
+      }
       dispatch(addToCart(payload, token, restaurantId));
     } catch (error) {
       // do nothing
@@ -290,14 +295,14 @@ const PopularDishesSlider = ({
               <div className="card product-card border rounded shadow-sm h-100">
                 <div className="text-center p-3">
                   {product.image_full_url && (
-                      <SafeImage
-                        src={product.image_full_url}
-                        alt={product.name}
-                        width={130}
-                        height={130}
-                        className="rounded-2"
-                        style={{ objectFit: "cover" }}
-                      />
+                    <SafeImage
+                      src={product.image_full_url}
+                      alt={product.name}
+                      width={130}
+                      height={130}
+                      className="rounded-2"
+                      style={{ objectFit: "cover" }}
+                    />
                   )}
                 </div>
                 <div className="card-footer border-0 px-3 bg-transparent mt-auto">

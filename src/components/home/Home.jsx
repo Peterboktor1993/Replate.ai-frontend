@@ -50,6 +50,7 @@ const Home = ({
     initialProducts?.length || 0
   );
   const checkoutRef = useRef(null);
+  const prevTotalRef = useRef(0);
   const dispatch = useDispatch();
 
   const { token, user } = useSelector(
@@ -59,10 +60,12 @@ const Home = ({
     cartItems,
     loading: cartLoading,
     guestId,
+    totalAmount,
   } = useSelector((state) => state.cart);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
+  const [lastAddedAmount, setLastAddedAmount] = useState(0);
 
   useEffect(() => {
     dispatch(setRestaurantId(restaurantId));
@@ -229,6 +232,18 @@ const Home = ({
     }, 0);
   };
 
+  useEffect(() => {
+    const newTotal =
+      typeof totalAmount === "number" ? totalAmount : calculateTotal();
+    const delta = newTotal - prevTotalRef.current;
+    if (cartItems.length === 0) {
+      setLastAddedAmount(0);
+    } else if (delta > 0.009) {
+      setLastAddedAmount(delta);
+    }
+    prevTotalRef.current = newTotal;
+  }, [cartItems, totalAmount]);
+
   return (
     <>
       <div className={`row g-0 ${className}`}>
@@ -316,6 +331,11 @@ const Home = ({
                 totalProducts={totalProductCount}
                 onProductCountUpdate={handleProductCountUpdate}
                 restaurantDetails={restaurantDetails}
+                onItemAdded={(amount) => {
+                  if (typeof amount === "number" && amount > 0) {
+                    setLastAddedAmount(amount);
+                  }
+                }}
               />
             </div>
           </div>
@@ -349,16 +369,55 @@ const Home = ({
           style={{ zIndex: 1000 }}
         >
           <div className="d-flex align-items-center justify-content-between">
-            <button
-              onClick={scrollToCheckout}
-              className="btn btn-primary btn-lg px-4 w-100"
-              style={{
-                animation: "pulse 2s infinite",
-                boxShadow: "0 0 0 0 rgba(212, 12, 20, 0.4)",
-              }}
-            >
-              Checkout Now
-            </button>
+            {(() => {
+              const computedTotal =
+                typeof totalAmount === "number" && totalAmount > 0
+                  ? totalAmount
+                  : prevTotalRef.current + (lastAddedAmount || 0);
+              return computedTotal > 0;
+            })() ? (
+              <>
+                <div className="flex-grow-1 me-2">
+                  {lastAddedAmount > 0 ? (
+                    <div className="small text-muted mb-1">
+                      Added: ${lastAddedAmount.toFixed(2)}
+                    </div>
+                  ) : null}
+                  <div className="fw-bold">
+                    Total: $
+                    {(() => {
+                      const computedTotal =
+                        typeof totalAmount === "number" && totalAmount > 0
+                          ? totalAmount
+                          : prevTotalRef.current + (lastAddedAmount || 0);
+                      return computedTotal.toFixed(2);
+                    })()}
+                  </div>
+                </div>
+                <button
+                  onClick={scrollToCheckout}
+                  className="btn btn-primary btn-lg px-4"
+                  style={{
+                    animation: "pulse 2s infinite",
+                    boxShadow: "0 0 0 0 rgba(212, 12, 20, 0.4)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Checkout
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={scrollToCheckout}
+                className="btn btn-primary btn-lg px-4 w-100"
+                style={{
+                  animation: "pulse 2s infinite",
+                  boxShadow: "0 0 0 0 rgba(212, 12, 20, 0.4)",
+                }}
+              >
+                Checkout Now
+              </button>
+            )}
           </div>
         </div>
       )}
