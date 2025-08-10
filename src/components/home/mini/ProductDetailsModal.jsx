@@ -227,6 +227,15 @@ const ProductDetailsModal = ({
   return (
     <>
       <style jsx global>{`
+        /* Ensure product modal is above its backdrop on all screens */
+        .product-detail-modal {
+          z-index: 1065 !important;
+        }
+
+        .product-detail-backdrop {
+          z-index: 1060 !important;
+        }
+
         .quantity-control button {
           display: flex;
           align-items: center;
@@ -288,19 +297,10 @@ const ProductDetailsModal = ({
           border-radius: 0.375rem;
         }
 
-        @media (max-width: 576px) {
-          .modal-backdrop {
-            z-index: 999998 !important;
-          }
-
-          .product-detail-modal {
-            z-index: 999999 !important;
-          }
-
+        @media (max-width: 768px) {
           .product-detail-modal .modal-dialog {
             margin: 0.5rem;
             max-width: calc(100vw - 1rem);
-            z-index: 999999 !important;
           }
 
           .product-detail-modal .modal-content {
@@ -308,7 +308,6 @@ const ProductDetailsModal = ({
             border: none;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            z-index: 999999 !important;
             position: relative;
           }
 
@@ -344,8 +343,12 @@ const ProductDetailsModal = ({
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            background: rgba(0, 0, 0, 0.08);
-            font-size: 12px;
+            background-color: rgba(0, 0, 0, 0.08);
+            background-image: var(--bs-btn-close-bg) !important;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 1em;
+            opacity: 1;
           }
 
           .product-detail-modal .modal-body {
@@ -356,14 +359,15 @@ const ProductDetailsModal = ({
           }
 
           .product-detail-modal .product-image-section {
-            padding: 1rem;
+            padding: 0.75rem;
+
             background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
           }
 
           .product-detail-modal .product-detail-img {
             width: 100%;
-            max-width: 200px;
-            height: 200px;
+            max-width: 300px !important;
+            height: 150px;
             object-fit: cover;
             border-radius: 15px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -578,8 +582,9 @@ const ProductDetailsModal = ({
         show={show}
         onHide={handleClose}
         centered
-        style={{ zIndex: 9999999999 }}
+        className="product-detail-modal"
         dialogClassName="product-detail-modal"
+        backdropClassName="product-detail-backdrop"
       >
         <Modal.Header closeButton className="fixed-header">
           <div className="d-flex w-100 justify-content-between align-items-center">

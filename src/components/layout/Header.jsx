@@ -100,7 +100,7 @@ const Header = ({ details }) => {
     <>
       <header
         style={{
-          zIndex: 9990,
+          zIndex: 1030,
         }}
         className="shadow-sm sticky-top bg-white"
       >
@@ -161,88 +161,98 @@ const Header = ({ details }) => {
                   </button>
                 </div>
               ) : (
-                <div className="dropdown position-relative">
-                  <button
-                    ref={dropdownRef}
-                    className="btn btn-primary dropdown-toggle user-dropdown-btn d-flex align-items-center"
-                    type="button"
-                    id="dropdownMenuButton"
-                    onClick={toggleDropdown}
-                    aria-expanded={dropdownOpen}
+                <div className="d-flex align-items-center">
+                  <Link
+                    href={`/orders?restaurant=${details?.id}`}
+                    className="btn rounded-pill btn-outline-primary d-inline-flex d-sm-none me-2 justify-content-center align-items-center gap-2"
+                    onClick={closeDropdown}
                   >
-                    <i className="fas fa-user-circle me-1 me-sm-2"></i>
-                    <span className="user-name d-none d-sm-inline text-truncate">
-                      {user?.f_name || user?.email || "Account"}
-                    </span>
-                  </button>
-                  <ul
-                    className={`dropdown-menu dropdown-menu-end shadow border-0 user-dropdown ${
-                      dropdownOpen ? "show" : ""
-                    }`}
-                    aria-labelledby="dropdownMenuButton"
-                  >
-                    <li className="px-3 py-2 d-flex align-items-center user-info">
-                      <div className="rounded-circle bg-primary text-white p-2 me-2 user-avatar flex-shrink-0">
-                        {user?.image_full_url ? (
-                          <img
-                            src={user.image_full_url}
-                            alt="Profile"
-                            className="rounded-circle"
-                            style={{
-                              width: "31px",
-                              height: "31px",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <i className="fas fa-user"></i>
-                        )}
-                      </div>
-                      <div className="user-details flex-grow-1 min-w-0">
-                        <h6 className="mb-0 text-truncate">
-                          {user?.f_name || "User"}
-                        </h6>
-                        <small className="text-muted user-contact text-truncate d-block">
-                          {user?.email || user?.phone || ""}
-                        </small>
-                      </div>
-                    </li>
-                    <li>
-                      <hr className="dropdown-divider" />
-                    </li>
-                    <li>
-                      <Link
-                        href={`/profile?restaurant=${details?.id}`}
-                        className="dropdown-item py-2 d-flex align-items-center"
-                        onClick={closeDropdown}
-                      >
-                        <i className="fas fa-user me-2 text-primary"></i>
-                        Profile
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href={`/orders?restaurant=${details?.id}`}
-                        className="dropdown-item py-2 d-flex align-items-center"
-                        onClick={closeDropdown}
-                      >
-                        <i className="fas fa-shopping-bag me-2 text-primary"></i>
-                        My Orders
-                      </Link>
-                    </li>
-                    <li>
-                      <hr className="dropdown-divider" />
-                    </li>
-                    <li>
-                      <button
-                        className="dropdown-item py-2 d-flex align-items-center w-100"
-                        onClick={handleLogout}
-                      >
-                        <i className="fas fa-sign-out-alt me-2 text-danger"></i>
-                        Logout
-                      </button>
-                    </li>
-                  </ul>
+                    <i className="fas fa-redo me-1"></i>
+                    <span>Reorder</span>
+                  </Link>
+                  <div className="dropdown position-relative">
+                    <button
+                      ref={dropdownRef}
+                      className="btn btn-primary dropdown-toggle user-dropdown-btn d-flex align-items-center"
+                      type="button"
+                      id="dropdownMenuButton"
+                      onClick={toggleDropdown}
+                      aria-expanded={dropdownOpen}
+                    >
+                      <i className="fas fa-user-circle me-1 me-sm-2"></i>
+                      <span className="user-name d-none d-sm-inline text-truncate">
+                        {user?.f_name || user?.email || "Account"}
+                      </span>
+                    </button>
+                    <ul
+                      className={`dropdown-menu dropdown-menu-end shadow border-0 user-dropdown ${
+                        dropdownOpen ? "show" : ""
+                      }`}
+                      aria-labelledby="dropdownMenuButton"
+                    >
+                      <li className="px-3 py-2 d-flex align-items-center user-info">
+                        <div className="rounded-circle bg-primary text-white p-2 me-2 user-avatar flex-shrink-0">
+                          {user?.image_full_url ? (
+                            <img
+                              src={user.image_full_url}
+                              alt="Profile"
+                              className="rounded-circle"
+                              style={{
+                                width: "31px",
+                                height: "31px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            <i className="fas fa-user"></i>
+                          )}
+                        </div>
+                        <div className="user-details flex-grow-1 min-w-0">
+                          <h6 className="mb-0 text-truncate">
+                            {user?.f_name || "User"}
+                          </h6>
+                          <small className="text-muted user-contact text-truncate d-block">
+                            {user?.email || user?.phone || ""}
+                          </small>
+                        </div>
+                      </li>
+                      <li>
+                        <hr className="dropdown-divider" />
+                      </li>
+                      <li>
+                        <Link
+                          href={`/profile?restaurant=${details?.id}`}
+                          className="dropdown-item py-2 d-flex align-items-center"
+                          onClick={closeDropdown}
+                        >
+                          <i className="fas fa-user me-2 text-primary"></i>
+                          Profile
+                        </Link>
+                      </li>
+                      <li className="d-none d-sm-block">
+                        <Link
+                          href={`/orders?restaurant=${details?.id}`}
+                          className="dropdown-item py-2 d-flex align-items-center"
+                          onClick={closeDropdown}
+                        >
+                          <i className="fas fa-shopping-bag me-2 text-primary"></i>
+                          My Orders
+                        </Link>
+                      </li>
+                      <li>
+                        <hr className="dropdown-divider" />
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item py-2 d-flex align-items-center w-100"
+                          onClick={handleLogout}
+                        >
+                          <i className="fas fa-sign-out-alt me-2 text-danger"></i>
+                          Logout
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
@@ -425,7 +435,6 @@ const Header = ({ details }) => {
           }
         }
 
-     
         @media (max-width: 479.98px) {
           .container-fluid {
             padding-left: 8px !important;
@@ -508,8 +517,6 @@ const Header = ({ details }) => {
           }
         }
 
-      
-     
         /* Fix for text overflow */
         .text-truncate {
           overflow: hidden;

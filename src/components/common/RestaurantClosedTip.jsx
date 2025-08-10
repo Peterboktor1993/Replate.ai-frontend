@@ -32,10 +32,10 @@ const RestaurantClosedTip = ({
     <>
       {/* Backdrop */}
       <div
-        className={`modal-backdrop fade ${isVisible ? "show" : ""}`}
+        className={`app-modal-backdrop fade ${isVisible ? "show" : ""}`}
         style={{
           backgroundColor: "rgba(0, 0, 0, 0.3)",
-          zIndex: 1055,
+          zIndex: 1045,
         }}
         onClick={handleClose}
       />
@@ -163,7 +163,7 @@ const RestaurantClosedTip = ({
           }
         }
 
-        .modal-backdrop.fade {
+        .app-modal-backdrop.fade {
           transition: opacity 0.3s ease;
         }
 
