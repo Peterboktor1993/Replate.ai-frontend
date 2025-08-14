@@ -170,6 +170,14 @@ const Header = ({ details }) => {
                     <i className="fas fa-redo me-1"></i>
                     <span>Reorder</span>
                   </Link>
+                  <Link
+                    href={`/orders?restaurant=${details?.id}`}
+                    className="btn rounded-pill btn-outline-primary d-none d-sm-inline-flex me-2 justify-content-center align-items-center gap-2"
+                    onClick={closeDropdown}
+                  >
+                    <i className="fas fa-redo me-1"></i>
+                    <span>Reorder</span>
+                  </Link>
                   <div className="dropdown position-relative">
                     <button
                       ref={dropdownRef}
@@ -229,14 +237,14 @@ const Header = ({ details }) => {
                           Profile
                         </Link>
                       </li>
-                      <li className="d-none d-sm-block">
+                      <li className="d-none">
                         <Link
                           href={`/orders?restaurant=${details?.id}`}
                           className="dropdown-item py-2 d-flex align-items-center"
                           onClick={closeDropdown}
                         >
                           <i className="fas fa-shopping-bag me-2 text-primary"></i>
-                          My Orders
+                          Reorder
                         </Link>
                       </li>
                       <li>
@@ -435,6 +443,20 @@ const Header = ({ details }) => {
           }
         }
 
+        /* Small screens: keep dropdown inside viewport and aligned */
+        @media (max-width: 767.98px) {
+          .user-dropdown {
+            position: absolute;
+            right: 8px;
+            left: auto;
+            transform: none !important;
+            min-width: unset;
+            width: calc(100vw - 24px);
+            max-width: calc(100vw - 24px);
+            box-sizing: border-box;
+          }
+        }
+
         @media (max-width: 479.98px) {
           .container-fluid {
             padding-left: 8px !important;
@@ -469,8 +491,8 @@ const Header = ({ details }) => {
           }
 
           .user-dropdown {
-            min-width: 260px;
-            max-width: calc(100vw - 16px);
+            min-width: unset;
+            width: calc(100vw - 24px);
           }
 
           .user-avatar {
@@ -532,12 +554,20 @@ const Header = ({ details }) => {
         .gap-2 {
           gap: 0.5rem;
         }
-
+        .dropdown-menu-end {
+          right: 0 !important;
+          left: auto !important;
+          transform: none !important;
+        }
         @media (max-width: 575.98px) {
           .dropdown-menu-end {
             right: 0 !important;
             left: auto !important;
             transform: none !important;
+          }
+          .dropdown-menu-end.user-dropdown {
+            right: 8px !important;
+            left: auto !important;
           }
         }
       `}</style>
